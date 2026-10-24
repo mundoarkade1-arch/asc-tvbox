@@ -3,7 +3,7 @@
 Última atualização: 24/10/2026
 
 ## Fase atual
-Etapa "EPG com prévia nos canais" em andamento. Feita a linha "Agora: ..." nos cartões de canais (página inicial e "Ver mais"). Faltam a caixinha de prévia ao focar num canal e a barra Agora/A seguir no player.
+Etapa "EPG com prévia nos canais" concluída e testada no TX9. Próxima etapa: controle parental.
 
 ## Feito (testado no TX9)
 - Repositório criado e documentação preenchida (README, AGENTS, CLAUDE, llms.txt, docs/*)
@@ -16,26 +16,26 @@ Etapa "EPG com prévia nos canais" em andamento. Feita a linha "Agora: ..." nos 
 - Página inicial com 3 faixas (Canais ao vivo, Filmes, Séries) de 10 itens cada
 - Tocar canal e filme
 - "Ver mais": cartão no fim de cada faixa que abre a navegação por categorias (BrowseActivity), com borda vermelha de seleção
-- Linha "Agora: ..." nos cartões de canais ao vivo da página inicial (testada no TX9)
-
-## Feito (compila, Actions verde, mas ainda NÃO testado no TX9)
-- Linha "Agora: ..." nos cartões de canais dentro do "Ver mais" (BrowseActivity). Teste a fazer: Canais ao vivo > Ver mais, esperar uns 5 segundos, rolar para baixo e trocar de categoria, e conferir se a linha aparece.
+- Linha "Agora: ..." nos cartões de canais ao vivo, na página inicial e no "Ver mais"
+- Caixinha de prévia na página inicial: ao parar o foco num canal ao vivo, uma faixa fixa embaixo mostra o programa de agora, a barra de progresso, os horários de início e fim e o "A seguir"
+- Barra Agora / A seguir no player (MainActivity): aparece quando o canal ao vivo começa a tocar, some depois de 6 segundos e volta ao apertar OK; não aparece em filmes
 
 ## Arquivos do EPG
-- XtreamApi.java: função epg(...) que pede ao servidor a programação de UM canal (get_short_epg, até 4 programas) e devolve o programa de agora e o "a seguir"
+- XtreamApi.java: função epg(...) que pede ao servidor a programação de UM canal (get_short_epg, até 4 programas) e devolve o programa de agora e o "a seguir". Horários em milissegundos.
 - EpgCache.java: guarda na memória até 80 canais por 1 minuto cada; no máximo 2 pedidos ao servidor ao mesmo tempo; avisa sempre na thread principal
-- item_card.xml: já tinha a linha tv_now (escondida); não foi alterado
-- HomeActivity.java e BrowseActivity.java: ligam a linha tv_now ao EpgCache
+- item_card.xml: tem a linha tv_now (usada para o "Agora: ...")
+- activity_home.xml: tem a caixinha de prévia fixa embaixo (group_preview)
+- HomeActivity.java: liga a linha tv_now e a caixinha de prévia ao EpgCache (espera 0,5 segundo parado no canal antes de pedir o guia)
+- BrowseActivity.java: liga a linha tv_now ao EpgCache (sem caixinha de prévia, por decisão do dono)
+- activity_main.xml: tem a barra Agora / A seguir (group_nowbar) e a mensagem de status no alto da tela
+- MainActivity.java: mostra a barra Agora / A seguir nos canais ao vivo
 
 ## Próximos passos (nesta ordem)
-1. Testar no TX9 o "Ver mais" com a linha "Agora" (ver acima)
-2. Caixinha de prévia ao parar o foco num canal: nome do programa, barra de progresso, horário de início e fim e "A seguir" (usa os campos start, end, nextTitle e nextStart da classe XtreamApi.Epg)
-3. Barra Agora / A seguir no player, enquanto o canal toca (MainActivity.java)
-4. Controle parental
-5. Episódios de séries (hoje o toque numa série só mostra um aviso)
-6. Página inicial para login por lista M3U (hoje mostra um aviso de que chega numa etapa própria)
+1. Controle parental
+2. Episódios de séries (hoje o toque numa série só mostra um aviso)
+3. Página inicial para login por lista M3U (hoje mostra um aviso de que chega numa etapa própria)
 
 ## Problemas em aberto
 - Armazenamento livre do TX9 e acesso à Play Store: ainda não sabemos
-- Lista M3U ainda não tem página inicial (ver passo 6 acima)
+- Lista M3U ainda não tem página inicial (ver passo 3 acima)
 - Canais sem guia no servidor mostram "Programação indisponível" (comportamento esperado, não é erro)
