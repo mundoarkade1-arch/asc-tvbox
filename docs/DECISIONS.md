@@ -56,3 +56,10 @@ Registre aqui cada decisão importante: o que foi decidido e por quê.
 
 - Decisão: ao abrir o app, se há login salvo, ele vai direto para a página inicial. O botão "Trocar login" abre a tela de login com os dados antigos preenchidos, sem apagar nada.
 - Motivo: no dia a dia, quem usa TV box quer ligar e assistir, sem digitar nada de novo.
+
+## 2026-10-24: Navegação por categorias ("Ver mais") por páginas
+
+- Decisão: tela BrowseActivity com categorias à esquerda e itens à direita. Os itens carregam por páginas de 40, quando o usuário chega perto do fim da grade, com máximo de 400 por categoria. Cada página é pedida ao servidor com um deslocamento (offset); os itens pulados são lidos e descartados sem ficar na memória.
+- Motivo: uma categoria pode ter milhares de itens; no TX9 (1 GB de RAM) não dá para guardar tudo. O limite de 400 protege a memória; busca por nome vem em etapa futura.
+- Sem dependência nova: usa ListView e GridView do próprio Android, que reaproveitam as linhas ao rolar.
+- Trocar de categoria rápido: respostas atrasadas são ignoradas (contador de geração).
