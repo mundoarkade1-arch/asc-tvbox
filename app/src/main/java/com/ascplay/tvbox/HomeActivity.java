@@ -1,177 +1,136 @@
 package com.ascplay.tvbox;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
+import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.BaseAdapter;
+import android.widget.GridView;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ProgressBar;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 /**
- * Página inicial: 10 primeiros canais, filmes e séries.
- * Servidor com login (Xtream): busca só o começo de cada lista (nunca a lista inteira).
- * No fim de cada faixa há o cartão "Ver mais ›", que abre a navegação por categorias.
- * Nos canais ao vivo, cada cartão mostra o programa que passa agora (EPG por canal).
- * Ao parar o foco num canal ao vivo, uma caixinha fixa embaixo mostra a prévia:
- * programa de agora, barra de progresso, horários e "A seguir".
- * Ao escolher uma série, abre a tela da série (temporadas e episódios).
+ * "Ver mais" para o login por lista M3U.
+ * Esquerda: categorias (group-title da lista). Direita: itens, por páginas de 40 (máximo 400).
  *
- * Lista M3U: lê a lista aos poucos, só até achar 10 itens de cada tipo (M3uApi).
- * O cartão "Ver mais ›" abre a navegação por categorias da lista M3U (M3uBrowseActivity).
- * Por enquanto, sem guia de programação e sem episódios das séries (chegam em etapas próprias).
+ * A lista é lida aos poucos e de novo a cada página (a lista M3U não tem como pedir "só a página
+ * 2"). Só uma página fica na memória. As categorias são achadas lendo a lista uma vez, depois que
+ * a primeira página aparece, e só os nomes são guardados.
  *
- * O botão "Controle parental" ativa, troca ou desativa a senha de 4 números.
- * Com o controle ligado, itens com nome adulto não aparecem nas faixas.
+ * Controle parental (quando ligado): categorias adultas mostram um cadeado e pedem a senha de
+ * 4 números. A liberação vale só para aquela categoria, enquanto a pessoa está nela. Em "Todas as
+ * categorias" e nas outras, itens adultos não aparecem.
+ *
+ * Canal e filme tocam direto pelo endereço da lista (MainActivity.EXTRA_URL).
+ * Série: abre a tela da série da lista M3U (M3uSeriesActivity), com temporadas e episódios.
  */
-public class HomeActivity extends Activity {
+public class M3uBrowseActivity extends Activity {
 
-    public static final String EXTRA_KIND = "kind";
-    public static final String EXTRA_ID = "id";
-    public static final String EXTRA_EXT = "ext";
-    public static final String EXTRA_NAME = "name";
-    public static final String EXTRA_SHOW_LOGIN = "show_login";
-
-    private static final int LIMIT = 10;
-    private static final long PREVIEW_DELAY_MS = 500L;
+    private static final int PAGE = 40;
+    private static final int MAX_ITEMS = 400;
+    private static final int LOAD_AHEAD = 12;
     private static final int COLOR_NEUTRAL = 0xFFA39A9D;
     private static final int COLOR_ERROR = 0xFFFF6B78;
-    private static final int COLOR_OK = 0xFF4ADE80;
-    private static final int COLOR_WHITE = 0xFFFFFFFF;
+    private static final String LOCK = "\uD83D\uDD12 ";
 
     private CredentialStore.Credentials creds;
+    private XtreamApi.Kind kind;
 
-    private Button btnLogout;
-    private Button btnParental;
-    private LinearLayout railLive;
-    private LinearLayout railMovie;
-    private LinearLayout railSeries;
-    private TextView stLive;
-    private TextView stMovie;
-    private TextView stSeries;
+    private TextView tvTitle;
+    private TextView tvStatus;
+    private ListView lvCategories;
+    private GridView gvItems;
 
-    // Para ignorar respostas antigas quando as faixas são recarregadas
-    private int railGen = 0;
+    // Nomes das categorias. A posição 0 é "Todas as categorias" (grupo null).
+    private final List<String> catNames = new ArrayList<>();
+    private final List<XtreamApi.Item> items = new ArrayList<>();
+    private CategoryAdapter catAdapter;
+    private ItemAdapter itemAdapter;
 
-    private View groupUpdate;
-    private TextView tvUpdate;
-    private Button btnUpdateNow;
-    private Button btnUpdateLater;
-    private Updater.Info pendingUpdate;
-    private boolean downloading = false;
+    private String currentGroup = null;
+    private String currentName = "Todas as categorias";
 
-    // Controle parental: teclado aberto no momento (para fechar ao sair da tela)
+    // Controle das páginas. "gen" muda a cada troca de categoria para ignorar respostas atrasadas.
+    private int gen = 0;
+    private boolean loading = false;
+    private boolean ended = false;
+    private boolean loadFailed = false;
+    private boolean focusGridWhenReady = true;
+    private boolean catsStarted = false;
+
+    // Controle parental
+    private boolean parentalOn = false;
+    private String adultOkName = null;
     private PinDialog pinDialog;
-
-    // Caixinha de prévia do canal
-    private View groupPreview;
-    private TextView tvPvChannel;
-    private TextView tvPvTitle;
-    private TextView tvPvStart;
-    private TextView tvPvEnd;
-    private TextView tvPvNext;
-    private ProgressBar pbPreview;
-    private final Handler handler = new Handler(Looper.getMainLooper());
-    private XtreamApi.Item previewItem;
-    private final Runnable previewRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (previewItem != null) {
-                fetchPreview(previewItem);
-            }
-        }
-    };
-    private final View.OnFocusChangeListener hideOnFocus = new View.OnFocusChangeListener() {
-        @Override
-        public void onFocusChange(View v, boolean hasFocus) {
-            if (hasFocus) {
-                hidePreview();
-            }
-        }
-    };
-
-    private boolean focusDone = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         creds = CredentialStore.load(this);
-        if (creds == null) {
-            startActivity(new Intent(this, LoginActivity.class));
+        try {
+            kind = XtreamApi.Kind.valueOf(getIntent().getStringExtra(HomeActivity.EXTRA_KIND));
+        } catch (Exception e) {
+            kind = null;
+        }
+        if (creds == null || !CredentialStore.MODE_M3U.equals(creds.mode)
+                || creds.m3uUrl == null || kind == null) {
             finish();
             return;
         }
 
-        setContentView(R.layout.activity_home);
+        parentalOn = ParentalStore.isEnabled(this);
 
-        btnLogout = findViewById(R.id.btn_logout);
-        btnParental = findViewById(R.id.btn_parental);
-        railLive = findViewById(R.id.rail_live);
-        railMovie = findViewById(R.id.rail_movie);
-        railSeries = findViewById(R.id.rail_series);
-        stLive = findViewById(R.id.st_live);
-        stMovie = findViewById(R.id.st_movie);
-        stSeries = findViewById(R.id.st_series);
+        setContentView(R.layout.activity_browse);
+        tvTitle = findViewById(R.id.tv_title);
+        tvStatus = findViewById(R.id.tv_status);
+        lvCategories = findViewById(R.id.lv_categories);
+        gvItems = findViewById(R.id.gv_items);
 
-        groupUpdate = findViewById(R.id.group_update);
-        tvUpdate = findViewById(R.id.tv_update);
-        btnUpdateNow = findViewById(R.id.btn_update_now);
-        btnUpdateLater = findViewById(R.id.btn_update_later);
+        lvCategories.setDividerHeight(dp(6));
+        gvItems.setHorizontalSpacing(dp(10));
+        gvItems.setVerticalSpacing(dp(10));
 
-        groupPreview = findViewById(R.id.group_preview);
-        tvPvChannel = findViewById(R.id.tv_pv_channel);
-        tvPvTitle = findViewById(R.id.tv_pv_title);
-        tvPvStart = findViewById(R.id.tv_pv_start);
-        tvPvEnd = findViewById(R.id.tv_pv_end);
-        tvPvNext = findViewById(R.id.tv_pv_next);
-        pbPreview = findViewById(R.id.pb_preview);
+        catNames.add("Todas as categorias");
+        catAdapter = new CategoryAdapter();
+        itemAdapter = new ItemAdapter();
+        lvCategories.setAdapter(catAdapter);
+        gvItems.setAdapter(itemAdapter);
 
-        btnLogout.setOnFocusChangeListener(hideOnFocus);
-        btnParental.setOnFocusChangeListener(hideOnFocus);
-        btnUpdateNow.setOnFocusChangeListener(hideOnFocus);
-        btnUpdateLater.setOnFocusChangeListener(hideOnFocus);
-
-        btnLogout.setOnClickListener(v -> {
-            Intent i = new Intent(this, LoginActivity.class);
-            i.putExtra(EXTRA_SHOW_LOGIN, true);
-            startActivity(i);
-            finish();
+        lvCategories.setOnItemClickListener((parent, view, position, id) -> onCategoryClick(position));
+        gvItems.setOnItemClickListener((parent, view, position, id) -> {
+            if (position >= 0 && position < items.size()) {
+                openItem(items.get(position));
+            }
         });
-        btnParental.setOnClickListener(v -> openParentalMenu());
-        btnUpdateNow.setOnClickListener(v -> startUpdate());
-        btnUpdateLater.setOnClickListener(v -> dismissUpdate());
+        gvItems.setOnScrollListener(new AbsListView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+                // nada a fazer
+            }
 
-        loadAllRails();
+            @Override
+            public void onScroll(AbsListView view, int first, int visible, int total) {
+                if (total > 0 && first + visible >= total - LOAD_AHEAD) {
+                    loadPage();
+                }
+            }
+        });
 
-        checkForUpdate();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        handler.removeCallbacks(previewRunnable);
+        selectCategory(0);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        handler.removeCallbacks(previewRunnable);
-        previewItem = null;
         if (pinDialog != null) {
             pinDialog.dismiss();
             pinDialog = null;
@@ -182,392 +141,225 @@ public class HomeActivity extends Activity {
     public void onLowMemory() {
         super.onLowMemory();
         ImageLoader.clear();
-        EpgCache.clear();
     }
 
-    // ---------- Faixas de canais, filmes e séries ----------
+    // ---------- Categorias ----------
 
-    private boolean isXtream() {
-        return creds != null && CredentialStore.MODE_XTREAM.equals(creds.mode);
-    }
-
-    private boolean isM3u() {
-        return creds != null && CredentialStore.MODE_M3U.equals(creds.mode);
-    }
-
-    /** Busca as três faixas, de acordo com o tipo de login. */
-    private void loadAllRails() {
-        if (isXtream()) {
-            loadRail(XtreamApi.Kind.LIVE, railLive, stLive);
-            loadRail(XtreamApi.Kind.MOVIE, railMovie, stMovie);
-            loadRail(XtreamApi.Kind.SERIES, railSeries, stSeries);
-        } else if (isM3u()) {
-            loadM3uRails();
-        } else {
-            stLive.setTextColor(COLOR_ERROR);
-            stLive.setText("Login não reconhecido. Use \"Trocar login\".");
-            stMovie.setVisibility(View.GONE);
-            stSeries.setVisibility(View.GONE);
-            btnLogout.requestFocus();
-        }
-    }
-
-    private void loadRail(final XtreamApi.Kind kind, final LinearLayout rail, final TextView status) {
-        final String server = creds.server;
-        final String user = creds.user;
-        final String pass = creds.pass;
-        final int gen = railGen;
-        new Thread(() -> {
-            List<XtreamApi.Item> items = null;
-            try {
-                items = XtreamApi.items(server, user, pass, kind, null, LIMIT);
-            } catch (Exception e) {
-                // sem rede, servidor fora do ar ou resposta estranha: mostra aviso abaixo
-            }
-            final List<XtreamApi.Item> result = items;
-            runOnUiThread(() -> {
-                if (gen == railGen) {
-                    showRail(kind, result, rail, status);
-                }
-            });
-        }).start();
-    }
-
-    /** Lista M3U: uma única leitura da lista traz os 10 primeiros de cada tipo. */
-    private void loadM3uRails() {
-        final String url = creds.m3uUrl;
-        final boolean hideAdult = ParentalStore.isEnabled(this);
-        final int gen = railGen;
-        new Thread(() -> {
-            M3uApi.Sample sample = null;
-            try {
-                sample = M3uApi.sample(url, LIMIT, hideAdult);
-            } catch (Exception e) {
-                // sem rede, endereço inválido ou lista estranha: mostra aviso abaixo
-            }
-            final M3uApi.Sample result = sample;
-            runOnUiThread(() -> {
-                if (gen != railGen) {
-                    return;
-                }
-                showRail(XtreamApi.Kind.LIVE, result == null ? null : result.live,
-                        railLive, stLive);
-                showRail(XtreamApi.Kind.MOVIE, result == null ? null : result.movie,
-                        railMovie, stMovie);
-                showRail(XtreamApi.Kind.SERIES, result == null ? null : result.series,
-                        railSeries, stSeries);
-            });
-        }).start();
-    }
-
-    /** Apaga as faixas e busca tudo de novo (usado quando o controle parental muda). */
-    private void reloadRails() {
-        if (!isXtream() && !isM3u()) {
+    /** Lê a lista uma vez para achar os nomes das categorias. Só os nomes ficam na memória. */
+    private void loadCategories() {
+        if (catsStarted) {
             return;
         }
-        railGen++;
-        focusDone = true; // não tira o foco de onde a pessoa está
-        hidePreview();
-        LinearLayout[] rails = {railLive, railMovie, railSeries};
-        TextView[] states = {stLive, stMovie, stSeries};
-        for (int i = 0; i < rails.length; i++) {
-            rails[i].removeAllViews();
-            states[i].setTextColor(COLOR_NEUTRAL);
-            states[i].setText("Carregando...");
-            states[i].setVisibility(View.VISIBLE);
-        }
-        loadAllRails();
+        catsStarted = true;
+        final String url = creds.m3uUrl;
+        final XtreamApi.Kind k = kind;
+        new Thread(() -> {
+            List<String> result = null;
+            try {
+                result = M3uApi.categories(url, k);
+            } catch (Exception e) {
+                // sem rede ou lista estranha: segue só com "Todas as categorias"
+            }
+            final List<String> res = result;
+            runOnUiThread(() -> onCategories(res));
+        }).start();
     }
 
-    private void showRail(final XtreamApi.Kind kind, List<XtreamApi.Item> items,
-                          LinearLayout rail, TextView status) {
+    private void onCategories(List<String> res) {
         if (isFinishing() || isDestroyed()) {
             return;
         }
-        if (items == null) {
-            status.setTextColor(COLOR_ERROR);
-            status.setText("Não foi possível carregar. Confira a internet e o servidor.");
+        if (res == null) {
+            Toast.makeText(this, "Não foi possível carregar as categorias.",
+                    Toast.LENGTH_SHORT).show();
             return;
         }
-        // Controle parental ligado: tira o que tem nome adulto
-        if (ParentalStore.isEnabled(this)) {
-            List<XtreamApi.Item> allowed = new ArrayList<>();
-            for (XtreamApi.Item it : items) {
-                if (!ParentalStore.isAdultName(it.name)) {
-                    allowed.add(it);
-                }
-            }
-            items = allowed;
-        }
-        if (items.isEmpty()) {
-            status.setTextColor(COLOR_NEUTRAL);
-            status.setText("Nada encontrado nesta seção.");
+        catNames.addAll(res);
+        catAdapter.notifyDataSetChanged();
+    }
+
+    /** A pessoa escolheu uma categoria. Se for adulta e trancada, pede a senha antes. */
+    private void onCategoryClick(int position) {
+        if (position < 0 || position >= catNames.size()) {
             return;
         }
-        status.setVisibility(View.GONE);
-        final boolean xtream = isXtream();
-        LayoutInflater inflater = LayoutInflater.from(this);
-        View first = null;
-        for (final XtreamApi.Item item : items) {
-            View card = inflater.inflate(R.layout.item_card, rail, false);
-            TextView initial = card.findViewById(R.id.tv_initial);
-            TextView name = card.findViewById(R.id.tv_name);
-            ImageView logo = card.findViewById(R.id.iv_logo);
+        String name = catNames.get(position);
+        boolean needPin = parentalOn && position > 0 && ParentalStore.isAdultCategory(name)
+                && !name.equals(adultOkName);
+        if (!needPin) {
+            selectCategory(position);
+            return;
+        }
+        askPin(position);
+    }
 
-            name.setText(item.name);
-            initial.setText(firstLetter(item.name));
-            ImageLoader.load(logo, item.icon);
+    private void askPin(final int position) {
+        pinDialog = PinDialog.show(this, "Senha do controle parental",
+                catNames.get(position), new PinDialog.Listener() {
+                    @Override
+                    public void onPin(PinDialog d, String pin) {
+                        long wait = ParentalStore.lockedSeconds(M3uBrowseActivity.this);
+                        if (wait > 0) {
+                            d.setMessage("Muitas tentativas. Aguarde " + wait + " segundos.", true);
+                            return;
+                        }
+                        if (ParentalStore.check(M3uBrowseActivity.this, pin)) {
+                            d.dismiss();
+                            adultOkName = catNames.get(position);
+                            selectCategory(position);
+                            return;
+                        }
+                        wait = ParentalStore.lockedSeconds(M3uBrowseActivity.this);
+                        if (wait > 0) {
+                            d.setMessage("Muitas tentativas. Aguarde " + wait + " segundos.", true);
+                        } else {
+                            d.setMessage("Senha incorreta.", true);
+                        }
+                    }
 
-            if (item.kind == XtreamApi.Kind.LIVE && xtream) {
-                TextView now = card.findViewById(R.id.tv_now);
-                now.setText("");
-                now.setVisibility(View.VISIBLE);
-                loadNow(item, now);
-                card.setOnFocusChangeListener((v, hasFocus) -> {
-                    if (hasFocus) {
-                        schedulePreview(item);
+                    @Override
+                    public void onCancel() {
+                        // saiu sem digitar a senha: continua na categoria de antes
                     }
                 });
-            } else {
-                if (item.kind == XtreamApi.Kind.LIVE) {
-                    // Lista M3U: ainda sem guia de programação
-                    TextView now = card.findViewById(R.id.tv_now);
-                    now.setText("");
-                    now.setVisibility(View.GONE);
-                }
-                card.setOnFocusChangeListener(hideOnFocus);
-            }
-
-            card.setOnClickListener(v -> openItem(item));
-            rail.addView(card);
-            if (first == null) {
-                first = card;
-            }
-        }
-
-        // Cartão "Ver mais ›" no fim da faixa (login por servidor e por lista M3U)
-        if (xtream || isM3u()) {
-            View more = inflater.inflate(R.layout.item_card, rail, false);
-            TextView moreInitial = more.findViewById(R.id.tv_initial);
-            TextView moreName = more.findViewById(R.id.tv_name);
-            moreName.setText("Ver mais ›");
-            moreInitial.setText("›");
-            more.setOnFocusChangeListener(hideOnFocus);
-            more.setOnClickListener(v -> openBrowse(kind));
-            rail.addView(more);
-        }
-
-        if (!focusDone && first != null && groupUpdate.getVisibility() != View.VISIBLE) {
-            focusDone = true;
-            first.requestFocus();
-        }
     }
 
-    /** Pede ao servidor o programa de agora e escreve na linha do cartão. */
-    private void loadNow(XtreamApi.Item item, final TextView now) {
-        EpgCache.get(creds.server, creds.user, creds.pass, item.id, epg -> {
-            if (isFinishing() || isDestroyed()) {
-                return;
-            }
-            if (epg == null) {
-                now.setText("Programação indisponível");
-            } else {
-                now.setText("Agora: " + epg.title);
-            }
-        });
-    }
-
-    // ---------- Controle parental ----------
-
-    private void openParentalMenu() {
-        final boolean on = ParentalStore.isEnabled(this);
-        AlertDialog.Builder b = new AlertDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
-        if (on) {
-            b.setTitle("Controle parental: ativo");
-            b.setItems(new CharSequence[]{"Trocar senha", "Desativar controle parental", "Voltar"},
-                    new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            if (which == 0) {
-                                askCurrentPin("Digite a senha atual", new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        createPin();
-                                    }
-                                });
-                            } else if (which == 1) {
-                                askCurrentPin("Digite a senha para desativar", new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        ParentalStore.disable(HomeActivity.this);
-                                        Toast.makeText(HomeActivity.this,
-                                                "Controle parental desativado.",
-                                                Toast.LENGTH_SHORT).show();
-                                        reloadRails();
-                                    }
-                                });
-                            }
-                        }
-                    });
-        } else {
-            b.setTitle("Controle parental: desativado");
-            b.setItems(new CharSequence[]{"Ativar controle parental", "Voltar"},
-                    new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            if (which == 0) {
-                                createPin();
-                            }
-                        }
-                    });
-        }
-        b.show();
-    }
-
-    /** Pede a senha nova (4 números). Depois pede para repetir. */
-    private void createPin() {
-        pinDialog = PinDialog.show(this, "Crie a senha (4 números)", "", new PinDialog.Listener() {
-            @Override
-            public void onPin(PinDialog d, String pin) {
-                d.dismiss();
-                confirmPin(pin);
-            }
-
-            @Override
-            public void onCancel() {
-                // saiu sem criar: nada muda
-            }
-        });
-    }
-
-    private void confirmPin(final String first) {
-        pinDialog = PinDialog.show(this, "Repita a senha", "", new PinDialog.Listener() {
-            @Override
-            public void onPin(PinDialog d, String pin) {
-                d.dismiss();
-                if (!first.equals(pin)) {
-                    Toast.makeText(HomeActivity.this,
-                            "As senhas não são iguais. Tente de novo.",
-                            Toast.LENGTH_SHORT).show();
-                    createPin();
-                    return;
-                }
-                if (ParentalStore.enable(HomeActivity.this, pin)) {
-                    Toast.makeText(HomeActivity.this,
-                            "Controle parental ativado.", Toast.LENGTH_SHORT).show();
-                    reloadRails();
-                } else {
-                    Toast.makeText(HomeActivity.this,
-                            "Não foi possível guardar a senha.", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onCancel() {
-                // saiu sem confirmar: nada muda
-            }
-        });
-    }
-
-    /** Pede a senha atual. Se estiver certa, fecha o teclado e roda "onOk". */
-    private void askCurrentPin(String title, final Runnable onOk) {
-        pinDialog = PinDialog.show(this, title, "", new PinDialog.Listener() {
-            @Override
-            public void onPin(PinDialog d, String pin) {
-                long wait = ParentalStore.lockedSeconds(HomeActivity.this);
-                if (wait > 0) {
-                    d.setMessage("Muitas tentativas. Aguarde " + wait + " segundos.", true);
-                    return;
-                }
-                if (ParentalStore.check(HomeActivity.this, pin)) {
-                    d.dismiss();
-                    onOk.run();
-                    return;
-                }
-                wait = ParentalStore.lockedSeconds(HomeActivity.this);
-                if (wait > 0) {
-                    d.setMessage("Muitas tentativas. Aguarde " + wait + " segundos.", true);
-                } else {
-                    d.setMessage("Senha incorreta.", true);
-                }
-            }
-
-            @Override
-            public void onCancel() {
-                // saiu sem digitar: nada muda
-            }
-        });
-    }
-
-    // ---------- Caixinha de prévia ----------
-
-    /** O foco parou num canal: mostra o nome e espera um instante antes de pedir o guia. */
-    private void schedulePreview(XtreamApi.Item item) {
-        handler.removeCallbacks(previewRunnable);
-        previewItem = item;
-        tvPvChannel.setText(item.name);
-        tvPvTitle.setText("Carregando...");
-        tvPvStart.setText("");
-        tvPvEnd.setText("");
-        tvPvNext.setText("");
-        pbPreview.setProgress(0);
-        groupPreview.setVisibility(View.VISIBLE);
-        handler.postDelayed(previewRunnable, PREVIEW_DELAY_MS);
-    }
-
-    private void hidePreview() {
-        handler.removeCallbacks(previewRunnable);
-        previewItem = null;
-        groupPreview.setVisibility(View.INVISIBLE);
-    }
-
-    private void fetchPreview(final XtreamApi.Item item) {
-        EpgCache.get(creds.server, creds.user, creds.pass, item.id, epg -> {
-            if (isFinishing() || isDestroyed() || previewItem != item) {
-                return; // o foco já mudou para outro lugar
-            }
-            showPreview(epg);
-        });
-    }
-
-    private void showPreview(XtreamApi.Epg epg) {
-        if (epg == null) {
-            tvPvTitle.setText("Programação indisponível");
-            tvPvStart.setText("");
-            tvPvEnd.setText("");
-            tvPvNext.setText("");
-            pbPreview.setProgress(0);
+    private void selectCategory(int position) {
+        if (position < 0 || position >= catNames.size()) {
             return;
         }
-        tvPvTitle.setText(epg.title);
-        tvPvStart.setText(clock(epg.start));
-        tvPvEnd.setText(clock(epg.end));
+        currentGroup = position == 0 ? null : catNames.get(position);
+        currentName = catNames.get(position);
 
-        long total = epg.end - epg.start;
-        long passed = System.currentTimeMillis() - epg.start;
-        int percent = 0;
-        if (total > 0) {
-            percent = (int) ((passed * 100L) / total);
+        // A liberação da senha vale só para a categoria liberada
+        if (adultOkName != null && !adultOkName.equals(currentGroup)) {
+            adultOkName = null;
         }
-        if (percent < 0) {
-            percent = 0;
-        }
-        if (percent > 100) {
-            percent = 100;
-        }
-        pbPreview.setProgress(percent);
 
-        if (epg.nextTitle == null || epg.nextTitle.isEmpty()) {
-            tvPvNext.setText("");
-        } else if (epg.nextStart > 0) {
-            tvPvNext.setText("A seguir: " + clock(epg.nextStart) + "  " + epg.nextTitle);
-        } else {
-            tvPvNext.setText("A seguir: " + epg.nextTitle);
+        gen++;
+        items.clear();
+        itemAdapter.notifyDataSetChanged();
+        loading = false;
+        ended = false;
+        loadFailed = false;
+        focusGridWhenReady = true;
+
+        tvTitle.setText(position == 0 ? kindLabel() : kindLabel() + " - " + currentName);
+        showStatus("Carregando...", COLOR_NEUTRAL);
+        loadPage();
+    }
+
+    private String kindLabel() {
+        switch (kind) {
+            case MOVIE:
+                return "Filmes";
+            case SERIES:
+                return "Séries";
+            default:
+                return "Canais ao vivo";
         }
     }
 
-    private static String clock(long millis) {
-        return new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date(millis));
+    // ---------- Itens, por páginas ----------
+
+    private void loadPage() {
+        if (loading || ended || loadFailed) {
+            return;
+        }
+        if (items.size() >= MAX_ITEMS) {
+            ended = true;
+            return;
+        }
+        loading = true;
+        final int myGen = gen;
+        final int offset = items.size();
+        final int want = Math.min(PAGE, MAX_ITEMS - items.size());
+        final String group = currentGroup;
+        // Itens adultos ficam escondidos, menos dentro da categoria adulta liberada com a senha
+        final boolean skipAdult = parentalOn && !(group != null && group.equals(adultOkName));
+        final String url = creds.m3uUrl;
+        final XtreamApi.Kind k = kind;
+        new Thread(() -> {
+            List<XtreamApi.Item> result = null;
+            try {
+                result = M3uApi.page(url, k, group, offset, want, skipAdult);
+            } catch (Exception e) {
+                // sem rede, lista fora do ar ou resposta estranha
+            }
+            final List<XtreamApi.Item> res = result;
+            runOnUiThread(() -> onPage(myGen, res, want));
+        }).start();
+    }
+
+    private void onPage(int myGen, List<XtreamApi.Item> res, int want) {
+        if (isFinishing() || isDestroyed() || myGen != gen) {
+            return; // tela fechada ou categoria já trocada: ignora a resposta atrasada
+        }
+        loading = false;
+
+        if (res == null) {
+            loadFailed = true;
+            if (items.isEmpty()) {
+                showStatus("Não foi possível carregar. Confira a internet e a lista.", COLOR_ERROR);
+            } else {
+                Toast.makeText(this, "Não foi possível carregar mais itens.",
+                        Toast.LENGTH_SHORT).show();
+            }
+            return;
+        }
+
+        items.addAll(res);
+        if (res.size() < want) {
+            ended = true;
+        } else if (items.size() >= MAX_ITEMS) {
+            ended = true;
+            Toast.makeText(this, "Mostrando os primeiros " + MAX_ITEMS
+                    + ". Escolha uma categoria para ver mais.", Toast.LENGTH_LONG).show();
+        }
+        itemAdapter.notifyDataSetChanged();
+
+        // Com a primeira página na tela, procura as categorias (uma vez só)
+        loadCategories();
+
+        if (items.isEmpty()) {
+            showStatus("Nada encontrado nesta categoria.", COLOR_NEUTRAL);
+            return;
+        }
+        tvStatus.setVisibility(View.GONE);
+        if (focusGridWhenReady) {
+            focusGridWhenReady = false;
+            gvItems.setSelection(0);
+            gvItems.requestFocus();
+        }
+    }
+
+    private void openItem(XtreamApi.Item item) {
+        if (item.kind == XtreamApi.Kind.SERIES) {
+            Intent s = new Intent(this, M3uSeriesActivity.class);
+            s.putExtra(HomeActivity.EXTRA_ID, item.id);
+            s.putExtra(HomeActivity.EXTRA_NAME, item.name);
+            startActivity(s);
+            return;
+        }
+        Intent i = new Intent(this, MainActivity.class);
+        i.putExtra(HomeActivity.EXTRA_KIND, item.kind.name());
+        i.putExtra(HomeActivity.EXTRA_ID, item.id);
+        i.putExtra(HomeActivity.EXTRA_EXT, item.ext);
+        i.putExtra(HomeActivity.EXTRA_NAME, item.name);
+        i.putExtra(MainActivity.EXTRA_URL, item.url);
+        startActivity(i);
+    }
+
+    // ---------- Ajudas ----------
+
+    private void showStatus(String text, int color) {
+        tvStatus.setTextColor(color);
+        tvStatus.setText(text);
+        tvStatus.setVisibility(View.VISIBLE);
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
     private static String firstLetter(String name) {
@@ -578,119 +370,78 @@ public class HomeActivity extends Activity {
         return new String(Character.toChars(s.codePointAt(0))).toUpperCase();
     }
 
-    /** Abre o "Ver mais": a tela do servidor ou a da lista M3U, conforme o login. */
-    private void openBrowse(XtreamApi.Kind kind) {
-        Intent i;
-        if (isM3u()) {
-            i = new Intent(this, M3uBrowseActivity.class);
-        } else {
-            i = new Intent(this, BrowseActivity.class);
+    // ---------- Adaptadores (reaproveitam as linhas ao rolar) ----------
+
+    private final class CategoryAdapter extends BaseAdapter {
+        @Override
+        public int getCount() {
+            return catNames.size();
         }
-        i.putExtra(EXTRA_KIND, kind.name());
-        startActivity(i);
+
+        @Override
+        public Object getItem(int position) {
+            return catNames.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            TextView tv;
+            if (convertView == null) {
+                tv = (TextView) LayoutInflater.from(M3uBrowseActivity.this)
+                        .inflate(R.layout.item_category, parent, false);
+                // Quem controla a seleção e o clique é a própria lista.
+                tv.setFocusable(false);
+                tv.setClickable(false);
+            } else {
+                tv = (TextView) convertView;
+            }
+            String name = catNames.get(position);
+            boolean locked = parentalOn && position > 0 && ParentalStore.isAdultCategory(name);
+            tv.setText(locked ? LOCK + name : name);
+            return tv;
+        }
     }
 
-    private void openItem(XtreamApi.Item item) {
-        if (item.kind == XtreamApi.Kind.SERIES) {
-            if (isM3u()) {
-                Toast.makeText(this, "Séries da lista M3U: os episódios chegam na próxima etapa.",
-                        Toast.LENGTH_SHORT).show();
-                return;
-            }
-            Intent s = new Intent(this, SeriesActivity.class);
-            s.putExtra(EXTRA_ID, item.id);
-            s.putExtra(EXTRA_NAME, item.name);
-            startActivity(s);
-            return;
+    private final class ItemAdapter extends BaseAdapter {
+        @Override
+        public int getCount() {
+            return items.size();
         }
-        Intent i = new Intent(this, MainActivity.class);
-        i.putExtra(EXTRA_KIND, item.kind.name());
-        i.putExtra(EXTRA_ID, item.id);
-        i.putExtra(EXTRA_EXT, item.ext);
-        i.putExtra(EXTRA_NAME, item.name);
-        if (isM3u()) {
-            i.putExtra(MainActivity.EXTRA_URL, item.url);
+
+        @Override
+        public Object getItem(int position) {
+            return items.get(position);
         }
-        startActivity(i);
-    }
 
-    // ---------- Atualização automática ----------
-
-    private void checkForUpdate() {
-        Updater.checkAsync(this, new Updater.CheckListener() {
-            @Override
-            public void onUpdateAvailable(Updater.Info info) {
-                if (isFinishing() || isDestroyed()) {
-                    return;
-                }
-                pendingUpdate = info;
-                tvUpdate.setTextColor(COLOR_OK);
-                tvUpdate.setText(getString(R.string.update_available, info.name));
-                groupUpdate.setVisibility(View.VISIBLE);
-                btnUpdateNow.requestFocus();
-            }
-
-            @Override
-            public void onNoUpdate() {
-                // nada a fazer
-            }
-        });
-    }
-
-    private void startUpdate() {
-        if (downloading || pendingUpdate == null) {
-            return;
+        @Override
+        public long getItemId(int position) {
+            return position;
         }
-        downloading = true;
-        btnUpdateNow.setEnabled(false);
-        btnUpdateLater.setEnabled(false);
-        tvUpdate.setTextColor(COLOR_WHITE);
-        tvUpdate.setText(R.string.msg_downloading_unknown);
 
-        Updater.downloadAndInstallAsync(this, pendingUpdate, new Updater.InstallListener() {
-            @Override
-            public void onProgress(int percent) {
-                if (isFinishing() || isDestroyed()) {
-                    return;
-                }
-                if (percent >= 0) {
-                    tvUpdate.setText(getString(R.string.msg_downloading, percent));
-                } else {
-                    tvUpdate.setText(R.string.msg_downloading_unknown);
-                }
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View card = convertView;
+            if (card == null) {
+                card = LayoutInflater.from(M3uBrowseActivity.this)
+                        .inflate(R.layout.item_card, parent, false);
+                card.setFocusable(false);
+                card.setClickable(false);
             }
+            XtreamApi.Item item = items.get(position);
+            ((TextView) card.findViewById(R.id.tv_name)).setText(item.name);
+            ((TextView) card.findViewById(R.id.tv_initial)).setText(firstLetter(item.name));
+            ImageLoader.load((ImageView) card.findViewById(R.id.iv_logo), item.icon);
 
-            @Override
-            public void onInstallerOpened() {
-                downloading = false;
-                if (isFinishing() || isDestroyed()) {
-                    return;
-                }
-                tvUpdate.setText(R.string.msg_installer_opened);
-                btnUpdateNow.setEnabled(true);
-                btnUpdateLater.setEnabled(true);
-            }
-
-            @Override
-            public void onFailed(String message) {
-                downloading = false;
-                if (isFinishing() || isDestroyed()) {
-                    return;
-                }
-                tvUpdate.setTextColor(COLOR_ERROR);
-                tvUpdate.setText(message);
-                btnUpdateNow.setEnabled(true);
-                btnUpdateLater.setEnabled(true);
-                btnUpdateNow.requestFocus();
-            }
-        });
-    }
-
-    private void dismissUpdate() {
-        if (downloading) {
-            return;
+            // Lista M3U: ainda sem guia de programação
+            TextView now = card.findViewById(R.id.tv_now);
+            now.setTag(null);
+            now.setVisibility(View.GONE);
+            return card;
         }
-        groupUpdate.setVisibility(View.GONE);
-        btnLogout.requestFocus();
     }
 }
