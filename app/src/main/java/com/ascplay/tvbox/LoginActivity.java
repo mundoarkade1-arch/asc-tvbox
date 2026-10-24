@@ -29,6 +29,14 @@ public class LoginActivity extends Activity {
     private EditText etM3u;
     private TextView tvStatus;
 
+    // Aviso de atualização
+    private View groupUpdate;
+    private TextView tvUpdate;
+    private Button btnUpdateNow;
+    private Button btnUpdateLater;
+    private Updater.Info pendingUpdate;
+    private boolean downloading = false;
+
     private String mode = CredentialStore.MODE_XTREAM;
     private boolean busy = false;
 
@@ -48,9 +56,16 @@ public class LoginActivity extends Activity {
         etM3u = findViewById(R.id.et_m3u);
         tvStatus = findViewById(R.id.tv_status);
 
+        groupUpdate = findViewById(R.id.group_update);
+        tvUpdate = findViewById(R.id.tv_update);
+        btnUpdateNow = findViewById(R.id.btn_update_now);
+        btnUpdateLater = findViewById(R.id.btn_update_later);
+
         btnXtream.setOnClickListener(v -> setMode(CredentialStore.MODE_XTREAM));
         btnM3u.setOnClickListener(v -> setMode(CredentialStore.MODE_M3U));
         btnEnter.setOnClickListener(v -> attemptLogin());
+        btnUpdateNow.setOnClickListener(v -> startUpdate());
+        btnUpdateLater.setOnClickListener(v -> dismissUpdate());
 
         TextView.OnEditorActionListener enterOnDone = (v, actionId, event) -> {
             boolean done = actionId == EditorInfo.IME_ACTION_DONE;
@@ -78,7 +93,91 @@ public class LoginActivity extends Activity {
                     : CredentialStore.MODE_XTREAM;
         }
         setMode(mode);
+
+        checkForUpdate();
     }
+
+    // ---------- Atualização automática ----------
+
+    private void checkForUpdate() {
+        Updater.checkAsync(this, new Updater.CheckListener() {
+            @Override
+            public void onUpdateAvailable(Updater.Info info) {
+                if (isFinishing() || isDestroyed()) {
+                    return;
+                }
+                pendingUpdate = info;
+                tvUpdate.setTextColor(COLOR_OK);
+                tvUpdate.setText(getString(R.string.update_available, info.name));
+                groupUpdate.setVisibility(View.VISIBLE);
+                btnUpdateNow.requestFocus();
+            }
+
+            @Override
+            public void onNoUpdate() {
+                // nada a fazer
+            }
+        });
+    }
+
+    private void startUpdate() {
+        if (downloading || pendingUpdate == null) {
+            return;
+        }
+        downloading = true;
+        btnUpdateNow.setEnabled(false);
+        btnUpdateLater.setEnabled(false);
+        tvUpdate.setTextColor(COLOR_NEUTRAL);
+        tvUpdate.setText(R.string.msg_downloading_unknown);
+
+        Updater.downloadAndInstallAsync(this, pendingUpdate, new Updater.InstallListener() {
+            @Override
+            public void onProgress(int percent) {
+                if (isFinishing() || isDestroyed()) {
+                    return;
+                }
+                if (percent >= 0) {
+                    tvUpdate.setText(getString(R.string.msg_downloading, percent));
+                } else {
+                    tvUpdate.setText(R.string.msg_downloading_unknown);
+                }
+            }
+
+            @Override
+            public void onInstallerOpened() {
+                downloading = false;
+                if (isFinishing() || isDestroyed()) {
+                    return;
+                }
+                tvUpdate.setText(R.string.msg_installer_opened);
+                btnUpdateNow.setEnabled(true);
+                btnUpdateLater.setEnabled(true);
+            }
+
+            @Override
+            public void onFailed(String message) {
+                downloading = false;
+                if (isFinishing() || isDestroyed()) {
+                    return;
+                }
+                tvUpdate.setTextColor(COLOR_ERROR);
+                tvUpdate.setText(message);
+                btnUpdateNow.setEnabled(true);
+                btnUpdateLater.setEnabled(true);
+                btnUpdateNow.requestFocus();
+            }
+        });
+    }
+
+    private void dismissUpdate() {
+        if (downloading) {
+            return;
+        }
+        groupUpdate.setVisibility(View.GONE);
+        btnXtream.requestFocus();
+    }
+
+    // ---------- Login ----------
 
     private void setMode(String newMode) {
         mode = newMode;
