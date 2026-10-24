@@ -27,6 +27,13 @@ public final class LoginChecker {
     private static final int MAX_M3U_PEEK_BYTES = 4096;
     private static final String USER_AGENT = "ASC-TVBox/1.0 (Android)";
 
+    /** O servidor recusou o login (o Android às vezes devolve isso como erro de IO). */
+    private static final class AuthRefusedException extends IOException {
+        AuthRefusedException() {
+            super("login recusado");
+        }
+    }
+
     private LoginChecker() {
     }
 
@@ -47,7 +54,8 @@ public final class LoginChecker {
                     + "&password=" + URLEncoder.encode(pass.trim(), "UTF-8");
             conn = open(api);
             int code = conn.getResponseCode();
-            if (code == 401 || code == 403) {
+            if (code >= 400 && code < 500) {
+                // Servidor respondeu e recusou: login errado.
                 return Result.AUTH;
             }
             if (code != 200) {
@@ -61,6 +69,8 @@ public final class LoginChecker {
                 in.close();
             }
             return evaluateXtream(body);
+        } catch (AuthRefusedException e) {
+            return Result.AUTH;
         } catch (IOException e) {
             return Result.NETWORK;
         } catch (Exception e) {
@@ -140,6 +150,8 @@ public final class LoginChecker {
                 return Result.OK;
             }
             return Result.NOT_M3U;
+        } catch (AuthRefusedException e) {
+            return Result.AUTH;
         } catch (IOException e) {
             return Result.NETWORK;
         } catch (Exception e) {
@@ -204,7 +216,18 @@ public final class LoginChecker {
             conn.setReadTimeout(TIMEOUT_MS);
             conn.setInstanceFollowRedirects(false);
             conn.setRequestProperty("User-Agent", USER_AGENT);
-            int code = conn.getResponseCode();
+            int code;
+            try {
+                code = conn.getResponseCode();
+            } catch (IOException e) {
+                conn.disconnect();
+                // Android lança este erro quando o servidor responde 401 sem pedir autenticação.
+                String msg = e.getMessage();
+                if (msg != null && msg.toLowerCase().contains("authentication challenge")) {
+                    throw new AuthRefusedException();
+                }
+                throw e;
+            }
             if (code == 301 || code == 302 || code == 303 || code == 307 || code == 308) {
                 String location = conn.getHeaderField("Location");
                 conn.disconnect();
