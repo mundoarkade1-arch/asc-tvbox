@@ -141,5 +141,21 @@ Registre aqui cada decisão importante: o que foi decidido e por quê.
 - Dependências: nenhuma nova.
 - Fora desta etapa (de propósito): "Ver mais" por categorias, episódios das séries e guia de programação (EPG) da lista M3U. Cada um chega numa etapa própria. Hoje, tocar numa série da lista M3U mostra um aviso.
 - Teste no TX9: as 3 faixas aparecem, canal e filme tocam, o aviso da série aparece e o controle parental esconde o conteúdo adulto.
+
+- ## 2026-10-24: "Ver mais" por categorias na lista M3U
+
+- Decisão: o "Ver mais" da lista M3U é uma tela própria (M3uBrowseActivity), separada da BrowseActivity do servidor. Ela reaproveita os mesmos layouts (activity_browse.xml, item_category.xml, item_card.xml), então fica igual por fora.
+- Motivo: a tela do servidor depende de pedidos à API (deslocamento por página, categorias com número, guia de programação). Misturar os dois tipos de login numa tela só deixaria o código confuso e poderia quebrar o que já foi testado no TX9.
+- Decisão: a lista M3U não permite pedir "só a página 2". Por isso, cada página lê a lista de novo desde o começo, linha por linha, pula os itens já mostrados e para ao juntar 40 itens. Só a página fica na memória. Máximo de 400 itens por categoria.
+- Motivo: no TX9 (1 GB de RAM) não dá para guardar a lista inteira. Trocamos tempo de leitura por memória: páginas mais para o fim de uma lista grande demoram mais.
+- Decisão: as categorias são achadas lendo a lista uma vez, depois que a primeira página aparece. Só os nomes (group-title) ficam na memória, no máximo 3000. A categoria é identificada pelo nome, já que a lista M3U não tem número de categoria.
+- Motivo: assim os primeiros itens aparecem sem esperar a leitura completa da lista.
+- Decisão: o M3uApi ganhou as funções categories(...) e page(...). A leitura linha por linha foi reunida num só lugar, usado também pela função sample(...) da página inicial, que continua funcionando igual. Os limites de 200 MB e 1 minuto valem para todas.
+- Decisão: controle parental no "Ver mais" da lista M3U: categorias adultas (pelo nome) ficam com cadeado e pedem a senha de 4 números; a liberação vale só para aquela categoria, enquanto a pessoa está nela. Fora da categoria liberada, itens adultos são pulados já na leitura e NÃO contam no deslocamento da página. Em "Todas as categorias", conteúdo adulto não aparece.
+- Decisão: séries continuam agrupadas pelo título, um cartão por série. Tocar numa série ainda mostra o aviso de que os episódios chegam na próxima etapa.
+- Decisão: sem linha "Agora" nos canais e sem caixinha de prévia, porque a lista M3U ainda não tem guia de programação (etapa própria).
+- Limite conhecido: se a leitura bater no limite de 200 MB ou de 1 minuto no meio de uma página, a página pode vir menor e a categoria é tratada como terminada.
+- Dependências: nenhuma nova.
+- Teste no TX9: o cartão "Ver mais" aparece nas 3 faixas, as categorias chegam, trocar de categoria funciona, mais itens chegam ao rolar, e canal e filme tocam.
 - Fora desta etapa (de propósito): lembrar onde a pessoa parou, capa e sinopse dos episódios.
 - Teste no TX9: série abre pela página inicial e pelo "Ver mais", temporadas e episódios funcionam com as setas, o episódio toca e o próximo começa sozinho.
