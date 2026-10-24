@@ -14,8 +14,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Busca categorias e itens (canais, filmes, séries) no servidor Xtream.
@@ -242,6 +244,87 @@ public final class XtreamApi {
         } finally {
             conn.disconnect();
         }
+    }
+
+    /**
+     * Busca por nome: lê a lista do tipo pedido aos poucos e guarda só os itens cujo nome
+     * tem todas as palavras de "query" (sem ligar para maiúsculas nem acentos).
+     * Para ao juntar "limit" itens. Se skipAdult for verdadeiro, itens com nome adulto
+     * são pulados. A lista inteira nunca fica na memória.
+     */
+    public static List<Item> search(String server, String user, String pass, Kind kind,
+                                    String query, boolean skipAdult, int limit)
+            throws IOException {
+        List<Item> out = new ArrayList<>();
+        String[] words = searchWords(query);
+        if (words.length == 0) {
+            return out;
+        }
+        String url = apiUrl(server, user, pass, itemsAction(kind));
+        HttpURLConnection conn = open(url);
+        try {
+            checkOk(conn);
+            JsonReader r = reader(conn);
+            try {
+                if (r.peek() != JsonToken.BEGIN_ARRAY) {
+                    throw new IOException("resposta invalida");
+                }
+                r.beginArray();
+                while (r.hasNext() && out.size() < limit) {
+                    if (r.peek() != JsonToken.BEGIN_OBJECT) {
+                        r.skipValue();
+                        continue;
+                    }
+                    Item item = readItem(r, kind);
+                    if (item == null) {
+                        continue;
+                    }
+                    if (!matchesWords(item.name, words)) {
+                        continue;
+                    }
+                    if (skipAdult && ParentalStore.isAdultName(item.name)) {
+                        continue;
+                    }
+                    out.add(item);
+                }
+                return out;
+            } finally {
+                closeQuietly(r);
+            }
+        } finally {
+            conn.disconnect();
+        }
+    }
+
+    /** Separa o texto da busca em palavras (sem acento e em minúsculas). */
+    static String[] searchWords(String query) {
+        String n = normalizeText(query);
+        if (n.isEmpty()) {
+            return new String[0];
+        }
+        return n.split("\\s+");
+    }
+
+    /** Diz se o nome tem todas as palavras da busca. */
+    static boolean matchesWords(String name, String[] words) {
+        if (name == null || words == null || words.length == 0) {
+            return false;
+        }
+        String n = normalizeText(name);
+        for (String w : words) {
+            if (!n.contains(w)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static String normalizeText(String s) {
+        if (s == null) {
+            return "";
+        }
+        String d = Normalizer.normalize(s, Normalizer.Form.NFD);
+        return d.replaceAll("\\p{M}+", "").toLowerCase(Locale.ROOT).trim();
     }
 
     /**
