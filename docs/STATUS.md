@@ -3,10 +3,11 @@
 Última atualização: 24/10/2026
 
 ## Fase atual
-Etapas feitas e VERDES no Actions, mas AINDA NÃO TESTADAS no TX9 (o dono pediu para testar tudo no final):
+Todas as etapas de código estão feitas e VERDES no Actions. Faltam só os testes no TX9 (o dono pediu para testar tudo no final):
 - Etapa 3: passar sozinho para a próxima temporada (servidor e lista M3U).
 - Etapa 1: lembrar o episódio onde a pessoa parou (servidor e lista M3U).
-- Etapa 4 (busca por nome): FALTA A ÚLTIMA TROCA. Os arquivos novos já estão salvos (SearchKeyboard, SearchActivity, funções search no XtreamApi e no M3uApi), mas ainda NÃO ligados: falta registrar a SearchActivity no AndroidManifest.xml e criar o botão "Buscar" na página inicial.
+- Etapa 4: busca por nome, agora LIGADA (SearchActivity registrada no AndroidManifest.xml, botão "Buscar" na página inicial).
+- Conserto: no "Ver mais" da lista M3U, tocar numa série agora abre a M3uSeriesActivity.
 O guia de programação (EPG) da lista M3U ficou de fora por decisão do dono (ver DECISIONS.md).
 
 ## Feito (testado no TX9)
@@ -27,9 +28,10 @@ O guia de programação (EPG) da lista M3U ficou de fora por decisão do dono (v
 ## Feito (verde no Actions, ainda NÃO testado no TX9)
 - Próxima temporada sozinha: a tela da série manda ao player a fila de TODOS os episódios da série (temporadas normais em ordem, "Especiais" = temporada 0 no fim). No último episódio de todos o player mostra "Fim da série." (servidor e lista M3U).
 - Lembrar onde parou: ao começar a tocar um episódio, o player anota a posição dele na fila (SeriesProgress). Ao abrir a série de novo, a tela vai para a temporada certa e deixa o episódio selecionado. Guarda no máximo 50 séries. Guarda só o episódio, não o minuto.
-- Busca por nome (parte pronta, falta ligar): teclado de letras, funções de busca e tela de resultados.
+- Busca por nome: botão "Buscar" na página inicial, menu (Canais, Filmes, Séries), teclado de letras, tela de resultados. Servidor e lista M3U.
+- "Ver mais" da lista M3U: série abre a M3uSeriesActivity (antes mostrava um aviso).
 
-## Roteiro de teste no TX9 (fazer no final, depois de ligar o botão Buscar)
+## Roteiro de teste no TX9 (fazer agora, no final)
 1. Próxima temporada (servidor): abrir uma série com 2 ou mais temporadas, tocar o ÚLTIMO episódio da Temporada 1, avançar o vídeo até o fim com a seta para a direita. Deve começar sozinho o 1º episódio da Temporada 2. No último episódio da série deve aparecer "Fim da série.".
 2. Próxima temporada (lista M3U): o mesmo teste, numa série da lista M3U.
 3. Onde parou (servidor): tocar o episódio 3 da Temporada 2, apertar Voltar até sair, abrir a mesma série. Deve abrir na Temporada 2 com o episódio 3 já selecionado.
@@ -39,14 +41,15 @@ O guia de programação (EPG) da lista M3U ficou de fora por decisão do dono (v
 7. Busca com acento: digitar "acao" deve achar nomes com "Ação".
 8. Busca com controle parental ligado: itens com nome adulto não devem aparecer.
 9. Busca sem resultado: digitar letras sem sentido deve mostrar "Nada encontrado com esse nome.".
-10. Conferir que o que já funcionava continua: tocar um canal, um filme e abrir o "Ver mais".
+10. "Ver mais" da lista M3U: entrar em Séries, escolher uma série. Deve abrir a tela da série (temporadas e episódios), sem aviso.
+11. Conferir que o que já funcionava continua: tocar um canal, um filme e abrir o "Ver mais".
 
 ## Arquivos do EPG
 - XtreamApi.java: função epg(...) que pede ao servidor a programação de UM canal (get_short_epg, até 4 programas) e devolve o programa de agora e o "a seguir". Horários em milissegundos.
 - EpgCache.java: guarda na memória até 80 canais por 1 minuto cada; no máximo 2 pedidos ao servidor ao mesmo tempo; avisa sempre na thread principal
 - item_card.xml: tem a linha tv_now (usada para o "Agora: ...")
-- activity_home.xml: tem o botão "Controle parental" no alto e a caixinha de prévia fixa embaixo (group_preview)
-- HomeActivity.java: liga a linha tv_now e a caixinha de prévia ao EpgCache (espera 0,5 segundo parado no canal); tem o menu do controle parental e esconde itens adultos das faixas; no servidor, série abre a SeriesActivity e "Ver mais" abre a BrowseActivity; na lista M3U carrega as faixas pelo M3uApi, manda o endereço do vídeo ao player, abre a M3uSeriesActivity nas séries e a M3uBrowseActivity no "Ver mais"
+- activity_home.xml: tem os botões "Buscar" (btn_search), "Controle parental" e "Trocar login" no alto e a caixinha de prévia fixa embaixo (group_preview)
+- HomeActivity.java: liga a linha tv_now e a caixinha de prévia ao EpgCache (espera 0,5 segundo parado no canal); tem o menu do controle parental e esconde itens adultos das faixas; tem o botão "Buscar" (menu Canais/Filmes/Séries, depois SearchKeyboard e, no onSearch, abre a SearchActivity com EXTRA_KIND e EXTRA_QUERY); no servidor, série abre a SeriesActivity e "Ver mais" abre a BrowseActivity; na lista M3U carrega as faixas pelo M3uApi, manda o endereço do vídeo ao player, abre a M3uSeriesActivity nas séries e a M3uBrowseActivity no "Ver mais"
 - BrowseActivity.java: "Ver mais" do servidor, liga a linha tv_now ao EpgCache; cadeado e senha nas categorias adultas; série abre a SeriesActivity
 - activity_main.xml: tem a barra Agora / A seguir (group_nowbar) e a mensagem de status no alto da tela
 - MainActivity.java: ver "Arquivos dos episódios" abaixo
@@ -62,7 +65,7 @@ O guia de programação (EPG) da lista M3U ficou de fora por decisão do dono (v
 - M3uSeriesActivity.java (lista M3U): igual, mas os episódios vêm do M3uApi.episodes; manda a fila de endereços (MainActivity.EXTRA_LIST_URLS) e a chave "m3u|endereçoDaLista|títuloDaSérie". Se a soma dos endereços passar de 100 mil letras, manda só o episódio escolhido. No lugar do número de identificação manda a posição na fila (+1).
 - SeriesProgress.java: guarda a posição do episódio na fila de cada série (SharedPreferences "series_progress"). A chave é um SHA-1 da chave da série (nunca texto, porque o endereço da lista pode ter senha). Máximo de 50 séries; as mais antigas são esquecidas. Funções save(ctx, chave, posição) e load(ctx, chave) (devolve -1 se não há nada).
 - MainActivity.java (player): toca canal, filme e episódio. Tem EXTRA_URL, EXTRA_LIST_URLS e EXTRA_SERIES_KEY. Quando o episódio começa a tocar (STATE_READY) anota a posição no SeriesProgress. Ao terminar um episódio toca o próximo da fila (passa para a temporada seguinte); no último mostra "Fim da série." (servidor e lista M3U). Barra Agora / A seguir só em canal ao vivo do servidor.
-- AndroidManifest.xml: tem SeriesActivity, M3uBrowseActivity e M3uSeriesActivity registradas. NÃO tem a SearchActivity ainda.
+- AndroidManifest.xml: tem LoginActivity, HomeActivity, BrowseActivity, M3uBrowseActivity, SeriesActivity, M3uSeriesActivity, SearchActivity e MainActivity registradas.
 
 ## Arquivos da lista M3U
 - M3uApi.java: lê a lista linha por linha direto da internet, sem guardá-la inteira. Para depois de 200 MB ou 1 minuto. Separa canal, filme e série pelas mesmas regras do app original. Séries agrupadas pelo título (sem "S01E03"). Toda a leitura passa por uma função interna (walk). Tem 5 funções públicas:
@@ -71,7 +74,7 @@ O guia de programação (EPG) da lista M3U ficou de fora por decisão do dono (v
   - page(m3uUrl, tipo, categoria, deslocamento, limite, pularAdulto): uma página de itens
   - episodes(m3uUrl, tituloDaSerie): episódios de UMA série (máximo 500)
   - search(m3uUrl, tipo, texto, pularAdulto, limite): itens do tipo cujo nome tem todas as palavras do texto (sem ligar para maiúsculas e acentos); para ao juntar o limite; séries por título, uma por série
-- M3uBrowseActivity.java: "Ver mais" da lista M3U (categorias à esquerda, itens à direita, páginas de 40, máximo 400). ATENÇÃO: o arquivo visto em 24/10/2026 ainda mostra o aviso "os episódios chegam na próxima etapa" ao tocar numa série; precisa abrir a M3uSeriesActivity (ver "Próximos passos").
+- M3uBrowseActivity.java: "Ver mais" da lista M3U (categorias à esquerda, itens à direita, páginas de 40, máximo 400). Ao tocar numa série, abre a M3uSeriesActivity (EXTRA_ID e EXTRA_NAME), como a HomeActivity.
 - XtreamApi.Item tem o campo "url" (endereço direto do vídeo). Vazio nos itens do servidor.
 - Nos itens da lista M3U, o "id" é só o número de ordem do item na leitura.
 - LoginActivity.java e CredentialStore.java: guardam o login por lista M3U (campo m3uUrl, criptografado)
@@ -79,20 +82,16 @@ O guia de programação (EPG) da lista M3U ficou de fora por decisão do dono (v
 ## Arquivos da busca por nome
 - SearchKeyboard.java: teclado de letras na tela (A a Z, 0 a 9, Espaço, Apagar, Buscar, Sair), com setas e OK. Máximo 40 letras, mínimo 2. SearchKeyboard.show(activity, título, listener); o listener tem onSearch(texto) e onCancel(). "Buscar" fecha o teclado e entrega o texto.
 - XtreamApi.search(server, user, pass, tipo, texto, pularAdulto, limite): lê get_live_streams / get_vod_streams / get_series aos poucos e guarda só os itens cujo nome combina. Também tem searchWords(...) e matchesWords(...) (sem acento, sem maiúsculas, todas as palavras), usadas pelo M3uApi.
-- SearchActivity.java: tela de resultados. Recebe HomeActivity.EXTRA_KIND (LIVE, MOVIE ou SERIES) e SearchActivity.EXTRA_QUERY. Reaproveita activity_browse.xml e esconde a lista de categorias por código. Até 100 resultados. Canal e filme tocam; série abre a SeriesActivity ou a M3uSeriesActivity. AINDA NÃO REGISTRADA no AndroidManifest.xml e nenhum botão abre ela.
+- SearchActivity.java: tela de resultados. Recebe HomeActivity.EXTRA_KIND (LIVE, MOVIE ou SERIES) e SearchActivity.EXTRA_QUERY. Reaproveita activity_browse.xml e esconde a lista de categorias por código. Até 100 resultados. Canal e filme tocam; série abre a SeriesActivity ou a M3uSeriesActivity. Registrada no AndroidManifest.xml e aberta pelo botão "Buscar" da HomeActivity.
 
 ## Próximos passos (nesta ordem)
-1. Ligar a busca (Troca 4 da etapa 4), nesta ordem, UM ARQUIVO POR VEZ e pedindo o arquivo atual antes:
-   a) AndroidManifest.xml: registrar a SearchActivity (mesmo padrão das outras telas).
-   b) activity_home.xml: criar o botão "Buscar" ao lado do botão "Controle parental".
-   c) HomeActivity.java: ligar o botão; ao clicar, abrir um menu (Canais, Filmes, Séries), depois o SearchKeyboard e, no onSearch, abrir a SearchActivity com EXTRA_KIND e EXTRA_QUERY. Lembrar de pôr o botão novo no hideOnFocus.
-2. Corrigir o M3uBrowseActivity.java: ao tocar numa série, abrir a M3uSeriesActivity (EXTRA_ID e EXTRA_NAME), como a HomeActivity já faz. Conferir antes se o arquivo no GitHub realmente ainda mostra o aviso.
-3. Pedir ao dono para fazer o "Roteiro de teste no TX9" acima e responder em palavras simples.
-4. Depois, definir com o dono as próximas etapas. Só se pedir: capa e sinopse dos episódios, voltar ao minuto exato, EPG da lista M3U.
+1. Pedir ao dono para fazer o "Roteiro de teste no TX9" acima e responder em palavras simples.
+2. Corrigir o que o teste mostrar.
+3. Depois, definir com o dono as próximas etapas. Só se pedir: capa e sinopse dos episódios, voltar ao minuto exato, EPG da lista M3U.
 
 ## Problemas em aberto
 - Armazenamento livre do TX9 e acesso à Play Store: ainda não sabemos
-- Etapas 3, 1 e 4 ainda sem teste no TX9
+- Etapas 3, 1 e 4 (e o conserto do "Ver mais" da lista M3U) ainda sem teste no TX9
 - Lista M3U: não tem guia de programação, por decisão do dono (ver DECISIONS.md)
 - Lista M3U: a página inicial mostra os 10 primeiros itens na ordem da lista; se a lista for gigante e tiver poucos itens de um tipo no começo, a leitura pode demorar até 1 minuto
 - Lista M3U, "Ver mais": cada página nova lê a lista de novo desde o começo, então páginas do fim de uma lista grande demoram mais. Se bater no limite de 200 MB ou 1 minuto, a página pode vir menor e a categoria é tratada como terminada
