@@ -24,14 +24,18 @@ import java.util.Locale;
 
 /**
  * Página inicial: 10 primeiros canais, filmes e séries.
- * Para servidor com login (Xtream), busca só o começo de cada lista (nunca a lista inteira).
+ * Servidor com login (Xtream): busca só o começo de cada lista (nunca a lista inteira).
  * No fim de cada faixa há o cartão "Ver mais ›", que abre a navegação por categorias.
  * Nos canais ao vivo, cada cartão mostra o programa que passa agora (EPG por canal).
  * Ao parar o foco num canal ao vivo, uma caixinha fixa embaixo mostra a prévia:
  * programa de agora, barra de progresso, horários e "A seguir".
+ * Ao escolher uma série, abre a tela da série (temporadas e episódios).
+ *
+ * Lista M3U: lê a lista aos poucos, só até achar 10 itens de cada tipo (M3uApi).
+ * Por enquanto, sem "Ver mais", sem guia de programação e sem séries (chegam em etapas próprias).
+ *
  * O botão "Controle parental" ativa, troca ou desativa a senha de 4 números.
  * Com o controle ligado, itens com nome adulto não aparecem nas faixas.
- * Ao escolher uma série, abre a tela da série (temporadas e episódios).
  */
 public class HomeActivity extends Activity {
 
@@ -151,19 +155,7 @@ public class HomeActivity extends Activity {
         btnUpdateNow.setOnClickListener(v -> startUpdate());
         btnUpdateLater.setOnClickListener(v -> dismissUpdate());
 
-        if (CredentialStore.MODE_XTREAM.equals(creds.mode)) {
-            loadRail(XtreamApi.Kind.LIVE, railLive, stLive);
-            loadRail(XtreamApi.Kind.MOVIE, railMovie, stMovie);
-            loadRail(XtreamApi.Kind.SERIES, railSeries, stSeries);
-        } else {
-            String msg = "Lista M3U: a página inicial para este tipo de login chega numa etapa própria.";
-            stLive.setText(msg);
-            stMovie.setText("");
-            stSeries.setText("");
-            stMovie.setVisibility(View.GONE);
-            stSeries.setVisibility(View.GONE);
-            btnLogout.requestFocus();
-        }
+        loadAllRails();
 
         checkForUpdate();
     }
@@ -194,6 +186,31 @@ public class HomeActivity extends Activity {
 
     // ---------- Faixas de canais, filmes e séries ----------
 
+    private boolean isXtream() {
+        return creds != null && CredentialStore.MODE_XTREAM.equals(creds.mode);
+    }
+
+    private boolean isM3u() {
+        return creds != null && CredentialStore.MODE_M3U.equals(creds.mode);
+    }
+
+    /** Busca as três faixas, de acordo com o tipo de login. */
+    private void loadAllRails() {
+        if (isXtream()) {
+            loadRail(XtreamApi.Kind.LIVE, railLive, stLive);
+            loadRail(XtreamApi.Kind.MOVIE, railMovie, stMovie);
+            loadRail(XtreamApi.Kind.SERIES, railSeries, stSeries);
+        } else if (isM3u()) {
+            loadM3uRails();
+        } else {
+            stLive.setTextColor(COLOR_ERROR);
+            stLive.setText("Login não reconhecido. Use \"Trocar login\".");
+            stMovie.setVisibility(View.GONE);
+            stSeries.setVisibility(View.GONE);
+            btnLogout.requestFocus();
+        }
+    }
+
     private void loadRail(final XtreamApi.Kind kind, final LinearLayout rail, final TextView status) {
         final String server = creds.server;
         final String user = creds.user;
@@ -215,9 +232,36 @@ public class HomeActivity extends Activity {
         }).start();
     }
 
+    /** Lista M3U: uma única leitura da lista traz os 10 primeiros de cada tipo. */
+    private void loadM3uRails() {
+        final String url = creds.m3uUrl;
+        final boolean hideAdult = ParentalStore.isEnabled(this);
+        final int gen = railGen;
+        new Thread(() -> {
+            M3uApi.Sample sample = null;
+            try {
+                sample = M3uApi.sample(url, LIMIT, hideAdult);
+            } catch (Exception e) {
+                // sem rede, endereço inválido ou lista estranha: mostra aviso abaixo
+            }
+            final M3uApi.Sample result = sample;
+            runOnUiThread(() -> {
+                if (gen != railGen) {
+                    return;
+                }
+                showRail(XtreamApi.Kind.LIVE, result == null ? null : result.live,
+                        railLive, stLive);
+                showRail(XtreamApi.Kind.MOVIE, result == null ? null : result.movie,
+                        railMovie, stMovie);
+                showRail(XtreamApi.Kind.SERIES, result == null ? null : result.series,
+                        railSeries, stSeries);
+            });
+        }).start();
+    }
+
     /** Apaga as faixas e busca tudo de novo (usado quando o controle parental muda). */
     private void reloadRails() {
-        if (!CredentialStore.MODE_XTREAM.equals(creds.mode)) {
+        if (!isXtream() && !isM3u()) {
             return;
         }
         railGen++;
@@ -231,9 +275,7 @@ public class HomeActivity extends Activity {
             states[i].setText("Carregando...");
             states[i].setVisibility(View.VISIBLE);
         }
-        loadRail(XtreamApi.Kind.LIVE, railLive, stLive);
-        loadRail(XtreamApi.Kind.MOVIE, railMovie, stMovie);
-        loadRail(XtreamApi.Kind.SERIES, railSeries, stSeries);
+        loadAllRails();
     }
 
     private void showRail(final XtreamApi.Kind kind, List<XtreamApi.Item> items,
@@ -262,6 +304,7 @@ public class HomeActivity extends Activity {
             return;
         }
         status.setVisibility(View.GONE);
+        final boolean xtream = isXtream();
         LayoutInflater inflater = LayoutInflater.from(this);
         View first = null;
         for (final XtreamApi.Item item : items) {
@@ -274,7 +317,7 @@ public class HomeActivity extends Activity {
             initial.setText(firstLetter(item.name));
             ImageLoader.load(logo, item.icon);
 
-            if (item.kind == XtreamApi.Kind.LIVE) {
+            if (item.kind == XtreamApi.Kind.LIVE && xtream) {
                 TextView now = card.findViewById(R.id.tv_now);
                 now.setText("");
                 now.setVisibility(View.VISIBLE);
@@ -285,6 +328,12 @@ public class HomeActivity extends Activity {
                     }
                 });
             } else {
+                if (item.kind == XtreamApi.Kind.LIVE) {
+                    // Lista M3U: ainda sem guia de programação
+                    TextView now = card.findViewById(R.id.tv_now);
+                    now.setText("");
+                    now.setVisibility(View.GONE);
+                }
                 card.setOnFocusChangeListener(hideOnFocus);
             }
 
@@ -295,15 +344,17 @@ public class HomeActivity extends Activity {
             }
         }
 
-        // Cartão "Ver mais ›" no fim da faixa
-        View more = inflater.inflate(R.layout.item_card, rail, false);
-        TextView moreInitial = more.findViewById(R.id.tv_initial);
-        TextView moreName = more.findViewById(R.id.tv_name);
-        moreName.setText("Ver mais ›");
-        moreInitial.setText("›");
-        more.setOnFocusChangeListener(hideOnFocus);
-        more.setOnClickListener(v -> openBrowse(kind));
-        rail.addView(more);
+        // Cartão "Ver mais ›" no fim da faixa (só no login por servidor, por enquanto)
+        if (xtream) {
+            View more = inflater.inflate(R.layout.item_card, rail, false);
+            TextView moreInitial = more.findViewById(R.id.tv_initial);
+            TextView moreName = more.findViewById(R.id.tv_name);
+            moreName.setText("Ver mais ›");
+            moreInitial.setText("›");
+            more.setOnFocusChangeListener(hideOnFocus);
+            more.setOnClickListener(v -> openBrowse(kind));
+            rail.addView(more);
+        }
 
         if (!focusDone && first != null && groupUpdate.getVisibility() != View.VISIBLE) {
             focusDone = true;
@@ -534,6 +585,11 @@ public class HomeActivity extends Activity {
 
     private void openItem(XtreamApi.Item item) {
         if (item.kind == XtreamApi.Kind.SERIES) {
+            if (isM3u()) {
+                Toast.makeText(this, "Séries da lista M3U: os episódios chegam na próxima etapa.",
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
             Intent s = new Intent(this, SeriesActivity.class);
             s.putExtra(EXTRA_ID, item.id);
             s.putExtra(EXTRA_NAME, item.name);
@@ -545,6 +601,9 @@ public class HomeActivity extends Activity {
         i.putExtra(EXTRA_ID, item.id);
         i.putExtra(EXTRA_EXT, item.ext);
         i.putExtra(EXTRA_NAME, item.name);
+        if (isM3u()) {
+            i.putExtra(MainActivity.EXTRA_URL, item.url);
+        }
         startActivity(i);
     }
 
