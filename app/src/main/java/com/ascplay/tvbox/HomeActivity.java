@@ -32,7 +32,8 @@ import java.util.Locale;
  * Ao escolher uma série, abre a tela da série (temporadas e episódios).
  *
  * Lista M3U: lê a lista aos poucos, só até achar 10 itens de cada tipo (M3uApi).
- * Por enquanto, sem "Ver mais", sem guia de programação e sem séries (chegam em etapas próprias).
+ * O cartão "Ver mais ›" abre a navegação por categorias da lista M3U (M3uBrowseActivity).
+ * Por enquanto, sem guia de programação e sem episódios das séries (chegam em etapas próprias).
  *
  * O botão "Controle parental" ativa, troca ou desativa a senha de 4 números.
  * Com o controle ligado, itens com nome adulto não aparecem nas faixas.
@@ -344,8 +345,8 @@ public class HomeActivity extends Activity {
             }
         }
 
-        // Cartão "Ver mais ›" no fim da faixa (só no login por servidor, por enquanto)
-        if (xtream) {
+        // Cartão "Ver mais ›" no fim da faixa (login por servidor e por lista M3U)
+        if (xtream || isM3u()) {
             View more = inflater.inflate(R.layout.item_card, rail, false);
             TextView moreInitial = more.findViewById(R.id.tv_initial);
             TextView moreName = more.findViewById(R.id.tv_name);
@@ -577,8 +578,14 @@ public class HomeActivity extends Activity {
         return new String(Character.toChars(s.codePointAt(0))).toUpperCase();
     }
 
+    /** Abre o "Ver mais": a tela do servidor ou a da lista M3U, conforme o login. */
     private void openBrowse(XtreamApi.Kind kind) {
-        Intent i = new Intent(this, BrowseActivity.class);
+        Intent i;
+        if (isM3u()) {
+            i = new Intent(this, M3uBrowseActivity.class);
+        } else {
+            i = new Intent(this, BrowseActivity.class);
+        }
         i.putExtra(EXTRA_KIND, kind.name());
         startActivity(i);
     }
