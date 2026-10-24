@@ -3,7 +3,7 @@
 Última atualização: 24/10/2026
 
 ## Fase atual
-Esqueleto do app nativo criado (ainda não compilado). Próximo passo: criar o workflow do GitHub Actions que compila e assina o APK.
+Primeiro APK mínimo concluído e testado no TX9: instala e toca um vídeo de teste com ExoPlayer. Próximo passo: implementar as funções do app, começando pelo login.
 
 ## Feito
 - Repositório criado e documentação preenchida (README, AGENTS, CLAUDE, llms.txt, docs/*)
@@ -19,17 +19,19 @@ Esqueleto do app nativo criado (ainda não compilado). Próximo passo: criar o w
   - Início: favoritos + 3 fileiras (Ao vivo, Filmes, Séries) com 10 itens cada e "Ver mais"
   - Extras: favoritos, continuar assistindo, várias listas, aviso de vencimento, PIN do app, atualização via GitHub Releases
   - Dados sensíveis criptografados com chave no Android Keystore
-- Esqueleto do projeto Android criado (9 arquivos): settings.gradle, build.gradle, gradle.properties, app/build.gradle, AndroidManifest.xml, strings.xml, activity_main.xml, MainActivity.java, .gitignore
-- Decidido: o asc-tvbox terá chave de assinatura PRÓPRIA (nova), com os Secrets KEYSTORE_B64, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD
+- Esqueleto do projeto Android criado (settings.gradle, build.gradle, gradle.properties, app/build.gradle, AndroidManifest.xml, strings.xml, activity_main.xml, MainActivity.java, .gitignore)
+- Chave de assinatura PRÓPRIA criada no Windows (pasta chaves-asc-tvbox, alias asc-tvbox) e 4 Secrets cadastrados: KEYSTORE_B64, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD
+- Workflow .github/workflows/apk.yml criado: compila, assina e publica o APK em Releases
+- Primeiro APK com ExoPlayer (stream HLS de teste, mostra "Carregando..." e erros na tela) instalado e TESTADO no TX9: funcionou
 
 ## Próximos passos
-1. Criar a chave de assinatura nova no Windows e cadastrar os 4 Secrets no asc-tvbox
-2. Criar o workflow do GitHub Actions (.github/workflows) que compila e assina o APK
-3. Primeiro APK mínimo: abrir e tocar um canal de teste com ExoPlayer
-4. Testar no TX9 e registrar o resultado aqui
-5. Implementar as funções uma a uma: login, página inicial por categorias, EPG, controle parental
+1. Tela de login: servidor + usuário + senha (DNS/Xtream), depois lista M3U por link; guardar o login no armazenamento privado do app
+2. Página inicial com categorias (10 primeiros canais, filmes e séries)
+3. EPG com prévia nos canais
+4. Controle parental
+5. Telas feitas para controle remoto (setas + OK, foco visível, OK longo para opções)
 
 ## Problemas em aberto
 - Ainda não sabemos: armazenamento livre do TX9 e se tem Play Store
-- Esqueleto ainda não compilado: pode aparecer erro no primeiro build (colar o texto do erro aqui para corrigir)
-- Decidir (mais adiante) como carregar listas grandes sem estourar 1 GB de RAM: API JSON do Xtream por categoria e M3U lido em fluxo, em vez de carregar tudo na memória
+- Guardar uma cópia da pasta chaves-asc-tvbox (e das senhas) em pen drive: sem ela não dá para atualizar o app instalado
+- Decidir como carregar listas grandes sem estourar 1 GB de RAM: API JSON do Xtream por categoria e M3U lido em fluxo, em vez de carregar tudo na memória
