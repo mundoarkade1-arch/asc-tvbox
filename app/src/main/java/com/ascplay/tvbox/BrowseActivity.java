@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -22,11 +23,15 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Navegação por categorias ("Ver mais" da página inicial).
+ * Navegação por categorias ("Ver mais" da página inicial; também as abas Canais, Filmes e Séries
+ * do menu à esquerda).
  * Esquerda: categorias. Direita: itens, carregados por páginas de 40 (máximo de 400 por categoria).
  * Nunca baixa a lista inteira: pede ao servidor só a página necessária.
  * Nos canais ao vivo, cada cartão mostra o programa que passa agora (EPG por canal).
  * Ao escolher uma série, abre a tela da série (temporadas e episódios).
+ *
+ * Barra de pesquisa (botão no alto): pesquisa SÓ o tipo desta tela (canais, filmes ou séries).
+ * Abre o teclado de letras e, ao buscar, a tela de resultados (SearchActivity).
  *
  * Controle parental (quando ligado): categorias adultas mostram um cadeado e pedem a senha
  * de 4 números para abrir. A liberação vale só para aquela categoria, enquanto a pessoa está
@@ -46,6 +51,7 @@ public class BrowseActivity extends Activity {
 
     private TextView tvTitle;
     private TextView tvStatus;
+    private Button btnSearchBar;
     private ListView lvCategories;
     private GridView gvItems;
 
@@ -98,12 +104,18 @@ public class BrowseActivity extends Activity {
         setContentView(R.layout.activity_browse);
         tvTitle = findViewById(R.id.tv_title);
         tvStatus = findViewById(R.id.tv_status);
+        btnSearchBar = findViewById(R.id.btn_search_bar);
         lvCategories = findViewById(R.id.lv_categories);
         gvItems = findViewById(R.id.gv_items);
 
         lvCategories.setDividerHeight(dp(6));
         gvItems.setHorizontalSpacing(dp(10));
         gvItems.setVerticalSpacing(dp(10));
+
+        // Barra de pesquisa: só este tipo (canais, filmes ou séries)
+        btnSearchBar.setText(searchLabel());
+        btnSearchBar.setVisibility(View.VISIBLE);
+        btnSearchBar.setOnClickListener(v -> openSearch());
 
         catIds.add(null);
         catNames.add("Todas as categorias");
@@ -150,6 +162,52 @@ public class BrowseActivity extends Activity {
         super.onLowMemory();
         ImageLoader.clear();
         EpgCache.clear();
+    }
+
+    // ---------- Pesquisa (só o tipo desta tela) ----------
+
+    private String searchLabel() {
+        switch (kind) {
+            case MOVIE:
+                return "Pesquisar filmes";
+            case SERIES:
+                return "Pesquisar séries";
+            default:
+                return "Pesquisar canais";
+        }
+    }
+
+    private String keyboardTitle() {
+        switch (kind) {
+            case MOVIE:
+                return "Buscar filmes";
+            case SERIES:
+                return "Buscar séries";
+            default:
+                return "Buscar canais";
+        }
+    }
+
+    /** Abre o teclado de letras. Ao buscar, abre a tela de resultados só deste tipo. */
+    private void openSearch() {
+        final XtreamApi.Kind k = kind;
+        SearchKeyboard.show(this, keyboardTitle(), new SearchKeyboard.Listener() {
+            @Override
+            public void onSearch(String text) {
+                if (isFinishing() || isDestroyed()) {
+                    return;
+                }
+                Intent i = new Intent(BrowseActivity.this, SearchActivity.class);
+                i.putExtra(HomeActivity.EXTRA_KIND, k.name());
+                i.putExtra(SearchActivity.EXTRA_QUERY, text);
+                startActivity(i);
+            }
+
+            @Override
+            public void onCancel() {
+                // saiu sem buscar: nada muda
+            }
+        });
     }
 
     // ---------- Categorias ----------
