@@ -36,8 +36,10 @@ import java.util.Locale;
  * de progresso, os horários e o "A seguir". Ela aparece quando o canal começa a tocar,
  * some depois de alguns segundos e volta ao apertar OK. (Lista M3U ainda não tem guia.)
  *
- * Nos episódios de série do servidor Xtream, a tela da série manda a lista de episódios da
- * temporada. Quando um episódio termina, o player toca sozinho o próximo da lista.
+ * Nos episódios de série, a tela da série manda a lista de episódios da temporada:
+ * - servidor Xtream: lista de números (ids) e extensões;
+ * - lista M3U: lista de endereços diretos (EXTRA_LIST_URLS).
+ * Quando um episódio termina, o player toca sozinho o próximo da lista.
  * No último episódio da temporada, mostra "Fim da temporada." e para.
  */
 @OptIn(markerClass = UnstableApi.class)
@@ -45,6 +47,8 @@ public class MainActivity extends Activity {
 
     /** Endereço direto do vídeo (só no login por lista M3U). */
     public static final String EXTRA_URL = "url";
+    /** Lista dos endereços diretos dos episódios da temporada (só na lista M3U). */
+    public static final String EXTRA_LIST_URLS = "list_urls";
 
     private static final String USER_AGENT = "ASC-TVBox/1.0 (Android)";
     private static final int TIMEOUT_MS = 15000;
@@ -64,6 +68,8 @@ public class MainActivity extends Activity {
     // Episódios da temporada (só quando está tocando um episódio de série)
     private ArrayList<String> listIds = null;
     private ArrayList<String> listExts = null;
+    // Lista M3U: endereços diretos dos episódios da temporada
+    private ArrayList<String> listUrls = null;
     private int listIndex = -1;
 
     // Barra Agora / A seguir
@@ -141,8 +147,12 @@ public class MainActivity extends Activity {
         item = new XtreamApi.Item(kind, id, name == null ? "" : name, "", "", "", ext, url);
         streamUrl = XtreamApi.streamUrl(creds.server, creds.user, creds.pass, item);
 
-        if (xtream && kind == XtreamApi.Kind.EPISODE) {
-            readEpisodeList();
+        if (kind == XtreamApi.Kind.EPISODE) {
+            if (xtream) {
+                readEpisodeList();
+            } else {
+                readM3uEpisodeList();
+            }
         }
     }
 
@@ -152,7 +162,7 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Lê a lista de episódios da temporada que a tela da série mandou.
+     * Lê a lista de episódios da temporada que a tela da série (servidor) mandou.
      * Se algo vier errado, não usa a lista: o episódio escolhido toca normalmente
      * e só não passa para o próximo sozinho.
      */
@@ -175,6 +185,28 @@ public class MainActivity extends Activity {
         }
         listIds = ids;
         listExts = exts;
+        listIndex = index;
+    }
+
+    /**
+     * Lê a lista de endereços dos episódios da temporada que a tela da série (lista M3U) mandou.
+     * Cada endereço precisa ser http ou https. Se algo vier errado, não usa a lista: o episódio
+     * escolhido toca normalmente e só não passa para o próximo sozinho.
+     */
+    private void readM3uEpisodeList() {
+        ArrayList<String> urls = getIntent().getStringArrayListExtra(EXTRA_LIST_URLS);
+        int index = getIntent().getIntExtra(SeriesActivity.EXTRA_LIST_INDEX, -1);
+        if (urls == null || urls.isEmpty() || urls.size() > MAX_LIST
+                || index < 0 || index >= urls.size()) {
+            return;
+        }
+        for (int i = 0; i < urls.size(); i++) {
+            String u = urls.get(i);
+            if (!isHttp(u) || u.length() > MAX_URL) {
+                return;
+            }
+        }
+        listUrls = urls;
         listIndex = index;
     }
 
@@ -280,6 +312,22 @@ public class MainActivity extends Activity {
     /** Passa para o próximo episódio da temporada. No último, avisa que acabou. */
     private void playNextEpisode() {
         int next = listIndex + 1;
+
+        // Lista M3U: a lista tem os endereços prontos
+        if (listUrls != null) {
+            if (next >= listUrls.size()) {
+                showStatus("Fim da temporada.");
+                return;
+            }
+            listIndex = next;
+            item = new XtreamApi.Item(XtreamApi.Kind.EPISODE, String.valueOf(next + 1), "", "",
+                    "", "", "", listUrls.get(next));
+            streamUrl = XtreamApi.streamUrl(creds.server, creds.user, creds.pass, item);
+            playCurrent();
+            return;
+        }
+
+        // Servidor: a lista tem números e extensões, e o endereço é montado aqui
         if (listIds == null || listExts == null || next >= listIds.size()) {
             showStatus("Fim da temporada.");
             return;
