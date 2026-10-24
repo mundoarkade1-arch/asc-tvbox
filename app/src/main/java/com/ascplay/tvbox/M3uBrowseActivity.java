@@ -30,7 +30,7 @@ import java.util.List;
  * categorias" e nas outras, itens adultos não aparecem.
  *
  * Canal e filme tocam direto pelo endereço da lista (MainActivity.EXTRA_URL).
- * Série: os episódios chegam na próxima etapa (por enquanto mostra um aviso).
+ * Série: abre a tela da série da lista M3U (M3uSeriesActivity), com temporadas e episódios.
  */
 public class M3uBrowseActivity extends Activity {
 
@@ -335,8 +335,11 @@ public class M3uBrowseActivity extends Activity {
 
     private void openItem(XtreamApi.Item item) {
         if (item.kind == XtreamApi.Kind.SERIES) {
-            Toast.makeText(this, "Séries da lista M3U: os episódios chegam na próxima etapa.",
-                    Toast.LENGTH_SHORT).show();
+            // Lista M3U: a série é achada pelo título
+            Intent s = new Intent(this, M3uSeriesActivity.class);
+            s.putExtra(HomeActivity.EXTRA_ID, item.id);
+            s.putExtra(HomeActivity.EXTRA_NAME, item.name);
+            startActivity(s);
             return;
         }
         Intent i = new Intent(this, MainActivity.class);
