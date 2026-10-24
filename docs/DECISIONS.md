@@ -19,7 +19,7 @@ Registre aqui cada decisão importante: o que foi decidido e por quê.
 
 ## 2026-10-24: Atualização automática pelo GitHub Releases
 
-- Decisão: o app confere o arquivo version.json da última versão em Releases (campos: code, name, url, sha256). Se o code for maior que o instalado, mostra a faixa "Atualizar / Depois" na tela de login.
+- Decisão: o app confere o arquivo version.json da última versão em Releases (campos: code, name, url, sha256). Se o code for maior que o instalado, mostra a faixa "Atualizar / Depois" na tela de login e na página inicial.
 - Segurança: só usa https; só aceita baixar APK de https://github.com/mundoarkade1-arch/asc-tvbox/releases/download/; confere o SHA-256 do arquivo baixado e apaga se não bater; o Android ainda confere a assinatura antes de instalar. Falhas na verificação ficam em silêncio (sem internet, o app segue normal).
 - Versão instalada: lida com PackageManager, porque o BuildConfig não é gerado neste projeto.
 - Motivo: o TV box não tem Play Store garantida, e o dono instala por pen drive. Com o atualizador, só a primeira instalação é manual.
@@ -30,3 +30,29 @@ Registre aqui cada decisão importante: o que foi decidido e por quê.
 - Decisão: a tela de login confere o login de verdade antes de entrar (Xtream: player_api.php; M3U: o início do arquivo precisa ser #EXTM3U). Mostra mensagens separadas para: campos vazios, servidor inválido, sem conexão, usuário/senha errados, conta vencida e lista que não é M3U.
 - Motivo: no Android, um 401 sem pedido de autenticação vira erro de rede. Por isso o app trata esse caso como "usuário ou senha incorretos" (AuthRefusedException), em vez de "sem conexão".
 - A rede nunca roda na thread principal, e senhas e endereços nunca vão para log.
+
+## 2026-10-24: Página inicial sem baixar a lista inteira
+
+- Decisão: com login por servidor (Xtream), o app NUNCA baixa a lista completa. Ele pede à API do servidor (player_api.php) e lê a resposta aos poucos (JsonReader), parando assim que junta os 10 itens da página inicial. Há limite de 80 MB por resposta e IDs só podem ser números.
+- Motivo: o app original baixa a lista M3U inteira e a mantém na memória (até 250 MB). No TX9, com 1 GB de RAM, isso estoura. A leitura parcial usa pouca memória, qualquer que seja o tamanho da lista.
+- Seções da página inicial: Canais ao vivo, Filmes e Séries, 10 itens cada, como no app original. As categorias são navegadas depois, em "Ver mais" (etapa seguinte).
+- Lista M3U (sem servidor): a página inicial ainda não existe para esse tipo de login. Será feita numa etapa própria, lendo a lista aos poucos e sem guardá-la inteira na memória.
+- Sem dependência nova: a leitura usa android.util.JsonReader, que já vem no Android.
+
+## 2026-10-24: Logos com carregador próprio (ImageLoader)
+
+- Decisão: um carregador de imagens simples, sem biblioteca externa: cache de cerca de 8 MB, imagem reduzida ao abrir (lado maior de no máximo 256 pixels), no máximo 2 downloads ao mesmo tempo, limite de 2 MB por imagem, só http e https, e endereços que falharam não são tentados de novo na sessão.
+- Motivo: bibliotecas como Glide e Picasso são boas, mas trazem muito código e consomem mais memória do que o necessário para cartões pequenos. O AGENTS.md pede poucas dependências, e este carregador resolve com cerca de 200 linhas e controle total da memória.
+- Se o logo falhar ou não existir, o cartão mostra a inicial do nome.
+
+## 2026-10-24: Player de canais e filmes
+
+- Decisão: o endereço de reprodução (que contém usuário e senha) é montado dentro do MainActivity, a partir do login salvo. Entre as telas viajam só o tipo, o número do item, a extensão e o nome.
+- Canal ao vivo: tenta primeiro HLS (.m3u8); se o servidor não entregar, tenta uma vez o .ts. Filme: usa a extensão informada pelo servidor (ou mp4).
+- Mensagens de erro do player mostram só o código do erro, porque a mensagem completa pode conter o endereço com a senha.
+- Redirecionamento de http para https é permitido (alguns servidores fazem isso).
+
+## 2026-10-24: Login salvo abre direto na página inicial
+
+- Decisão: ao abrir o app, se há login salvo, ele vai direto para a página inicial. O botão "Trocar login" abre a tela de login com os dados antigos preenchidos, sem apagar nada.
+- Motivo: no dia a dia, quem usa TV box quer ligar e assistir, sem digitar nada de novo.
