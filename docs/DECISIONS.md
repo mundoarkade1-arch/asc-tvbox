@@ -24,3 +24,10 @@ Registre aqui cada decisão importante: o que foi decidido e por quê.
 - Tela fixa na horizontal e sem exigir tela de toque (uses-feature touchscreen required=false), pois o alvo é TV box com controle remoto. O app também aparece no menu de apps de TV (LEANBACK_LAUNCHER).
 - Sem gradlew no repositório: o workflow do GitHub Actions instala o Gradle. Isso evita arquivos binários que o dono não conseguiria criar pelo navegador.
 - Interface sem bibliotecas extras (só componentes nativos do Android) para economizar memória.
+
+## 2026-10-24: Como o APK é gerado (workflow)
+
+- O workflow .github/workflows/apk.yml roda a cada alteração na branch main (e manualmente). Ele instala Java 17 e Gradle 8.9, compila com "gradle assembleRelease", alinha e assina o APK com apksigner usando os Secrets, e publica em Releases (tag v<número da execução>) como ASC-TVBox.apk.
+- Plugin do Android Gradle: versão 8.5.2.
+- Sem os Secrets, o workflow gera um APK de teste com chave temporária e não publica em Releases.
+- versionCode e versionName vêm das variáveis VERSION_CODE e VERSION_NAME (número da execução do workflow), lidas em variáveis simples no app/build.gradle (a primeira forma, direto dentro de defaultConfig, dava erro "Value is null").
