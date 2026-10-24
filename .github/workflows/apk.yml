@@ -51,6 +51,14 @@ jobs:
           "$BT/apksigner" verify --print-certs ASC-TVBox.apk
           rm -f release.keystore aligned.apk
 
+      - name: Criar version.json (usado pela atualizacao automatica)
+        run: |
+          SHA=$(sha256sum ASC-TVBox.apk | cut -d' ' -f1)
+          jq -n --argjson code "$VERSION_CODE" --arg name "$VERSION_NAME" --arg sha "$SHA" \
+            --arg url "https://github.com/${{ github.repository }}/releases/download/v${VERSION_CODE}/ASC-TVBox.apk" \
+            '{code:$code,name:$name,url:$url,sha256:$sha}' > version.json
+          cat version.json
+
       - uses: actions/upload-artifact@v4
         with:
           name: ASC-TVBox-apk
@@ -62,4 +70,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="v${VERSION_CODE}"
-          gh release create "$TAG" ASC-TVBox.apk --title "ASC TV Box ${VERSION_NAME}" --notes "Versao ${VERSION_NAME}" --latest
+          gh release create "$TAG" ASC-TVBox.apk version.json --title "ASC TV Box ${VERSION_NAME}" --notes "Versao ${VERSION_NAME}" --latest
