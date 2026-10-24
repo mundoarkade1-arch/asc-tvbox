@@ -22,17 +22,22 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
 import androidx.media3.ui.PlayerView;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
 /**
- * Player: toca o canal ou filme escolhido na página inicial.
+ * Player: toca o canal, filme ou episódio escolhido.
  * O endereço (com usuário e senha) é montado aqui, a partir do login salvo.
  * Nunca mostra nem registra o endereço, porque ele contém a senha.
  *
  * Nos canais ao vivo, uma barra embaixo mostra o programa de agora, a barra de
  * progresso, os horários e o "A seguir". Ela aparece quando o canal começa a tocar,
  * some depois de alguns segundos e volta ao apertar OK.
+ *
+ * Nos episódios de série, a tela da série manda a lista de episódios da temporada.
+ * Quando um episódio termina, o player toca sozinho o próximo da lista.
+ * No último episódio da temporada, mostra "Fim da temporada." e para.
  */
 @OptIn(markerClass = UnstableApi.class)
 public class MainActivity extends Activity {
@@ -40,6 +45,7 @@ public class MainActivity extends Activity {
     private static final String USER_AGENT = "ASC-TVBox/1.0 (Android)";
     private static final int TIMEOUT_MS = 15000;
     private static final long NOWBAR_HIDE_MS = 6000L;
+    private static final int MAX_LIST = 500;
 
     private PlayerView playerView;
     private TextView status;
@@ -49,6 +55,11 @@ public class MainActivity extends Activity {
     private XtreamApi.Item item;
     private String streamUrl;
     private boolean triedTs = false;
+
+    // Episódios da temporada (só quando está tocando um episódio de série)
+    private ArrayList<String> listIds = null;
+    private ArrayList<String> listExts = null;
+    private int listIndex = -1;
 
     // Barra Agora / A seguir
     private View groupNowbar;
@@ -111,6 +122,37 @@ public class MainActivity extends Activity {
         }
         item = new XtreamApi.Item(kind, id, name == null ? "" : name, "", "", "", ext);
         streamUrl = XtreamApi.streamUrl(creds.server, creds.user, creds.pass, item);
+
+        if (kind == XtreamApi.Kind.EPISODE) {
+            readEpisodeList();
+        }
+    }
+
+    /**
+     * Lê a lista de episódios da temporada que a tela da série mandou.
+     * Se algo vier errado, não usa a lista: o episódio escolhido toca normalmente
+     * e só não passa para o próximo sozinho.
+     */
+    private void readEpisodeList() {
+        ArrayList<String> ids = getIntent().getStringArrayListExtra(SeriesActivity.EXTRA_LIST_IDS);
+        ArrayList<String> exts = getIntent().getStringArrayListExtra(SeriesActivity.EXTRA_LIST_EXTS);
+        int index = getIntent().getIntExtra(SeriesActivity.EXTRA_LIST_INDEX, -1);
+        if (ids == null || exts == null || ids.size() != exts.size()
+                || ids.isEmpty() || ids.size() > MAX_LIST
+                || index < 0 || index >= ids.size()) {
+            return;
+        }
+        for (int i = 0; i < ids.size(); i++) {
+            String eid = ids.get(i);
+            String eext = exts.get(i);
+            if (eid == null || !eid.matches("\\d{1,12}")
+                    || eext == null || !eext.matches("[A-Za-z0-9]{0,5}")) {
+                return;
+            }
+        }
+        listIds = ids;
+        listExts = exts;
+        listIndex = index;
     }
 
     @Override
@@ -175,6 +217,11 @@ public class MainActivity extends Activity {
                         nowbarShownOnce = true;
                         showNowbar();
                     }
+                } else if (state == Player.STATE_ENDED) {
+                    // Terminou um episódio: toca o próximo da mesma temporada
+                    if (item != null && item.kind == XtreamApi.Kind.EPISODE) {
+                        playNextEpisode();
+                    }
                 }
             }
 
@@ -204,6 +251,20 @@ public class MainActivity extends Activity {
         player.setMediaItem(MediaItem.fromUri(Uri.parse(streamUrl)));
         player.prepare();
         player.setPlayWhenReady(true);
+    }
+
+    /** Passa para o próximo episódio da temporada. No último, avisa que acabou. */
+    private void playNextEpisode() {
+        int next = listIndex + 1;
+        if (listIds == null || listExts == null || next >= listIds.size()) {
+            showStatus("Fim da temporada.");
+            return;
+        }
+        listIndex = next;
+        item = new XtreamApi.Item(XtreamApi.Kind.EPISODE, listIds.get(next), "", "", "", "",
+                listExts.get(next));
+        streamUrl = XtreamApi.streamUrl(creds.server, creds.user, creds.pass, item);
+        playCurrent();
     }
 
     private void releasePlayer() {
