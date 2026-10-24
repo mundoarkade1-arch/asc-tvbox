@@ -26,6 +26,10 @@ import java.util.Set;
  * Esquerda: categorias. Direita: itens, carregados por páginas de 40 (máximo de 400 por categoria).
  * Nunca baixa a lista inteira: pede ao servidor só a página necessária.
  * Nos canais ao vivo, cada cartão mostra o programa que passa agora (EPG por canal).
+ *
+ * Controle parental (quando ligado): categorias adultas mostram um cadeado e pedem a senha
+ * de 4 números para abrir. A liberação vale só para aquela categoria, enquanto a pessoa está
+ * nela. Na lista "Todas as categorias", conteúdo adulto não aparece.
  */
 public class BrowseActivity extends Activity {
 
@@ -34,6 +38,7 @@ public class BrowseActivity extends Activity {
     private static final int LOAD_AHEAD = 12;
     private static final int COLOR_NEUTRAL = 0xFFA39A9D;
     private static final int COLOR_ERROR = 0xFFFF6B78;
+    private static final String LOCK = "\uD83D\uDD12 ";
 
     private CredentialStore.Credentials creds;
     private XtreamApi.Kind kind;
@@ -62,6 +67,15 @@ public class BrowseActivity extends Activity {
     private boolean ended = false;
     private boolean loadFailed = false;
     private boolean focusGridWhenReady = true;
+    // Quantos itens o servidor já entregou (antes do filtro do controle parental)
+    private int rawLoaded = 0;
+
+    // Controle parental
+    private boolean parentalOn = false;
+    private boolean catsDone = false;
+    private final Set<String> adultCatIds = new HashSet<>();
+    private String adultOkId = null;
+    private PinDialog pinDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +91,8 @@ public class BrowseActivity extends Activity {
             finish();
             return;
         }
+
+        parentalOn = ParentalStore.isEnabled(this);
 
         setContentView(R.layout.activity_browse);
         tvTitle = findViewById(R.id.tv_title);
@@ -95,7 +111,7 @@ public class BrowseActivity extends Activity {
         lvCategories.setAdapter(catAdapter);
         gvItems.setAdapter(itemAdapter);
 
-        lvCategories.setOnItemClickListener((parent, view, position, id) -> selectCategory(position));
+        lvCategories.setOnItemClickListener((parent, view, position, id) -> onCategoryClick(position));
         gvItems.setOnItemClickListener((parent, view, position, id) -> {
             if (position >= 0 && position < items.size()) {
                 openItem(items.get(position));
@@ -117,6 +133,15 @@ public class BrowseActivity extends Activity {
 
         loadCategories();
         selectCategory(0);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (pinDialog != null) {
+            pinDialog.dismiss();
+            pinDialog = null;
+        }
     }
 
     @Override
@@ -152,13 +177,67 @@ public class BrowseActivity extends Activity {
         if (res == null) {
             Toast.makeText(this, "Não foi possível carregar as categorias.",
                     Toast.LENGTH_SHORT).show();
+        } else {
+            for (XtreamApi.Category c : res) {
+                catIds.add(c.id);
+                catNames.add(c.name);
+                if (parentalOn && ParentalStore.isAdultCategory(c.name)) {
+                    adultCatIds.add(c.id);
+                }
+            }
+            catAdapter.notifyDataSetChanged();
+        }
+        catsDone = true;
+        // Com o controle parental ligado, a primeira página esperou as categorias chegarem.
+        if (items.isEmpty() && !loading && !ended && !loadFailed) {
+            loadPage();
+        }
+    }
+
+    /** A pessoa escolheu uma categoria. Se for adulta e trancada, pede a senha antes. */
+    private void onCategoryClick(int position) {
+        if (position < 0 || position >= catIds.size()) {
             return;
         }
-        for (XtreamApi.Category c : res) {
-            catIds.add(c.id);
-            catNames.add(c.name);
+        String id = catIds.get(position);
+        boolean needPin = parentalOn && id != null && adultCatIds.contains(id)
+                && !id.equals(adultOkId);
+        if (!needPin) {
+            selectCategory(position);
+            return;
         }
-        catAdapter.notifyDataSetChanged();
+        askPin(position);
+    }
+
+    private void askPin(final int position) {
+        pinDialog = PinDialog.show(this, "Senha do controle parental",
+                catNames.get(position), new PinDialog.Listener() {
+                    @Override
+                    public void onPin(PinDialog d, String pin) {
+                        long wait = ParentalStore.lockedSeconds(BrowseActivity.this);
+                        if (wait > 0) {
+                            d.setMessage("Muitas tentativas. Aguarde " + wait + " segundos.", true);
+                            return;
+                        }
+                        if (ParentalStore.check(BrowseActivity.this, pin)) {
+                            d.dismiss();
+                            adultOkId = catIds.get(position);
+                            selectCategory(position);
+                            return;
+                        }
+                        wait = ParentalStore.lockedSeconds(BrowseActivity.this);
+                        if (wait > 0) {
+                            d.setMessage("Muitas tentativas. Aguarde " + wait + " segundos.", true);
+                        } else {
+                            d.setMessage("Senha incorreta.", true);
+                        }
+                    }
+
+                    @Override
+                    public void onCancel() {
+                        // saiu sem digitar a senha: continua na categoria de antes
+                    }
+                });
     }
 
     private void selectCategory(int position) {
@@ -167,6 +246,11 @@ public class BrowseActivity extends Activity {
         }
         currentCat = catIds.get(position);
         currentName = catNames.get(position);
+
+        // A liberação da senha vale só para a categoria liberada
+        if (adultOkId != null && !adultOkId.equals(currentCat)) {
+            adultOkId = null;
+        }
 
         gen++;
         items.clear();
@@ -177,6 +261,7 @@ public class BrowseActivity extends Activity {
         ended = false;
         loadFailed = false;
         focusGridWhenReady = true;
+        rawLoaded = 0;
 
         tvTitle.setText(position == 0 ? kindLabel() : kindLabel() + " - " + currentName);
         showStatus("Carregando...", COLOR_NEUTRAL);
@@ -194,10 +279,28 @@ public class BrowseActivity extends Activity {
         }
     }
 
+    /** Este item pode aparecer? Com o controle parental ligado, adulto fica escondido. */
+    private boolean allowed(XtreamApi.Item item) {
+        if (!parentalOn) {
+            return true;
+        }
+        if (adultOkId != null && adultOkId.equals(item.categoryId)) {
+            return true;
+        }
+        if (adultCatIds.contains(item.categoryId)) {
+            return false;
+        }
+        return !ParentalStore.isAdultName(item.name);
+    }
+
     // ---------- Itens, por páginas ----------
 
     private void loadPage() {
         if (loading || ended || loadFailed) {
+            return;
+        }
+        // Com o controle parental ligado, espera saber quais categorias são adultas
+        if (parentalOn && !catsDone) {
             return;
         }
         if (items.size() >= MAX_ITEMS) {
@@ -206,8 +309,8 @@ public class BrowseActivity extends Activity {
         }
         loading = true;
         final int myGen = gen;
-        final int offset = items.size();
-        final int want = Math.min(PAGE, MAX_ITEMS - offset);
+        final int offset = rawLoaded;
+        final int want = Math.min(PAGE, MAX_ITEMS - items.size());
         final String cat = currentCat;
         final String server = creds.server;
         final String user = creds.user;
@@ -242,7 +345,14 @@ public class BrowseActivity extends Activity {
             return;
         }
 
-        items.addAll(res);
+        rawLoaded += res.size();
+        int added = 0;
+        for (XtreamApi.Item it : res) {
+            if (allowed(it)) {
+                items.add(it);
+                added++;
+            }
+        }
         if (res.size() < want) {
             ended = true;
         } else if (items.size() >= MAX_ITEMS) {
@@ -251,6 +361,12 @@ public class BrowseActivity extends Activity {
                     + ". Escolha uma categoria para ver mais.", Toast.LENGTH_LONG).show();
         }
         itemAdapter.notifyDataSetChanged();
+
+        // A página veio toda escondida pelo controle parental: busca a próxima
+        if (added == 0 && !ended) {
+            loadPage();
+            return;
+        }
 
         if (items.isEmpty()) {
             showStatus("Nada encontrado nesta categoria.", COLOR_NEUTRAL);
@@ -359,7 +475,9 @@ public class BrowseActivity extends Activity {
             } else {
                 tv = (TextView) convertView;
             }
-            tv.setText(catNames.get(position));
+            String id = catIds.get(position);
+            boolean locked = parentalOn && id != null && adultCatIds.contains(id);
+            tv.setText(locked ? LOCK + catNames.get(position) : catNames.get(position));
             return tv;
         }
     }
