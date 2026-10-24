@@ -23,11 +23,12 @@ import java.util.regex.Pattern;
  * Para listas gigantes, a leitura também para depois de 200 MB ou de 1 minuto e devolve
  * o que já achou.
  *
- * Quatro funções públicas:
+ * Cinco funções públicas:
  * - sample: os primeiros itens de cada tipo (página inicial).
  * - categories: os nomes das categorias de um tipo ("Ver mais").
  * - page: uma página de itens de um tipo, de uma categoria ou de todas ("Ver mais").
  * - episodes: os episódios de UMA série, achados pelo título (tela da série).
+ * - search: os itens de um tipo cujo nome combina com o que a pessoa digitou (busca).
  *
  * Faz acesso à rede: NUNCA chamar na thread principal.
  * Os endereços dos vídeos costumam conter usuário e senha: nunca mostrar nem registrar em log.
@@ -236,6 +237,59 @@ public final class M3uApi {
                 }
                 out.add(new Episode(cut(name), season, number, url));
                 return out.size() < MAX_EPISODES;
+            }));
+        } catch (IOException e) {
+            if (out.isEmpty()) {
+                throw e;
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Busca por nome: lê a lista linha por linha e guarda só os itens do tipo pedido cujo
+     * nome tem todas as palavras de "query" (sem ligar para maiúsculas nem acentos).
+     * Para ao juntar "limit" itens. Séries são comparadas e mostradas pelo título (sem
+     * "S01E03"), um item por série. Se skipAdult for verdadeiro, itens adultos (pelo nome
+     * ou pela categoria) são pulados. A lista inteira nunca fica na memória.
+     */
+    public static List<XtreamApi.Item> search(String m3uUrl, XtreamApi.Kind kind, String query,
+                                              boolean skipAdult, int limit)
+            throws IOException {
+        final List<XtreamApi.Item> out = new ArrayList<>();
+        final String[] words = XtreamApi.searchWords(query);
+        if (words.length == 0) {
+            return out;
+        }
+        final HashSet<String> seenSeries = new HashSet<>();
+        try {
+            readList(m3uUrl, reader -> walk(reader, (url, grp, name, icon, tvgId, counter) -> {
+                if (classify(url, grp, name) != kind) {
+                    return true;
+                }
+                String shownName = name;
+                if (kind == XtreamApi.Kind.SERIES) {
+                    shownName = seriesTitle(name);
+                }
+                if (!XtreamApi.matchesWords(shownName, words)) {
+                    return true;
+                }
+                if (skipAdult && (ParentalStore.isAdultCategory(grp)
+                        || ParentalStore.isAdultName(name))) {
+                    return true;
+                }
+                if (kind == XtreamApi.Kind.SERIES) {
+                    if (!seenSeries.add(shownName.toLowerCase(Locale.ROOT))) {
+                        return true;
+                    }
+                    // Série: sem endereço próprio. Os episódios são buscados quando a série abrir.
+                    out.add(new XtreamApi.Item(kind, String.valueOf(counter), cut(shownName),
+                            icon, grp, "", ""));
+                } else {
+                    out.add(new XtreamApi.Item(kind, String.valueOf(counter), cut(shownName),
+                            icon, grp, tvgId, "", url));
+                }
+                return out.size() < limit;
             }));
         } catch (IOException e) {
             if (out.isEmpty()) {
