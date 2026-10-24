@@ -15,12 +15,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Navegação por categorias ("Ver mais" da página inicial).
  * Esquerda: categorias. Direita: itens, carregados por páginas de 40 (máximo de 400 por categoria).
  * Nunca baixa a lista inteira: pede ao servidor só a página necessária.
+ * Nos canais ao vivo, cada cartão mostra o programa que passa agora (EPG por canal).
  */
 public class BrowseActivity extends Activity {
 
@@ -43,6 +48,10 @@ public class BrowseActivity extends Activity {
     private final List<XtreamApi.Item> items = new ArrayList<>();
     private CategoryAdapter catAdapter;
     private ItemAdapter itemAdapter;
+
+    // Programa de agora de cada canal já consultado nesta categoria (id do canal -> texto).
+    private final Map<String, String> nowText = new HashMap<>();
+    private final Set<String> nowAsked = new HashSet<>();
 
     private String currentCat = null;
     private String currentName = "Todas as categorias";
@@ -114,6 +123,7 @@ public class BrowseActivity extends Activity {
     public void onLowMemory() {
         super.onLowMemory();
         ImageLoader.clear();
+        EpgCache.clear();
     }
 
     // ---------- Categorias ----------
@@ -160,6 +170,8 @@ public class BrowseActivity extends Activity {
 
         gen++;
         items.clear();
+        nowText.clear();
+        nowAsked.clear();
         itemAdapter.notifyDataSetChanged();
         loading = false;
         ended = false;
@@ -266,6 +278,37 @@ public class BrowseActivity extends Activity {
         startActivity(i);
     }
 
+    // ---------- Programa de agora (EPG) ----------
+
+    /**
+     * Escreve na linha do cartão o programa de agora. Usa o que já foi consultado;
+     * se ainda não foi, pede ao servidor uma única vez por canal.
+     */
+    private void showNow(final XtreamApi.Item item, final TextView now) {
+        now.setTag(item.id);
+        now.setVisibility(View.VISIBLE);
+        String known = nowText.get(item.id);
+        if (known != null) {
+            now.setText(known);
+            return;
+        }
+        now.setText("");
+        if (!nowAsked.add(item.id)) {
+            return; // já pedido: a resposta vai preencher o cartão quando chegar
+        }
+        final int myGen = gen;
+        EpgCache.get(creds.server, creds.user, creds.pass, item.id, epg -> {
+            if (isFinishing() || isDestroyed() || myGen != gen) {
+                return;
+            }
+            String text = epg == null ? "Programação indisponível" : "Agora: " + epg.title;
+            nowText.put(item.id, text);
+            if (item.id.equals(now.getTag())) {
+                now.setText(text);
+            }
+        });
+    }
+
     // ---------- Ajudas ----------
 
     private void showStatus(String text, int color) {
@@ -350,6 +393,14 @@ public class BrowseActivity extends Activity {
             ((TextView) card.findViewById(R.id.tv_name)).setText(item.name);
             ((TextView) card.findViewById(R.id.tv_initial)).setText(firstLetter(item.name));
             ImageLoader.load((ImageView) card.findViewById(R.id.iv_logo), item.icon);
+
+            TextView now = card.findViewById(R.id.tv_now);
+            if (item.kind == XtreamApi.Kind.LIVE) {
+                showNow(item, now);
+            } else {
+                now.setTag(null);
+                now.setVisibility(View.GONE);
+            }
             return card;
         }
     }
