@@ -3,7 +3,7 @@
 Última atualização: 24/10/2026
 
 ## Fase atual
-Etapa "Controle parental" concluída e testada no TX9. Próxima etapa: episódios de séries.
+Etapa "Episódios de séries" em andamento. Feita só a parte de dados (XtreamApi.episodes). Faltam a tela da série, ligar os toques e tocar o episódio no player.
 
 ## Feito (testado no TX9)
 - Repositório criado e documentação preenchida (README, AGENTS, CLAUDE, llms.txt, docs/*)
@@ -17,7 +17,7 @@ Etapa "Controle parental" concluída e testada no TX9. Próxima etapa: episódio
 - Tocar canal e filme
 - "Ver mais": cartão no fim de cada faixa que abre a navegação por categorias (BrowseActivity), com borda vermelha de seleção
 - Linha "Agora: ..." nos cartões de canais ao vivo, na página inicial e no "Ver mais"
-- Caixinha de prévia na página inicial: ao parar o foco num canal ao vivo, uma faixa fixa embaixo mostra o programa de agora, a barra de progresso, os horários de início e fim e o "A seguir"
+- Caixinha de prévia na página inicial: ao parar o foco num canal ao vivo, uma faixa fixa embaixo mostra o programa de agora, a barra de progresso, os horários e o "A seguir"
 - Barra Agora / A seguir no player (MainActivity): aparece quando o canal ao vivo começa a tocar, some depois de 6 segundos e volta ao apertar OK; não aparece em filmes
 - Controle parental:
   - Botão "Controle parental" na página inicial, com menu: ativar, trocar senha e desativar
@@ -26,6 +26,10 @@ Etapa "Controle parental" concluída e testada no TX9. Próxima etapa: episódio
   - No "Ver mais", categorias adultas ficam com cadeado e pedem a senha; a liberação vale só enquanto a pessoa está naquela categoria
   - Em "Todas as categorias", conteúdo adulto não aparece com o controle ligado
   - Depois de 5 senhas erradas seguidas, o app trava por um tempo antes de aceitar nova tentativa
+
+## Feito (compila, Actions verde, mas ainda NÃO testado no TX9)
+- XtreamApi.java ganhou: o tipo Kind.EPISODE, a classe Episode (id, title, season, number, ext) e a função episodes(server, user, pass, seriesId), que pede ao servidor (get_series_info) os episódios de UMA série, no máximo 500, lendo aos poucos. streamUrl(...) já sabe montar o endereço de um episódio (/series/usuario/senha/id.ext).
+- Nada na tela usa isso ainda, então não há nada para testar no TX9 nesta parte.
 
 ## Arquivos do EPG
 - XtreamApi.java: função epg(...) que pede ao servidor a programação de UM canal (get_short_epg, até 4 programas) e devolve o programa de agora e o "a seguir". Horários em milissegundos.
@@ -42,12 +46,8 @@ Etapa "Controle parental" concluída e testada no TX9. Próxima etapa: episódio
 - PinDialog.java: teclado de números na tela (1 a 9, 0, Apagar e Sair); avisa o app quando o 4º número é digitado
 
 ## Próximos passos (nesta ordem)
-1. Episódios de séries (hoje o toque numa série só mostra um aviso). Ao fazer, respeitar o controle parental.
-2. Página inicial para login por lista M3U (hoje mostra um aviso de que chega numa etapa própria). Ao fazer, aplicar o controle parental também.
-
-## Problemas em aberto
-- Armazenamento livre do TX9 e acesso à Play Store: ainda não sabemos
-- Lista M3U ainda não tem página inicial (ver passo 2 acima)
-- Canais sem guia no servidor mostram "Programação indisponível" (comportamento esperado, não é erro)
-- Controle parental: na página inicial, os itens adultos são tirados DEPOIS de buscar os 10 primeiros, então uma faixa pode mostrar menos de 10 cartões (comportamento esperado, não é erro)
-- Controle parental: o reconhecimento de conteúdo adulto é só pelo nome (categoria ou título). Conteúdo adulto com nome comum pode passar; categorias com nome normal não ganham cadeado
+1. Episódios de séries (combinado com o dono):
+   a. Criar a tela da série (SeriesActivity.java e o layout dela): à esquerda a lista de temporadas, à direita os episódios da temporada escolhida (número e título). Navegação só com setas, OK e Voltar.
+   b. Registrar a tela nova no AndroidManifest.xml (SÓ depois de a classe existir, senão o Actions fica vermelho). Padrão das outras telas: configChanges="orientation|screenSize|keyboardHidden", exported="false", screenOrientation="landscape".
+   c. Trocar o aviso "Séries: os episódios chegam na próxima etapa" (em HomeActivity.openItem e BrowseActivity.openItem) por abrir a tela da série.
+   d. MainActivity tocar um episódio (Kind.EPISODE) e, quando terminar, tocar sozinho o
