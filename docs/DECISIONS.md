@@ -182,5 +182,40 @@ Registre aqui cada decisão importante: o que foi decidido e por quê.
 - Login por servidor: não muda. O "Agora", a prévia e a barra do player continuam funcionando.
 - Alternativas estudadas: (B) ler o guia aos poucos só para os canais da tela, o que é lento porque cada leitura percorre o arquivo inteiro; (C) ler o guia de tempos em tempos e guardar só "agora" e "a seguir" num arquivo pequeno, o que é rápido depois da primeira leitura, mas dá mais código e depende do espaço livre no TX9. A opção C pode voltar a ser considerada se o dono pedir e se a lista trouxer o endereço do guia (url-tvg) e os canais tiverem tvg-id.
 - Dependências: nenhuma nova. Nenhum arquivo de código foi alterado nesta etapa.
+
+- ## 2026-10-24: Próxima temporada sozinha
+
+- Decisão: a tela da série (servidor e lista M3U) manda ao player a fila de TODOS os episódios da série, em ordem: temporadas normais primeiro e "Especiais" (temporada 0) no fim. Ao acabar um episódio, o player toca o próximo da fila, inclusive na temporada seguinte. No último episódio da série mostra "Fim da série.".
+- Motivo: antes, o player parava no fim de cada temporada. Os "Especiais" ficam no fim para o player não voltar a eles por engano depois da última temporada.
+- Limites mantidos: no máximo 500 episódios na fila; na lista M3U, se a soma dos endereços passar de 100 mil letras, só o episódio escolhido é mandado (sem "próximo sozinho").
+- Dependências: nenhuma nova.
+
+## 2026-10-24: Lembrar onde a pessoa parou numa série
+
+- Decisão: o app guarda só a POSIÇÃO do episódio na fila da série (um número pequeno) e a hora, no arquivo próprio "series_progress" (SeriesProgress.java). A anotação é feita quando o episódio começa a tocar. Ao abrir a série, a tela vai para a temporada certa e deixa o episódio selecionado. Não lembra o minuto exato (fica para depois, se o dono pedir).
+- Decisão: a chave da série nunca é guardada em texto. Guarda-se só um resumo SHA-1 dela, porque o endereço da lista M3U pode conter usuário e senha. Servidor: "xt|servidor|usuário|idDaSérie". Lista M3U: "m3u|endereçoDaLista|títuloDaSérie".
+- Decisão: no máximo 50 séries; as mais antigas são esquecidas.
+- Limite conhecido: se a lista de episódios mudar de tamanho ou de ordem, a posição pode apontar para outro episódio. Trocar a lista M3U faz a anotação deixar de valer.
+- Motivo: usa quase nenhuma memória e nenhum pedido ao servidor, ideal para o TX9 (1 GB de RAM).
+- Dependências: nenhuma nova.
+
+## 2026-10-24: Guia de programação (EPG) na lista M3U: não será feito por enquanto
+
+- Decisão (combinada com o dono): não fazer o guia para o login por lista M3U nesta fase. Os canais da lista M3U continuam sem "Agora", sem prévia e sem barra no player. O dono usa mais o login por servidor, onde o guia já funciona.
+- Motivo: a lista M3U não tem pedido de "programação deste canal". O guia viria num arquivo grande à parte (XMLTV), pesado para o TX9.
+- Alternativas estudadas: (B) ler o guia aos poucos só para os canais da tela (lento, cada leitura percorre o arquivo todo); (C) ler o guia de tempos em tempos e guardar só "agora" e "a seguir" num arquivo pequeno (rápido depois da primeira leitura, mas mais código). A opção C pode voltar se o dono pedir e se a lista trouxer url-tvg e os canais tiverem tvg-id.
+- Dependências: nenhuma nova.
+
+## 2026-10-24: Busca por nome
+
+- Decisão (combinada com o dono): a pessoa escolhe antes o tipo (Canais, Filmes ou Séries) e depois digita o nome. A busca lê só a lista daquele tipo.
+- Decisão: o nome é digitado num teclado de letras na tela (SearchKeyboard.java), com setas e OK, igual ao teclado de números da senha, porque o controle não tem teclado. Mínimo de 2 letras, máximo de 40.
+- Decisão: a busca acha o nome sem ligar para maiúsculas nem acentos ("acao" acha "Ação"). Com mais de uma palavra, o nome precisa ter todas.
+- Decisão: servidor: XtreamApi.search lê a resposta aos poucos (JsonReader) e guarda só os itens que combinam; a lista inteira nunca fica na memória. Lista M3U: M3uApi.search lê linha por linha, com os mesmos limites de 200 MB e 1 minuto. Para ao juntar 100 resultados. Séries aparecem uma vez só, pelo título.
+- Decisão: a tela de resultados (SearchActivity) reaproveita activity_browse.xml e esconde a lista de categorias por código, para não mexer em um layout que já funciona. Sem linha "Agora" na busca.
+- Decisão: controle parental ligado esconde itens adultos nos resultados (servidor: pelo nome; lista M3U: pelo nome e pela categoria). A busca nunca é registrada em log.
+- Decisão: o botão "Buscar" fica ao lado do "Controle parental" na página inicial. Foi criado por último, depois dos arquivos novos, para o Actions não ficar vermelho.
+- Motivo: o servidor Xtream não tem pedido de "buscar por nome"; ler só o tipo escolhido deixa a espera menor e mantém a memória baixa no TX9.
+- Dependências: nenhuma nova (usa java.text.Normalizer, que já vem no Android).
 - Fora desta etapa (de propósito): lembrar onde a pessoa parou, capa e sinopse dos episódios.
 - Teste no TX9: série abre pela página inicial e pelo "Ver mais", temporadas e episódios funcionam com as setas, o episódio toca e o próximo começa sozinho.
