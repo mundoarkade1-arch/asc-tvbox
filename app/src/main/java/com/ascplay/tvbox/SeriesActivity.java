@@ -22,15 +22,16 @@ import java.util.List;
  * Recebe o número da série e o nome (HomeActivity.EXTRA_ID e EXTRA_NAME).
  * Pede ao servidor só os episódios desta série (no máximo 500).
  *
- * Ao escolher um episódio, abre o player (MainActivity) levando a lista dos episódios
- * da mesma temporada, para o player tocar o próximo sozinho no fim.
+ * Ao escolher um episódio, abre o player (MainActivity) levando a lista de TODOS os episódios
+ * da série, em ordem (temporadas normais primeiro, "Especiais" no fim), para o player tocar
+ * o próximo sozinho no fim, inclusive passando para a temporada seguinte.
  *
  * Esta tela só é aberta a partir de itens que já passaram pelo controle parental
  * (página inicial e "Ver mais"), por isso não repete a conferência da senha.
  */
 public class SeriesActivity extends Activity {
 
-    /** Lista de números (ids) dos episódios da temporada, na ordem de exibição. */
+    /** Lista de números (ids) dos episódios da série, na ordem de reprodução. */
     public static final String EXTRA_LIST_IDS = "list_ids";
     /** Lista das extensões (mp4, mkv...) na mesma ordem da lista de ids. */
     public static final String EXTRA_LIST_EXTS = "list_exts";
@@ -204,13 +205,32 @@ public class SeriesActivity extends Activity {
         if (position < 0 || position >= shown.size()) {
             return;
         }
+        XtreamApi.Episode chosen = shown.get(position);
+
+        // Fila de reprodução: temporadas normais em ordem, e os "Especiais" (temporada 0) no fim.
+        ArrayList<XtreamApi.Episode> queue = new ArrayList<>();
+        for (XtreamApi.Episode e : allEpisodes) {
+            if (e.season != 0) {
+                queue.add(e);
+            }
+        }
+        for (XtreamApi.Episode e : allEpisodes) {
+            if (e.season == 0) {
+                queue.add(e);
+            }
+        }
+
         ArrayList<String> ids = new ArrayList<>();
         ArrayList<String> exts = new ArrayList<>();
-        for (XtreamApi.Episode e : shown) {
+        int index = 0;
+        for (int n = 0; n < queue.size(); n++) {
+            XtreamApi.Episode e = queue.get(n);
             ids.add(e.id);
             exts.add(e.ext);
+            if (e == chosen) {
+                index = n;
+            }
         }
-        XtreamApi.Episode chosen = shown.get(position);
 
         Intent i = new Intent(this, MainActivity.class);
         i.putExtra(HomeActivity.EXTRA_KIND, XtreamApi.Kind.EPISODE.name());
@@ -219,7 +239,7 @@ public class SeriesActivity extends Activity {
         i.putExtra(HomeActivity.EXTRA_NAME, episodeLabel(chosen));
         i.putStringArrayListExtra(EXTRA_LIST_IDS, ids);
         i.putStringArrayListExtra(EXTRA_LIST_EXTS, exts);
-        i.putExtra(EXTRA_LIST_INDEX, position);
+        i.putExtra(EXTRA_LIST_INDEX, index);
         startActivity(i);
     }
 
