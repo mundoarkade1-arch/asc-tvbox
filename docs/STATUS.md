@@ -10,7 +10,7 @@ Todas as etapas de código anteriores estão feitas e VERDES no Actions, mas o r
 - Conserto: no "Ver mais" da lista M3U, tocar numa série abre a M3uSeriesActivity.
 O guia de programação (EPG) da lista M3U ficou de fora por decisão do dono (ver DECISIONS.md).
 
-NOVA FASE (decidida com o dono em 24/10/2026): mudar a aparência e a navegação do app. As ideias estão na seção "Nova interface (a fazer)" abaixo. NADA dela foi feito ainda. O dono ainda vai lembrar de mais coisas.
+FASE ATUAL (decidida com o dono em 24/10/2026): MUDAR TODA A APARÊNCIA E A NAVEGAÇÃO DO APP PRIMEIRO. Os testes no TX9 ficam para DEPOIS da nova aparência (as telas e funções vão mudar, por exemplo a busca passa a ser por aba, então testar agora seria perder tempo). As ideias estão na seção "Nova interface (a fazer)" abaixo. NADA dela foi feito ainda. O dono ainda vai lembrar de mais coisas; se falar, anotar aqui e no DECISIONS.md.
 
 ## Feito (testado no TX9)
 - Repositório criado e documentação preenchida (README, AGENTS, CLAUDE, llms.txt, docs/*)
@@ -46,11 +46,11 @@ Nada disto foi feito. Ainda vão chegar mais pedidos. Ordem e detalhes a definir
 - Mantém a grade ao lado, com a barra de pesquisa e a linha "Agora: ..." embaixo de cada canal (como já é).
 - Barra embaixo da tela, no canal que está sendo assistido: "Agora" com o programa que passa e, do lado direito, o que vai passar depois.
 - Tecla de "três setinhas" (como botão de lista), apertada sobre um canal: abre a programação, com o que está passando e os próximos 5 programas. SÓ carrega quando a tecla é apertada, nunca antes.
-- A CONFIRMAR com o dono: o controle do TX9 não tem tecla de menu ou lista. Em qual teclado ou controle fica essa tecla das três setinhas? (Pode chegar ao app como tecla de menu do Android.)
+- A CONFIRMAR com o dono: o controle do TX9 não tem tecla de menu ou lista. Em qual teclado ou controle fica essa tecla das três setinhas? (Pode chegar ao app como tecla de menu do Android.) Combinar também uma alternativa para o controle do TX9 (por exemplo, OK longo no canal).
 
 ### Página do filme
 - Ao escolher um filme, abre uma página com a capa e a sinopse.
-- Botão de tocar e botão "Continuar de onde parei". Se já assistiu parte, o "Continuar" é a opção já pronta para apertar.
+- Botão de tocar e botão "Continuar de onde parei". Se já assistiu parte, o "Continuar" é a opção já pronta para apertar (foco nele).
 - Isso pede lembrar o MINUTO exato (hoje o app só lembra o episódio, não o minuto).
 
 ### Página da série
@@ -72,12 +72,14 @@ Nada disto foi feito. Ainda vão chegar mais pedidos. Ordem e detalhes a definir
 - Botão para verificar se há atualização.
 
 ### Pontos a conferir antes de fazer (limites técnicos)
-- Capa e sinopse: o servidor Xtream tem pedidos próprios para isso (um filme e uma série por vez). A lista M3U em geral NÃO traz sinopse; só a imagem do item. Falar com o dono antes.
+- Capa e sinopse: o servidor Xtream tem pedidos próprios para isso (get_vod_info para filme e get_series_info para série, um item por vez). A lista M3U em geral NÃO traz sinopse; só a imagem do item. Falar com o dono antes de decidir o que mostrar na lista M3U.
 - "Continuar de onde parei" com minuto exato: exige guardar o minuto de cada filme e episódio (arquivo pequeno, com limite de itens, e chave em resumo SHA-1 como no SeriesProgress).
 - Episódio "visto" e "visto pela metade": exige guardar, por episódio, o minuto e a duração.
+- Memória: o aparelho tem só 1 GB de RAM. Pedir só o que está na tela e nunca guardar listas inteiras.
+- Foco bem visível, tudo navegável só com setas, OK e Voltar, e também com o modo mouse.
 
 ## Roteiro de teste no TX9 (ainda NÃO feito)
-O dono não respondeu o roteiro. Antes de mexer na aparência, perguntar se ele quer testar primeiro, pois a nova interface vai mexer nas mesmas telas.
+DECIDIDO pelo dono em 24/10/2026: os testes ficam para DEPOIS da nova aparência. No fim da nova aparência, este roteiro será reescrito para as telas novas. Os passos abaixo são do app ANTES da nova aparência e vão mudar (por exemplo, a busca vai ser por aba).
 1. Próxima temporada (servidor): abrir uma série com 2 ou mais temporadas, tocar o ÚLTIMO episódio da Temporada 1, avançar o vídeo até o fim com a seta para a direita. Deve começar sozinho o 1º episódio da Temporada 2. No último episódio da série deve aparecer "Fim da série.".
 2. Próxima temporada (lista M3U): o mesmo teste, numa série da lista M3U.
 3. Onde parou (servidor): tocar o episódio 3 da Temporada 2, apertar Voltar até sair, abrir a mesma série. Deve abrir na Temporada 2 com o episódio 3 já selecionado.
@@ -131,15 +133,15 @@ O dono não respondeu o roteiro. Antes de mexer na aparência, perguntar se ele 
 - SearchActivity.java: tela de resultados. Recebe HomeActivity.EXTRA_KIND (LIVE, MOVIE ou SERIES) e SearchActivity.EXTRA_QUERY. Reaproveita activity_browse.xml e esconde a lista de categorias por código. Até 100 resultados. Canal e filme tocam; série abre a SeriesActivity ou a M3uSeriesActivity. Registrada no AndroidManifest.xml e aberta pelo botão "Buscar" da HomeActivity.
 
 ## Próximos passos (nesta ordem)
-1. Registrar as ideias da nova interface no DECISIONS.md (próximo passo).
-2. Perguntar ao dono se quer fazer o "Roteiro de teste no TX9" antes de mexer na aparência. Se sim, corrigir o que o teste mostrar.
-3. Combinar com o dono a ORDEM da nova interface (sugestão: menu à esquerda e tela inicial primeiro; depois abas Canais, Filmes e Séries com busca própria; depois Ajustes; depois página do filme e da série com capa e sinopse; depois player e "continuar de onde parei" com minuto exato).
-4. Responder a dúvida em aberto: em qual teclado ou controle fica a tecla das três setinhas.
-5. Fazer cada parte UM ARQUIVO POR VEZ, pedindo o arquivo atual antes.
+1. Registrar a decisão da nova interface no DECISIONS.md (próximo passo).
+2. Perguntar ao dono em qual teclado ou controle fica a tecla das três setinhas e combinar uma alternativa para o controle do TX9.
+3. Combinar com o dono a ORDEM da nova interface (sugestão: a) menu à esquerda e tela inicial; b) abas Canais, Filmes e Séries com busca própria; c) aba Ajustes e ícone de atualizar; d) página do filme e da série com capa e sinopse; e) player e "continuar de onde parei" com minuto exato; f) barra Agora / A seguir e a programação com as três setinhas).
+4. Fazer cada parte UM ARQUIVO POR VEZ, pedindo o arquivo atual antes (começar pelo activity_home.xml e pelo HomeActivity.java).
+5. No fim da nova aparência: reescrever o roteiro de teste para as telas novas e testar tudo no TX9.
 
 ## Problemas em aberto
 - Armazenamento livre do TX9 e acesso à Play Store: ainda não sabemos
-- Etapas 3, 1 e 4 (e o conserto do "Ver mais" da lista M3U) ainda sem teste no TX9
+- Etapas 3, 1 e 4 (e o conserto do "Ver mais" da lista M3U) ainda sem teste no TX9 (os testes ficam para depois da nova aparência)
 - Tecla das três setinhas: o controle do TX9 não tem tecla de menu ou lista; falta saber em qual teclado ou controle ela fica
 - Lista M3U: não tem guia de programação, por decisão do dono (ver DECISIONS.md)
 - Lista M3U: a página inicial mostra os 10 primeiros itens na ordem da lista; se a lista for gigante e tiver poucos itens de um tipo no começo, a leitura pode demorar até 1 minuto
