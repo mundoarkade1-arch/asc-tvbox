@@ -1,0 +1,19 @@
+# Compilação
+build/
+.gradle/
+*.apk
+*.aab
+
+# Chaves e segredos (nunca no repositório)
+*.jks
+*.keystore
+*.p12
+keystore.properties
+local.properties
+*.b64
+
+# Arquivos de editor e sistema
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
