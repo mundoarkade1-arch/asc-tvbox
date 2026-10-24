@@ -3,7 +3,7 @@
 Última atualização: 24/10/2026
 
 ## Fase atual
-Etapa "Ver mais por categorias na lista M3U" CONCLUÍDA e testada no TX9. Próxima etapa: episódios das séries na lista M3U.
+Etapa "Episódios das séries na lista M3U" CONCLUÍDA e testada no TX9. Com isso, a lista M3U já tem página inicial, "Ver mais" por categorias e séries com episódios. Próxima etapa: guia de programação (EPG) da lista M3U, que deve ser conversada com o dono antes de ser feita.
 
 ## Feito (testado no TX9)
 - Repositório criado e documentação preenchida (README, AGENTS, CLAUDE, llms.txt, docs/*)
@@ -37,17 +37,17 @@ Etapa "Ver mais por categorias na lista M3U" CONCLUÍDA e testada no TX9. Próxi
   - Canal e filme da lista tocam direto pelo endereço que vem na lista
   - Controle parental esconde itens adultos (pela categoria e pelo nome) já na leitura
   - "Ver mais": categorias achadas lendo a lista, itens por páginas de 40 (máximo 400 por categoria), canal e filme tocam direto
-  - Tocar numa série da lista M3U (na página inicial ou no "Ver mais") mostra o aviso "os episódios chegam na próxima etapa" (esperado)
+  - Séries: tocar numa série (na página inicial ou no "Ver mais") abre a tela da série da lista M3U, com temporadas à esquerda e episódios à direita; o episódio toca e o próximo da mesma temporada começa sozinho; no último mostra "Fim da temporada."
 
 ## Arquivos do EPG
 - XtreamApi.java: função epg(...) que pede ao servidor a programação de UM canal (get_short_epg, até 4 programas) e devolve o programa de agora e o "a seguir". Horários em milissegundos.
 - EpgCache.java: guarda na memória até 80 canais por 1 minuto cada; no máximo 2 pedidos ao servidor ao mesmo tempo; avisa sempre na thread principal
 - item_card.xml: tem a linha tv_now (usada para o "Agora: ...")
 - activity_home.xml: tem o botão "Controle parental" no alto e a caixinha de prévia fixa embaixo (group_preview)
-- HomeActivity.java: liga a linha tv_now e a caixinha de prévia ao EpgCache (espera 0,5 segundo parado no canal antes de pedir o guia); tem o menu do controle parental e esconde itens adultos das faixas; ao escolher uma série abre a SeriesActivity (login por servidor); no login por lista M3U carrega as faixas pelo M3uApi e manda o endereço do vídeo ao player; o cartão "Ver mais" abre a BrowseActivity (servidor) ou a M3uBrowseActivity (lista M3U)
+- HomeActivity.java: liga a linha tv_now e a caixinha de prévia ao EpgCache (espera 0,5 segundo parado no canal antes de pedir o guia); tem o menu do controle parental e esconde itens adultos das faixas; no login por servidor, ao escolher uma série abre a SeriesActivity e o cartão "Ver mais" abre a BrowseActivity; no login por lista M3U carrega as faixas pelo M3uApi, manda o endereço do vídeo ao player, abre a M3uSeriesActivity nas séries e a M3uBrowseActivity no "Ver mais"
 - BrowseActivity.java: liga a linha tv_now ao EpgCache (sem caixinha de prévia, por decisão do dono); mostra o cadeado e pede a senha nas categorias adultas; ao escolher uma série abre a SeriesActivity
 - activity_main.xml: tem a barra Agora / A seguir (group_nowbar) e a mensagem de status no alto da tela
-- MainActivity.java: mostra a barra Agora / A seguir nos canais ao vivo do servidor; toca episódios e passa para o próximo da temporada; no login por lista M3U toca o endereço direto recebido pela tela anterior (EXTRA_URL)
+- MainActivity.java: mostra a barra Agora / A seguir nos canais ao vivo do servidor; toca episódios e passa para o próximo da temporada; no login por lista M3U toca o endereço direto recebido pela tela anterior (EXTRA_URL) e, nos episódios, a lista de endereços da temporada (EXTRA_LIST_URLS)
 
 ## Arquivos do controle parental
 - ParentalStore.java: liga e desliga o controle; guarda a senha embaralhada (PBKDF2 com SHA-1, porque o Android 7.1 não tem SHA-256 nesse método) num arquivo próprio, separado do login (o botão "Trocar login" não apaga); confere a senha; trava depois de 5 erros; reconhece categorias e nomes adultos pelas mesmas palavras do app original
@@ -55,33 +55,38 @@ Etapa "Ver mais por categorias na lista M3U" CONCLUÍDA e testada no TX9. Próxi
 
 ## Arquivos dos episódios de séries (servidor)
 - XtreamApi.java: tipo Kind.EPISODE, classe Episode (id, title, season, number, ext) e função episodes(server, user, pass, seriesId), que pede ao servidor (get_series_info) os episódios de UMA série, no máximo 500, lendo aos poucos. streamUrl(...) monta o endereço de um episódio (/series/usuario/senha/id.ext).
-- activity_series.xml: layout da tela da série (título no alto, lista de temporadas à esquerda, lista de episódios à direita, mensagem de status no meio)
+- activity_series.xml: layout da tela da série (título no alto, lista de temporadas à esquerda, lista de episódios à direita, mensagem de status no meio). Usado também pela M3uSeriesActivity.
 - SeriesActivity.java: carrega os episódios de uma série, ordena por temporada e número, mostra temporadas e episódios (reaproveita item_category.xml); ao escolher um episódio abre o MainActivity levando a lista de episódios da mesma temporada (ids, extensões e posição). Temporada 0 aparece como "Especiais".
 - AndroidManifest.xml: tem a SeriesActivity registrada (mesmo padrão das outras telas)
 
 ## Arquivos da lista M3U
-- M3uApi.java: lê a lista linha por linha direto da internet, sem guardá-la inteira. Para depois de 200 MB ou 1 minuto. Separa canal, filme e série pelas mesmas regras do app original (caminho do endereço, tipo de arquivo, palavras na categoria e no título). Séries são agrupadas pelo título (sem "S01E03"). Tem 3 funções públicas:
+- M3uApi.java: lê a lista linha por linha direto da internet, sem guardá-la inteira. Para depois de 200 MB ou 1 minuto. Separa canal, filme e série pelas mesmas regras do app original (caminho do endereço, tipo de arquivo, palavras na categoria e no título). Séries são agrupadas pelo título (sem "S01E03"). Toda a leitura passa por uma função interna só (walk), que entrega cada item a quem pediu. Tem 4 funções públicas:
   - sample(m3uUrl, limite, esconderAdulto): os primeiros itens de cada tipo (página inicial); para ao achar o limite de cada tipo
   - categories(m3uUrl, tipo): os nomes das categorias (group-title) que têm itens daquele tipo, na ordem da lista; guarda só os nomes (máximo 3000)
   - page(m3uUrl, tipo, categoria, deslocamento, limite, pularAdulto): uma página de itens de um tipo, de uma categoria ou de todas (categoria null); pula os primeiros "deslocamento" itens; itens adultos pulados não contam no deslocamento; a lista é lida desde o começo a cada chamada, mas só a página fica na memória
-- M3uBrowseActivity.java: tela do "Ver mais" da lista M3U. Reaproveita activity_browse.xml, item_category.xml e item_card.xml. Categorias à esquerda (a 1ª é "Todas as categorias"), itens à direita, páginas de 40 (máximo 400). As categorias são lidas uma vez, depois que a primeira página aparece. Cadeado e senha nas categorias adultas (liberação vale só para aquela categoria). Canal e filme tocam direto pelo endereço da lista (EXTRA_URL). Série mostra o aviso. Sem linha "Agora" (a lista M3U ainda não tem guia).
-- AndroidManifest.xml: tem a M3uBrowseActivity registrada
+  - episodes(m3uUrl, tituloDaSerie): os episódios de UMA série, achados lendo a lista e juntando os itens de série cujo título (sem "S01E03") é igual ao pedido; no máximo 500; guarda só esses episódios. A classe M3uApi.Episode tem título, temporada, número e endereço (url). Quando o nome não traz "S01E03", "T1E5" ou "1x05", o episódio fica na temporada 1 com número 0.
+- M3uBrowseActivity.java: tela do "Ver mais" da lista M3U. Reaproveita activity_browse.xml, item_category.xml e item_card.xml. Categorias à esquerda (a 1ª é "Todas as categorias"), itens à direita, páginas de 40 (máximo 400). As categorias são lidas uma vez, depois que a primeira página aparece. Cadeado e senha nas categorias adultas (liberação vale só para aquela categoria). Canal e filme tocam direto pelo endereço da lista (EXTRA_URL). Série abre a M3uSeriesActivity. Sem linha "Agora" (a lista M3U ainda não tem guia).
+- M3uSeriesActivity.java: tela da série da lista M3U. Reaproveita activity_series.xml e item_category.xml. Recebe o título da série (EXTRA_NAME), lê a lista pelo M3uApi.episodes, ordena por temporada e número e mostra temporadas à esquerda e episódios à direita. Ao escolher um episódio abre o MainActivity levando o endereço dele (EXTRA_URL) e a lista de endereços da temporada (EXTRA_LIST_URLS) com a posição (SeriesActivity.EXTRA_LIST_INDEX). Se a soma dos endereços passar de 100 mil letras, manda só o episódio escolhido (sem "próximo sozinho"). No lugar do número de identificação, manda a posição do episódio (o player exige um número).
+- AndroidManifest.xml: tem a M3uBrowseActivity e a M3uSeriesActivity registradas
 - XtreamApi.Item ganhou o campo "url" (endereço direto do vídeo). Vazio nos itens do servidor; preenchido nos canais e filmes da lista M3U. XtreamApi.streamUrl devolve esse endereço como está, quando existe.
-- Nos itens da lista M3U, o "id" é só o número de ordem do item na leitura (não é um número do servidor). Itens de série da lista M3U NÃO têm endereço: serão preenchidos na etapa dos episódios, relendo a lista pelo título da série.
+- Nos itens da lista M3U, o "id" é só o número de ordem do item na leitura (não é um número do servidor). Itens de série da lista M3U não têm endereço: os episódios são achados pelo título da série quando a tela da série abre.
 - LoginActivity.java e CredentialStore.java: já guardavam o login por lista M3U (campo m3uUrl, criptografado); não mudaram.
 
 ## Próximos passos (nesta ordem)
-1. Lista M3U: episódios das séries (tela da série com temporadas e episódios, relendo a lista pelo título da série, reaproveitando a SeriesActivity se der; o player toca o próximo episódio sozinho).
-2. Lista M3U: guia de programação (EPG). É pesado: o app original baixa um arquivo XMLTV inteiro. Decidir com o dono se vale a pena no TX9 e, se sim, como (por exemplo, ler só os canais da tela, lendo aos poucos).
-3. Depois, definir com o dono as próximas etapas. Fora do que já foi feito, só se o dono pedir: lembrar onde parou numa série, capa e sinopse dos episódios, passar sozinho para a próxima temporada.
+1. Lista M3U: guia de programação (EPG). É pesado: o app original baixa um arquivo XMLTV inteiro. ANTES de fazer, conversar com o dono sobre se vale a pena no TX9 e, se sim, como (por exemplo, ler só os canais da tela, lendo aos poucos). Também ver se a lista do dono traz o endereço do guia (url-tvg no começo da lista) e se os canais têm tvg-id.
+2. Depois, definir com o dono as próximas etapas. Fora do que já foi feito, só se o dono pedir: lembrar onde parou numa série, capa e sinopse dos episódios, passar sozinho para a próxima temporada, busca por nome.
 
 ## Problemas em aberto
 - Armazenamento livre do TX9 e acesso à Play Store: ainda não sabemos
-- Lista M3U: ainda não tem episódios das séries nem guia de programação (ver passos 1 e 2 acima)
+- Lista M3U: ainda não tem guia de programação (ver passo 1 acima)
 - Lista M3U: a página inicial mostra os 10 primeiros itens na ordem em que aparecem na lista; se a lista for gigante e tiver poucos itens de um tipo no começo, a leitura pode demorar até o limite de 1 minuto
 - Lista M3U, "Ver mais": cada página nova lê a lista de novo desde o começo, então páginas mais para o fim de uma lista grande demoram mais. Se a leitura bater no limite de 200 MB ou de 1 minuto, a página pode vir menor e a categoria é tratada como terminada
 - Lista M3U, "Ver mais": as categorias chegam alguns segundos depois dos primeiros itens (comportamento esperado)
 - Lista M3U, "Ver mais": a categoria é identificada pelo nome (group-title); duas categorias com o mesmo nome aparecem como uma só
+- Lista M3U, séries: a série é achada pelo título (sem "S01E03"). Séries com títulos escritos de jeitos diferentes na lista podem aparecer separadas ou misturadas. A tela leva alguns segundos para abrir, porque lê a lista; se a leitura bater no limite de 200 MB ou 1 minuto, podem faltar episódios do fim da lista
+- Lista M3U, séries: no máximo 500 episódios por série. Episódio sem "S01E03" no nome vai para a temporada 1, sem número, e fica na ordem em que aparece na lista
+- Lista M3U, séries: a tela da série não pede a senha de novo; ela só abre a partir de itens que já passaram pelo filtro do controle parental. Esse caminho com o controle ligado ainda não foi testado de propósito no TX9
+- Lista M3U, séries: o player só passa para o próximo episódio da MESMA temporada; no último mostra "Fim da temporada." e para
 - Canais sem guia no servidor mostram "Programação indisponível" (comportamento esperado, não é erro)
 - Controle parental: no login por servidor, os itens adultos são tirados DEPOIS de buscar os 10 primeiros, então uma faixa pode mostrar menos de 10 cartões (comportamento esperado, não é erro). Na lista M3U os adultos já são pulados durante a leitura.
 - Controle parental: o reconhecimento de conteúdo adulto é só pelo nome (categoria ou título). Conteúdo adulto com nome comum pode passar; categorias com nome normal não ganham cadeado
