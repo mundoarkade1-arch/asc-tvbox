@@ -70,3 +70,12 @@ Registre aqui cada decisão importante: o que foi decidido e por quê.
 - Decisão: a página inicial continua buscando só os 10 primeiros itens de cada faixa. O cartão "Ver mais ›" no fim de cada faixa abre uma tela própria (BrowseActivity) para navegar por categorias, carregando os itens por páginas (a API ganhou o parâmetro de deslocamento, o "offset").
 - Motivo: o TX9 tem só 1 GB de RAM. Carregar a lista inteira do servidor de uma vez pode travar o aparelho. Carregar por partes mantém o app leve.
 - Nenhuma dependência nova foi adicionada nesta etapa.
+
+
+## 2026-10-24: EPG por canal, sob demanda, sem baixar o guia inteiro
+
+- Decisão: o guia de programação (EPG) é pedido ao servidor canal por canal (ação get_short_epg da API Xtream, até 4 programas), só para os canais que aparecem na tela. Os resultados ficam num cache pequeno na memória (EpgCache): no máximo 80 canais, cada um por 1 minuto, e no máximo 2 pedidos ao servidor ao mesmo tempo.
+- Motivo: o app original baixa o guia completo (XMLTV) e guarda tudo na memória. No TX9, com 1 GB de RAM, esse arquivo grande pode travar o aparelho. Pedir só o que está na tela mantém o app leve.
+- Alternativa descartada: baixar e ler o XMLTV inteiro. Pode voltar a ser considerada para login por lista M3U, que não tem a API do Xtream.
+- Canal sem guia mostra "Programação indisponível", sem erro.
+- Nenhuma dependência nova foi adicionada.
