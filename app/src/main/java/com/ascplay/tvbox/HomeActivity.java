@@ -31,6 +31,7 @@ import java.util.Locale;
  * programa de agora, barra de progresso, horários e "A seguir".
  * O botão "Controle parental" ativa, troca ou desativa a senha de 4 números.
  * Com o controle ligado, itens com nome adulto não aparecem nas faixas.
+ * Ao escolher uma série, abre a tela da série (temporadas e episódios).
  */
 public class HomeActivity extends Activity {
 
@@ -533,8 +534,10 @@ public class HomeActivity extends Activity {
 
     private void openItem(XtreamApi.Item item) {
         if (item.kind == XtreamApi.Kind.SERIES) {
-            Toast.makeText(this, "Séries: os episódios chegam na próxima etapa.",
-                    Toast.LENGTH_SHORT).show();
+            Intent s = new Intent(this, SeriesActivity.class);
+            s.putExtra(EXTRA_ID, item.id);
+            s.putExtra(EXTRA_NAME, item.name);
+            startActivity(s);
             return;
         }
         Intent i = new Intent(this, MainActivity.class);
