@@ -217,5 +217,16 @@ Registre aqui cada decisão importante: o que foi decidido e por quê.
 - Decisão: o botão "Buscar" fica ao lado do "Controle parental" na página inicial. Foi criado por último, depois dos arquivos novos, para o Actions não ficar vermelho.
 - Motivo: o servidor Xtream não tem pedido de "buscar por nome"; ler só o tipo escolhido deixa a espera menor e mantém a memória baixa no TX9.
 - Dependências: nenhuma nova (usa java.text.Normalizer, que já vem no Android).
+
+- ## 2026-10-24: Busca por nome ligada à página inicial e "Ver mais" da lista M3U abre a série
+
+- Decisão: o botão "Buscar" fica no alto da página inicial, ao lado do "Controle parental". Ao apertar OK, abre um menu (Canais, Filmes, Séries, Voltar). Depois de escolher o tipo, abre o teclado de letras. Ao apertar "Buscar" no teclado, abre a tela de resultados (SearchActivity) com o tipo e o texto.
+- Motivo: o controle remoto só tem setas e OK. Escolher o tipo antes deixa a leitura da lista menor e mais rápida, o que ajuda no TX9 (1 GB de RAM).
+- Decisão: o botão novo também esconde a caixinha de prévia do canal ao receber o foco (hideOnFocus), como os outros botões do alto.
+- Decisão: a SearchActivity foi registrada no AndroidManifest.xml só depois de a classe existir, e o botão foi ligado por último, para o Actions não ficar vermelho.
+- Decisão: no "Ver mais" da lista M3U, tocar numa série abre a M3uSeriesActivity (com EXTRA_ID e EXTRA_NAME), igual à página inicial. O aviso "os episódios chegam na próxima etapa" foi retirado.
+- Motivo: a tela da série da lista M3U já existe e foi testada na página inicial. Mostrar o aviso no "Ver mais" era um resto da etapa anterior.
+- Dependências: nenhuma nova.
+- Teste no TX9: o botão "Buscar" abre o menu, o teclado e os resultados; no "Ver mais" da lista M3U, a série abre a tela de temporadas e episódios.
 - Fora desta etapa (de propósito): lembrar onde a pessoa parou, capa e sinopse dos episódios.
 - Teste no TX9: série abre pela página inicial e pelo "Ver mais", temporadas e episódios funcionam com as setas, o episódio toca e o próximo começa sozinho.
