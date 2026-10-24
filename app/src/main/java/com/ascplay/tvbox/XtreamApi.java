@@ -28,7 +28,8 @@ import java.util.List;
  */
 public final class XtreamApi {
 
-    public enum Kind { LIVE, MOVIE, SERIES }
+    /** EPISODE é um episódio de série (não aparece em listas, só serve para tocar). */
+    public enum Kind { LIVE, MOVIE, SERIES, EPISODE }
 
     public static final class Category {
         public final String id;
@@ -82,6 +83,26 @@ public final class XtreamApi {
         }
     }
 
+    /**
+     * Um episódio de série. "season" é a temporada e "number" o número do episódio
+     * (0 quando o servidor não informa). "title" pode vir vazio.
+     */
+    public static final class Episode {
+        public final String id;
+        public final String title;
+        public final int season;
+        public final int number;
+        public final String ext;
+
+        Episode(String id, String title, int season, int number, String ext) {
+            this.id = id;
+            this.title = title;
+            this.season = season;
+            this.number = number;
+            this.ext = ext;
+        }
+    }
+
     private static final class Slot {
         final String title;
         final long start;
@@ -100,6 +121,7 @@ public final class XtreamApi {
     private static final int MAX_CATEGORIES = 3000;
     private static final int MAX_NAME = 200;
     private static final int MAX_EPG_SLOTS = 8;
+    private static final int MAX_EPISODES = 500;
     private static final String USER_AGENT = "ASC-TVBox/1.0 (Android)";
 
     private XtreamApi() {
@@ -277,7 +299,48 @@ public final class XtreamApi {
         }
     }
 
-    /** Endereço para tocar um canal ou filme. Séries precisam de episódios (etapa futura). */
+    /**
+     * Episódios de UMA série (get_series_info). Devolve no máximo 500, na ordem em que
+     * o servidor mandou. A resposta é lida aos poucos e a leitura para ao chegar no limite.
+     * Devolve lista vazia se a série não tem episódios.
+     */
+    public static List<Episode> episodes(String server, String user, String pass, String seriesId)
+            throws IOException {
+        List<Episode> out = new ArrayList<>();
+        if (!isNumber(seriesId)) {
+            return out;
+        }
+        String url = apiUrl(server, user, pass, "get_series_info") + "&series_id=" + seriesId;
+        HttpURLConnection conn = open(url);
+        try {
+            checkOk(conn);
+            JsonReader r = reader(conn);
+            try {
+                if (r.peek() != JsonToken.BEGIN_OBJECT) {
+                    throw new IOException("resposta invalida");
+                }
+                r.beginObject();
+                while (r.hasNext()) {
+                    String key = r.nextName();
+                    if ("episodes".equals(key)) {
+                        if (readEpisodeGroups(r, out)) {
+                            return out; // chegou no limite: para de ler
+                        }
+                    } else {
+                        r.skipValue();
+                    }
+                }
+                r.endObject();
+                return out;
+            } finally {
+                closeQuietly(r);
+            }
+        } finally {
+            conn.disconnect();
+        }
+    }
+
+    /** Endereço para tocar um canal, filme ou episódio. Séries inteiras precisam dos episódios. */
     public static String streamUrl(String server, String user, String pass, Item item) {
         String base = server + "/";
         String u = Uri.encode(user) + "/" + Uri.encode(pass) + "/";
@@ -287,6 +350,10 @@ public final class XtreamApi {
         if (item.kind == Kind.MOVIE) {
             String ext = item.ext.isEmpty() ? "mp4" : item.ext;
             return base + "movie/" + u + item.id + "." + ext;
+        }
+        if (item.kind == Kind.EPISODE) {
+            String ext = item.ext.isEmpty() ? "mp4" : item.ext;
+            return base + "series/" + u + item.id + "." + ext;
         }
         return null;
     }
@@ -384,6 +451,123 @@ public final class XtreamApi {
             return null;
         }
         return new Slot(cut(t), s * 1000L, e * 1000L);
+    }
+
+    // ---------- Leitura de episódios ----------
+
+    /**
+     * Lê o campo "episodes". O servidor manda um objeto com uma lista por temporada
+     * ("1": [...], "2": [...]), ou uma lista de listas. Devolve true se chegou no limite.
+     */
+    private static boolean readEpisodeGroups(JsonReader r, List<Episode> out) throws IOException {
+        JsonToken t = r.peek();
+        if (t == JsonToken.BEGIN_OBJECT) {
+            r.beginObject();
+            while (r.hasNext()) {
+                int season = parseIntSafe(r.nextName());
+                if (r.peek() == JsonToken.BEGIN_ARRAY) {
+                    if (readEpisodeList(r, season, out)) {
+                        return true;
+                    }
+                } else {
+                    r.skipValue();
+                }
+            }
+            r.endObject();
+        } else if (t == JsonToken.BEGIN_ARRAY) {
+            r.beginArray();
+            int index = 0;
+            while (r.hasNext()) {
+                index++;
+                if (r.peek() == JsonToken.BEGIN_ARRAY) {
+                    if (readEpisodeList(r, index, out)) {
+                        return true;
+                    }
+                } else {
+                    r.skipValue();
+                }
+            }
+            r.endArray();
+        } else {
+            r.skipValue();
+        }
+        return false;
+    }
+
+    /** Lê a lista de episódios de uma temporada. Devolve true se chegou no limite. */
+    private static boolean readEpisodeList(JsonReader r, int season, List<Episode> out)
+            throws IOException {
+        r.beginArray();
+        while (r.hasNext()) {
+            if (out.size() >= MAX_EPISODES) {
+                return true;
+            }
+            if (r.peek() != JsonToken.BEGIN_OBJECT) {
+                r.skipValue();
+                continue;
+            }
+            Episode e = readEpisode(r, season);
+            if (e != null) {
+                out.add(e);
+            }
+        }
+        r.endArray();
+        return false;
+    }
+
+    /** Lê um episódio. Devolve null se não tiver número de identificação válido. */
+    private static Episode readEpisode(JsonReader r, int fallbackSeason) throws IOException {
+        String id = "";
+        String title = "";
+        String num = "";
+        String seasonText = "";
+        String ext = "";
+        r.beginObject();
+        while (r.hasNext()) {
+            String key = r.nextName();
+            switch (key) {
+                case "id":
+                    id = readText(r);
+                    break;
+                case "title":
+                    title = readText(r);
+                    break;
+                case "episode_num":
+                    num = readText(r);
+                    break;
+                case "season":
+                    seasonText = readText(r);
+                    break;
+                case "container_extension":
+                    ext = readText(r);
+                    break;
+                default:
+                    r.skipValue();
+                    break;
+            }
+        }
+        r.endObject();
+
+        if (!isNumber(id)) {
+            return null;
+        }
+        if (!ext.matches("[A-Za-z0-9]{1,5}")) {
+            ext = "";
+        }
+        int season = isNumber(seasonText) ? parseIntSafe(seasonText) : fallbackSeason;
+        int number = parseIntSafe(num);
+        return new Episode(id, cut(title), season, number, ext);
+    }
+
+    private static int parseIntSafe(String s) {
+        if (!isNumber(s)) {
+            return 0;
+        }
+        try {
+            return Integer.parseInt(s);
+        } catch (NumberFormatException ex) {
+            return 0;
+        }
     }
 
     private static long parseSeconds(String s) {
