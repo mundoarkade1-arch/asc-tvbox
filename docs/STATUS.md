@@ -3,14 +3,22 @@
 Última atualização: 24/10/2026
 
 ## Fase atual
-Todas as etapas de código anteriores estão feitas e VERDES no Actions, mas o roteiro de teste no TX9 ainda NÃO foi feito:
+FASE ATUAL (decidida com o dono em 24/10/2026): MUDAR TODA A APARÊNCIA E A NAVEGAÇÃO DO APP PRIMEIRO. Os testes no TX9 ficam para DEPOIS da nova aparência (as telas e funções vão mudar, então testar agora seria perder tempo). As ideias estão na seção "Nova interface" abaixo. O dono ainda pode lembrar de mais pedidos; se falar, anotar aqui e no DECISIONS.md.
+
+Andamento da nova aparência (uma parte de cada vez):
+- (a) Menu à esquerda + Tela inicial: FEITA (verde no Actions, ainda NÃO testada no TX9). Veja "Parte (a)" abaixo.
+- (b) Abas Canais, Filmes e Séries com busca própria: a fazer (PRÓXIMA)
+- (c) Aba Ajustes e ícone de atualizar: o ícone de atualizar já existe no menu (parte a); a aba Ajustes a fazer
+- (d) Página do filme e da série com capa e sinopse: a fazer
+- (e) Player (botões transparentes, barra que some rápido, foco livre) e "continuar de onde parei" com minuto exato: a fazer
+- (f) Barra Agora / A seguir e a programação com a tecla das três listras: a fazer
+
+Antes da nova aparência, todas as etapas de código estavam VERDES no Actions, mas o roteiro de teste no TX9 ainda NÃO foi feito:
 - Etapa 3: passar sozinho para a próxima temporada (servidor e lista M3U).
 - Etapa 1: lembrar o episódio onde a pessoa parou (servidor e lista M3U).
 - Etapa 4: busca por nome, LIGADA (SearchActivity registrada no AndroidManifest.xml, botão "Buscar" na página inicial).
 - Conserto: no "Ver mais" da lista M3U, tocar numa série abre a M3uSeriesActivity.
 O guia de programação (EPG) da lista M3U ficou de fora por decisão do dono (ver DECISIONS.md).
-
-FASE ATUAL (decidida com o dono em 24/10/2026): MUDAR TODA A APARÊNCIA E A NAVEGAÇÃO DO APP PRIMEIRO. Os testes no TX9 ficam para DEPOIS da nova aparência (as telas e funções vão mudar, por exemplo a busca passa a ser por aba, então testar agora seria perder tempo). As ideias estão na seção "Nova interface (a fazer)" abaixo. NADA dela foi feito ainda. O dono ainda vai lembrar de mais coisas; se falar, anotar aqui e no DECISIONS.md.
 
 ## Feito (testado no TX9)
 - Repositório criado e documentação preenchida (README, AGENTS, CLAUDE, llms.txt, docs/*)
@@ -32,21 +40,32 @@ FASE ATUAL (decidida com o dono em 24/10/2026): MUDAR TODA A APARÊNCIA E A NAVE
 - Lembrar onde parou: ao começar a tocar um episódio, o player anota a posição dele na fila (SeriesProgress). Ao abrir a série de novo, a tela vai para a temporada certa e deixa o episódio selecionado. Guarda no máximo 50 séries. Guarda só o episódio, não o minuto.
 - Busca por nome: botão "Buscar" na página inicial, menu (Canais, Filmes, Séries), teclado de letras, tela de resultados. Servidor e lista M3U.
 - "Ver mais" da lista M3U: série abre a M3uSeriesActivity (antes mostrava um aviso).
+- Parte (a) da nova aparência: menu vertical à esquerda, só com ícones.
 
-## Nova interface (a fazer) - pedidos do dono em 24/10/2026
-Nada disto foi feito. Ainda vão chegar mais pedidos. Ordem e detalhes a definir com o dono, um passo de cada vez.
+## Parte (a): menu à esquerda (feita, verde, NÃO testada no TX9)
+- Menu vertical à esquerda, com 6 ícones: Tela inicial, Canais, Filmes, Séries, Ajustes e (embaixo) Atualizar.
+- Tela inicial: leva o foco para o primeiro canal (ou filme, ou série) já carregado.
+- Canais, Filmes e Séries: POR ENQUANTO abrem o "Ver mais" daquele tipo. As abas de verdade (com busca própria) são a parte (b).
+- Ajustes: POR ENQUANTO só mostra um aviso na tela. A aba de verdade é a parte (c).
+- Atualizar: recarrega as três faixas (mesma função usada pelo controle parental).
+- Os botões do alto (Buscar, Controle parental, Trocar login) CONTINUAM, de propósito, para nada ficar sem acesso no meio do caminho. Eles saem quando a busca por aba (b) e os Ajustes (c) existirem.
+- A caixinha de prévia do canal continua embaixo, agora só na parte da direita (ao lado do menu).
+- Os botões do menu usam o fundo bg_button, que já existia. A CONFERIR no TX9: se o foco (item selecionado) aparece bem visível nos ícones.
+
+## Nova interface - pedidos do dono em 24/10/2026
+Ainda vão chegar mais pedidos. Ordem e detalhes combinados com o dono, um passo de cada vez.
 
 ### Menu e telas principais
-- Menu vertical no lado ESQUERDO, só com ícones: Tela inicial, Canais, Filmes, Séries e Ajustes.
+- Menu vertical no lado ESQUERDO, só com ícones: Tela inicial, Canais, Filmes, Séries e Ajustes. (FEITO na parte a, com ligações provisórias)
 - A Tela inicial é sempre a que abre com o app. Na parte grande da direita mostra as indicações: 10 primeiros canais, 10 primeiros filmes, 10 primeiras séries.
 - Cada aba (Canais, Filmes, Séries) tem a sua barra de pesquisa, e a busca mostra SÓ aquele tipo (no lugar do botão "Buscar" e do menu de tipo de hoje).
-- Ícone de atualizar na tela principal, para recarregar a lista.
+- Ícone de atualizar na tela principal, para recarregar a lista. (FEITO na parte a)
 
 ### Aba Canais
 - Mantém a grade ao lado, com a barra de pesquisa e a linha "Agora: ..." embaixo de cada canal (como já é).
 - Barra embaixo da tela, no canal que está sendo assistido: "Agora" com o programa que passa e, do lado direito, o que vai passar depois.
-- Tecla de "três setinhas" (como botão de lista), apertada sobre um canal: abre a programação, com o que está passando e os próximos 5 programas. SÓ carrega quando a tecla é apertada, nunca antes.
-- A CONFIRMAR com o dono: o controle do TX9 não tem tecla de menu ou lista. Em qual teclado ou controle fica essa tecla das três setinhas? (Pode chegar ao app como tecla de menu do Android.) Combinar também uma alternativa para o controle do TX9 (por exemplo, OK longo no canal).
+- Tecla das "três listras" do controle do TX9 (botão de lista), apertada sobre um canal: abre a programação, com o que está passando e os próximos 5 programas. SÓ carrega quando a tecla é apertada, nunca antes.
+- RESOLVIDO com o dono: o controle do TX9 TEM um botão com três listras. No Android ela costuma chegar como tecla de menu (KEYCODE_MENU). Segunda via, caso a tecla chegue diferente: segurar o OK sobre o canal também abre a programação. Conferir no TX9 se a tecla funciona.
 
 ### Página do filme
 - Ao escolher um filme, abre uma página com a capa e a sinopse.
@@ -80,6 +99,7 @@ Nada disto foi feito. Ainda vão chegar mais pedidos. Ordem e detalhes a definir
 
 ## Roteiro de teste no TX9 (ainda NÃO feito)
 DECIDIDO pelo dono em 24/10/2026: os testes ficam para DEPOIS da nova aparência. No fim da nova aparência, este roteiro será reescrito para as telas novas. Os passos abaixo são do app ANTES da nova aparência e vão mudar (por exemplo, a busca vai ser por aba).
+Itens novos da parte (a) para incluir no roteiro: (i) o menu à esquerda aparece com os 6 ícones; (ii) o foco nos ícones é bem visível; (iii) ir com a seta para a esquerda a partir de um canal chega ao menu, e para a direita volta ao conteúdo; (iv) o ícone da Tela inicial leva ao primeiro canal; (v) Canais, Filmes e Séries abrem o "Ver mais"; (vi) Ajustes mostra o aviso; (vii) Atualizar recarrega as faixas.
 1. Próxima temporada (servidor): abrir uma série com 2 ou mais temporadas, tocar o ÚLTIMO episódio da Temporada 1, avançar o vídeo até o fim com a seta para a direita. Deve começar sozinho o 1º episódio da Temporada 2. No último episódio da série deve aparecer "Fim da série.".
 2. Próxima temporada (lista M3U): o mesmo teste, numa série da lista M3U.
 3. Onde parou (servidor): tocar o episódio 3 da Temporada 2, apertar Voltar até sair, abrir a mesma série. Deve abrir na Temporada 2 com o episódio 3 já selecionado.
@@ -92,12 +112,16 @@ DECIDIDO pelo dono em 24/10/2026: os testes ficam para DEPOIS da nova aparência
 10. "Ver mais" da lista M3U: entrar em Séries, escolher uma série. Deve abrir a tela da série (temporadas e episódios), sem aviso.
 11. Conferir que o que já funcionava continua: tocar um canal, um filme e abrir o "Ver mais".
 
+## Arquivos do menu à esquerda (parte a)
+- Ícones (pasta app/src/main/res/drawable/): ic_nav_home.xml, ic_nav_live.xml, ic_nav_movie.xml, ic_nav_series.xml, ic_nav_settings.xml, ic_nav_refresh.xml. Cada um é um desenho branco de 32dp.
+- activity_home.xml: agora tem duas colunas lado a lado. Esquerda: group_nav (88dp) com os botões nav_home, nav_live, nav_movie, nav_series, nav_settings e, embaixo, nav_refresh (ImageButton, 64dp, fundo bg_button). Direita: o conteúdo de antes (títulos, botões do alto, faixas e caixinha de prévia).
+- HomeActivity.java: liga os 6 botões do menu (navHome, navLive, navMovie, navSeries, navSettings, navRefresh). goToFirstCard() leva o foco ao primeiro cartão; openSection(kind) abre o "Ver mais"; Ajustes mostra um Toast; Atualizar chama reloadRails(). Os botões do menu escondem a caixinha de prévia ao receber o foco (hideOnFocus).
+
 ## Arquivos do EPG
 - XtreamApi.java: função epg(...) que pede ao servidor a programação de UM canal (get_short_epg, até 4 programas) e devolve o programa de agora e o "a seguir". Horários em milissegundos.
 - EpgCache.java: guarda na memória até 80 canais por 1 minuto cada; no máximo 2 pedidos ao servidor ao mesmo tempo; avisa sempre na thread principal
 - item_card.xml: tem a linha tv_now (usada para o "Agora: ...")
-- activity_home.xml: tem os botões "Buscar" (btn_search), "Controle parental" e "Trocar login" no alto e a caixinha de prévia fixa embaixo (group_preview)
-- HomeActivity.java: liga a linha tv_now e a caixinha de prévia ao EpgCache (espera 0,5 segundo parado no canal); tem o menu do controle parental e esconde itens adultos das faixas; tem o botão "Buscar" (menu Canais/Filmes/Séries, depois SearchKeyboard e, no onSearch, abre a SearchActivity com EXTRA_KIND e EXTRA_QUERY); no servidor, série abre a SeriesActivity e "Ver mais" abre a BrowseActivity; na lista M3U carrega as faixas pelo M3uApi, manda o endereço do vídeo ao player, abre a M3uSeriesActivity nas séries e a M3uBrowseActivity no "Ver mais"
+- HomeActivity.java: liga a linha tv_now e a caixinha de prévia ao EpgCache (espera 0,5 segundo parado no canal); tem o menu do controle parental e esconde itens adultos das faixas; tem o botão "Buscar" (menu Canais/Filmes/Séries, depois SearchKeyboard e, no onSearch, abre a SearchActivity com EXTRA_KIND e EXTRA_QUERY); no servidor, série abre a SeriesActivity e "Ver mais" abre a BrowseActivity; na lista M3U carrega as faixas pelo M3uApi, manda o endereço do vídeo ao player, abre a M3uSeriesActivity nas séries e a M3uBrowseActivity no "Ver mais"; tem o menu à esquerda (ver "Arquivos do menu à esquerda")
 - BrowseActivity.java: "Ver mais" do servidor, liga a linha tv_now ao EpgCache; cadeado e senha nas categorias adultas; série abre a SeriesActivity
 - activity_main.xml: tem a barra Agora / A seguir (group_nowbar) e a mensagem de status no alto da tela
 - MainActivity.java: ver "Arquivos dos episódios" abaixo
@@ -133,16 +157,19 @@ DECIDIDO pelo dono em 24/10/2026: os testes ficam para DEPOIS da nova aparência
 - SearchActivity.java: tela de resultados. Recebe HomeActivity.EXTRA_KIND (LIVE, MOVIE ou SERIES) e SearchActivity.EXTRA_QUERY. Reaproveita activity_browse.xml e esconde a lista de categorias por código. Até 100 resultados. Canal e filme tocam; série abre a SeriesActivity ou a M3uSeriesActivity. Registrada no AndroidManifest.xml e aberta pelo botão "Buscar" da HomeActivity.
 
 ## Próximos passos (nesta ordem)
-1. Registrar a decisão da nova interface no DECISIONS.md (próximo passo).
-2. Perguntar ao dono em qual teclado ou controle fica a tecla das três setinhas e combinar uma alternativa para o controle do TX9.
-3. Combinar com o dono a ORDEM da nova interface (sugestão: a) menu à esquerda e tela inicial; b) abas Canais, Filmes e Séries com busca própria; c) aba Ajustes e ícone de atualizar; d) página do filme e da série com capa e sinopse; e) player e "continuar de onde parei" com minuto exato; f) barra Agora / A seguir e a programação com as três setinhas).
-4. Fazer cada parte UM ARQUIVO POR VEZ, pedindo o arquivo atual antes (começar pelo activity_home.xml e pelo HomeActivity.java).
-5. No fim da nova aparência: reescrever o roteiro de teste para as telas novas e testar tudo no TX9.
+1. Salvar o trecho novo do DECISIONS.md (parte a e tecla das três listras) e corrigir o docs/TARGET_DEVICES.md (ele ainda diz que o controle não tem tecla de menu).
+2. Parte (b): abas Canais, Filmes e Séries com a busca própria de cada uma (a busca por tipo sai do botão "Buscar" do alto). Fazer UM ARQUIVO POR VEZ, pedindo o arquivo atual antes.
+3. Parte (c): aba Ajustes (controle parental, mudar/gerenciar lista, sobre o dispositivo, sobre o aplicativo, verificar atualização). Aí saem os botões do alto.
+4. Parte (d): página do filme e da série com capa e sinopse.
+5. Parte (e): player e "continuar de onde parei" com minuto exato.
+6. Parte (f): barra Agora / A seguir e a programação com a tecla das três listras.
+7. No fim da nova aparência: reescrever o roteiro de teste para as telas novas e testar tudo no TX9.
 
 ## Problemas em aberto
 - Armazenamento livre do TX9 e acesso à Play Store: ainda não sabemos
 - Etapas 3, 1 e 4 (e o conserto do "Ver mais" da lista M3U) ainda sem teste no TX9 (os testes ficam para depois da nova aparência)
-- Tecla das três setinhas: o controle do TX9 não tem tecla de menu ou lista; falta saber em qual teclado ou controle ela fica
+- Tecla das três listras: o dono confirmou que o controle do TX9 tem esse botão. Falta conferir no TX9 se ele chega ao app como tecla de menu. Segunda via prevista: OK longo no canal.
+- Parte (a): o menu à esquerda usa o fundo bg_button; falta conferir no TX9 se o foco nos ícones fica bem visível
 - Lista M3U: não tem guia de programação, por decisão do dono (ver DECISIONS.md)
 - Lista M3U: a página inicial mostra os 10 primeiros itens na ordem da lista; se a lista for gigante e tiver poucos itens de um tipo no começo, a leitura pode demorar até 1 minuto
 - Lista M3U, "Ver mais": cada página nova lê a lista de novo desde o começo, então páginas do fim de uma lista grande demoram mais. Se bater no limite de 200 MB ou 1 minuto, a página pode vir menor e a categoria é tratada como terminada
