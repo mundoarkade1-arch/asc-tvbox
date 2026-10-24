@@ -262,3 +262,306 @@ public final class XtreamApi {
                     Slot s = slots.get(i);
                     if (s.start <= now && now < s.end) {
                         if (i + 1 < slots.size()) {
+                            Slot n = slots.get(i + 1);
+                            return new Epg(s.title, s.start, s.end, n.title, n.start);
+                        }
+                        return new Epg(s.title, s.start, s.end, "", 0L);
+                    }
+                }
+                return null;
+            } finally {
+                closeQuietly(r);
+            }
+        } finally {
+            conn.disconnect();
+        }
+    }
+
+    /** Endereço para tocar um canal ou filme. Séries precisam de episódios (etapa futura). */
+    public static String streamUrl(String server, String user, String pass, Item item) {
+        String base = server + "/";
+        String u = Uri.encode(user) + "/" + Uri.encode(pass) + "/";
+        if (item.kind == Kind.LIVE) {
+            return base + "live/" + u + item.id + ".m3u8";
+        }
+        if (item.kind == Kind.MOVIE) {
+            String ext = item.ext.isEmpty() ? "mp4" : item.ext;
+            return base + "movie/" + u + item.id + "." + ext;
+        }
+        return null;
+    }
+
+    // ---------- Leitura de um item ----------
+
+    private static Item readItem(JsonReader r, Kind kind) throws IOException {
+        String id = "";
+        String name = "";
+        String icon = "";
+        String cat = "";
+        String epg = "";
+        String ext = "";
+        r.beginObject();
+        while (r.hasNext()) {
+            String key = r.nextName();
+            switch (key) {
+                case "stream_id":
+                    if (kind != Kind.SERIES) {
+                        id = readText(r);
+                    } else {
+                        r.skipValue();
+                    }
+                    break;
+                case "series_id":
+                    if (kind == Kind.SERIES) {
+                        id = readText(r);
+                    } else {
+                        r.skipValue();
+                    }
+                    break;
+                case "name":
+                    name = readText(r);
+                    break;
+                case "stream_icon":
+                case "cover":
+                    String v = readText(r);
+                    if (icon.isEmpty()) {
+                        icon = v;
+                    }
+                    break;
+                case "category_id":
+                    cat = readText(r);
+                    break;
+                case "epg_channel_id":
+                    epg = readText(r);
+                    break;
+                case "container_extension":
+                    ext = readText(r);
+                    break;
+                default:
+                    r.skipValue();
+                    break;
+            }
+        }
+        r.endObject();
+
+        if (!isNumber(id) || name.isEmpty()) {
+            return null;
+        }
+        String lowerIcon = icon.toLowerCase();
+        if (!lowerIcon.startsWith("http://") && !lowerIcon.startsWith("https://")) {
+            icon = "";
+        }
+        if (!ext.matches("[A-Za-z0-9]{1,5}")) {
+            ext = "";
+        }
+        return new Item(kind, id, cut(name), icon, cat, epg.trim(), ext);
+    }
+
+    /** Lê um programa do guia. Devolve null se faltar título ou horário válido. */
+    private static Slot readSlot(JsonReader r) throws IOException {
+        String title = "";
+        String start = "";
+        String stop = "";
+        r.beginObject();
+        while (r.hasNext()) {
+            String key = r.nextName();
+            if ("title".equals(key)) {
+                title = readText(r);
+            } else if ("start_timestamp".equals(key)) {
+                start = readText(r);
+            } else if ("stop_timestamp".equals(key)) {
+                stop = readText(r);
+            } else {
+                r.skipValue();
+            }
+        }
+        r.endObject();
+
+        long s = parseSeconds(start);
+        long e = parseSeconds(stop);
+        String t = decodeTitle(title);
+        if (t.isEmpty() || s <= 0 || e <= s) {
+            return null;
+        }
+        return new Slot(cut(t), s * 1000L, e * 1000L);
+    }
+
+    private static long parseSeconds(String s) {
+        if (!isNumber(s)) {
+            return 0L;
+        }
+        try {
+            return Long.parseLong(s);
+        } catch (NumberFormatException ex) {
+            return 0L;
+        }
+    }
+
+    /** O título do guia costuma vir em Base64. Se não for, usa o texto como veio. */
+    private static String decodeTitle(String raw) {
+        if (raw == null || raw.isEmpty()) {
+            return "";
+        }
+        try {
+            byte[] bytes = Base64.decode(raw, Base64.DEFAULT);
+            String s = new String(bytes, StandardCharsets.UTF_8).trim();
+            if (!s.isEmpty() && looksLikeText(s)) {
+                return s;
+            }
+        } catch (IllegalArgumentException ignored) {
+            // não era Base64: usa o texto original
+        }
+        return raw.trim();
+    }
+
+    private static boolean looksLikeText(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '\uFFFD' || (c < 32 && c != '\n' && c != '\t' && c != '\r')) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // ---------- Ajudas ----------
+
+    private static String categoriesAction(Kind kind) {
+        switch (kind) {
+            case MOVIE:
+                return "get_vod_categories";
+            case SERIES:
+                return "get_series_categories";
+            default:
+                return "get_live_categories";
+        }
+    }
+
+    private static String itemsAction(Kind kind) {
+        switch (kind) {
+            case MOVIE:
+                return "get_vod_streams";
+            case SERIES:
+                return "get_series";
+            default:
+                return "get_live_streams";
+        }
+    }
+
+    private static String apiUrl(String server, String user, String pass, String action)
+            throws IOException {
+        try {
+            return server + "/player_api.php?username=" + URLEncoder.encode(user, "UTF-8")
+                    + "&password=" + URLEncoder.encode(pass, "UTF-8")
+                    + "&action=" + action;
+        } catch (Exception e) {
+            throw new IOException("endereco");
+        }
+    }
+
+    /** Lê texto, número ou nulo como texto. Qualquer outra coisa é ignorada. */
+    private static String readText(JsonReader r) throws IOException {
+        JsonToken t = r.peek();
+        if (t == JsonToken.STRING || t == JsonToken.NUMBER) {
+            return r.nextString().trim();
+        }
+        if (t == JsonToken.NULL) {
+            r.nextNull();
+            return "";
+        }
+        r.skipValue();
+        return "";
+    }
+
+    private static boolean isNumber(String s) {
+        return s != null && s.matches("\\d{1,12}");
+    }
+
+    private static String cut(String s) {
+        return s.length() > MAX_NAME ? s.substring(0, MAX_NAME) : s;
+    }
+
+    private static void checkOk(HttpURLConnection conn) throws IOException {
+        int code = conn.getResponseCode();
+        if (code != 200) {
+            throw new IOException("resposta " + code);
+        }
+    }
+
+    private static JsonReader reader(HttpURLConnection conn) throws IOException {
+        InputStream in = new BufferedInputStream(new LimitedStream(conn.getInputStream(), MAX_BYTES));
+        JsonReader r = new JsonReader(new InputStreamReader(in, StandardCharsets.UTF_8));
+        r.setLenient(true);
+        return r;
+    }
+
+    private static void closeQuietly(JsonReader r) {
+        try {
+            r.close();
+        } catch (IOException ignored) {
+            // nada a fazer
+        }
+    }
+
+    /** Abre o endereço seguindo redirecionamentos (inclusive de http para https). */
+    private static HttpURLConnection open(String address) throws IOException {
+        URL url = new URL(address);
+        for (int i = 0; i <= MAX_REDIRECTS; i++) {
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(TIMEOUT_MS);
+            conn.setReadTimeout(TIMEOUT_MS);
+            conn.setInstanceFollowRedirects(false);
+            conn.setRequestProperty("User-Agent", USER_AGENT);
+            int code = conn.getResponseCode();
+            if (code == 301 || code == 302 || code == 303 || code == 307 || code == 308) {
+                String location = conn.getHeaderField("Location");
+                conn.disconnect();
+                if (location == null || location.isEmpty()) {
+                    throw new IOException("redirecionamento sem destino");
+                }
+                url = new URL(url, location);
+                String protocol = url.getProtocol();
+                if (!"http".equals(protocol) && !"https".equals(protocol)) {
+                    throw new IOException("redirecionamento invalido");
+                }
+                continue;
+            }
+            return conn;
+        }
+        throw new IOException("redirecionamentos demais");
+    }
+
+    /** Corta a leitura se a resposta passar do limite de bytes. */
+    private static final class LimitedStream extends FilterInputStream {
+        private long left;
+
+        LimitedStream(InputStream in, long max) {
+            super(in);
+            this.left = max;
+        }
+
+        @Override
+        public int read() throws IOException {
+            if (left <= 0) {
+                throw new IOException("resposta grande demais");
+            }
+            int b = super.read();
+            if (b >= 0) {
+                left--;
+            }
+            return b;
+        }
+
+        @Override
+        public int read(byte[] buf, int off, int len) throws IOException {
+            if (left <= 0) {
+                throw new IOException("resposta grande demais");
+            }
+            int n = super.read(buf, off, (int) Math.min(len, left));
+            if (n > 0) {
+                left -= n;
+            }
+            return n;
+        }
+    }
+}
