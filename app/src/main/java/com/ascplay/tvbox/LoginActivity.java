@@ -43,6 +43,17 @@ public class LoginActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Já existe login salvo? Vai direto para a página inicial.
+        // (O botão "Trocar login" da página inicial pede para mostrar esta tela.)
+        CredentialStore.Credentials saved = CredentialStore.load(this);
+        boolean forceLogin = getIntent().getBooleanExtra(HomeActivity.EXTRA_SHOW_LOGIN, false);
+        if (saved != null && !forceLogin) {
+            startActivity(new Intent(this, HomeActivity.class));
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_login);
 
         btnXtream = findViewById(R.id.btn_mode_xtream);
@@ -82,7 +93,6 @@ public class LoginActivity extends Activity {
         etM3u.setOnEditorActionListener(enterOnDone);
 
         // Preenche com o último login salvo (se houver).
-        CredentialStore.Credentials saved = CredentialStore.load(this);
         if (saved != null) {
             etServer.setText(saved.server);
             etUser.setText(saved.user);
@@ -236,7 +246,7 @@ public class LoginActivity extends Activity {
             }
             CredentialStore.save(this, c);
             showStatus(getString(R.string.msg_ok), COLOR_OK);
-            startActivity(new Intent(this, MainActivity.class));
+            startActivity(new Intent(this, HomeActivity.class));
             finish();
             return;
         }
