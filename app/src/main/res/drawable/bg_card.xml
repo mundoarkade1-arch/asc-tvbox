@@ -21,6 +21,16 @@
         </shape>
     </item>
 
+    <item android:state_selected="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#2E2125" />
+            <stroke
+                android:width="4dp"
+                android:color="#FF2A3D" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+
     <item>
         <shape android:shape="rectangle">
             <solid android:color="#1A1517" />
