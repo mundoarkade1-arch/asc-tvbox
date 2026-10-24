@@ -41,6 +41,10 @@ import java.util.Locale;
  *
  * O botão "Buscar" abre um menu (Canais, Filmes, Séries), depois o teclado de letras
  * e, ao buscar, a tela de resultados (SearchActivity).
+ *
+ * Menu à esquerda (só ícones): Tela inicial, Canais, Filmes, Séries, Ajustes e Atualizar.
+ * Por enquanto: Canais, Filmes e Séries abrem o "Ver mais"; Ajustes só mostra um aviso
+ * (as abas de verdade chegam nas próximas partes).
  */
 public class HomeActivity extends Activity {
 
@@ -68,6 +72,14 @@ public class HomeActivity extends Activity {
     private TextView stLive;
     private TextView stMovie;
     private TextView stSeries;
+
+    // Menu à esquerda (só ícones)
+    private View navHome;
+    private View navLive;
+    private View navMovie;
+    private View navSeries;
+    private View navSettings;
+    private View navRefresh;
 
     // Para ignorar respostas antigas quando as faixas são recarregadas
     private int railGen = 0;
@@ -134,6 +146,13 @@ public class HomeActivity extends Activity {
         stMovie = findViewById(R.id.st_movie);
         stSeries = findViewById(R.id.st_series);
 
+        navHome = findViewById(R.id.nav_home);
+        navLive = findViewById(R.id.nav_live);
+        navMovie = findViewById(R.id.nav_movie);
+        navSeries = findViewById(R.id.nav_series);
+        navSettings = findViewById(R.id.nav_settings);
+        navRefresh = findViewById(R.id.nav_refresh);
+
         groupUpdate = findViewById(R.id.group_update);
         tvUpdate = findViewById(R.id.tv_update);
         btnUpdateNow = findViewById(R.id.btn_update_now);
@@ -153,6 +172,13 @@ public class HomeActivity extends Activity {
         btnUpdateNow.setOnFocusChangeListener(hideOnFocus);
         btnUpdateLater.setOnFocusChangeListener(hideOnFocus);
 
+        navHome.setOnFocusChangeListener(hideOnFocus);
+        navLive.setOnFocusChangeListener(hideOnFocus);
+        navMovie.setOnFocusChangeListener(hideOnFocus);
+        navSeries.setOnFocusChangeListener(hideOnFocus);
+        navSettings.setOnFocusChangeListener(hideOnFocus);
+        navRefresh.setOnFocusChangeListener(hideOnFocus);
+
         btnLogout.setOnClickListener(v -> {
             Intent i = new Intent(this, LoginActivity.class);
             i.putExtra(EXTRA_SHOW_LOGIN, true);
@@ -163,6 +189,18 @@ public class HomeActivity extends Activity {
         btnSearch.setOnClickListener(v -> openSearchMenu());
         btnUpdateNow.setOnClickListener(v -> startUpdate());
         btnUpdateLater.setOnClickListener(v -> dismissUpdate());
+
+        navHome.setOnClickListener(v -> goToFirstCard());
+        navLive.setOnClickListener(v -> openSection(XtreamApi.Kind.LIVE));
+        navMovie.setOnClickListener(v -> openSection(XtreamApi.Kind.MOVIE));
+        navSeries.setOnClickListener(v -> openSection(XtreamApi.Kind.SERIES));
+        navSettings.setOnClickListener(v -> Toast.makeText(this,
+                "A aba Ajustes chega em breve. Por enquanto, use os botões do alto.",
+                Toast.LENGTH_SHORT).show());
+        navRefresh.setOnClickListener(v -> {
+            Toast.makeText(this, "Atualizando a lista...", Toast.LENGTH_SHORT).show();
+            reloadRails();
+        });
 
         loadAllRails();
 
@@ -191,6 +229,27 @@ public class HomeActivity extends Activity {
         super.onLowMemory();
         ImageLoader.clear();
         EpgCache.clear();
+    }
+
+    // ---------- Menu à esquerda ----------
+
+    /** Tela inicial: leva o foco para o primeiro canal (ou filme, ou série) já carregado. */
+    private void goToFirstCard() {
+        LinearLayout[] rails = {railLive, railMovie, railSeries};
+        for (LinearLayout rail : rails) {
+            if (rail.getChildCount() > 0) {
+                rail.getChildAt(0).requestFocus();
+                return;
+            }
+        }
+    }
+
+    /** Canais, Filmes e Séries: por enquanto abrem o "Ver mais" daquele tipo. */
+    private void openSection(XtreamApi.Kind kind) {
+        if (!isXtream() && !isM3u()) {
+            return;
+        }
+        openBrowse(kind);
     }
 
     // ---------- Faixas de canais, filmes e séries ----------
