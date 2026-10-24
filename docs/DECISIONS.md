@@ -89,3 +89,21 @@ Registre aqui cada decisão importante: o que foi decidido e por quê.
 - Decisão: no player, a barra Agora / A seguir aparece só em canais ao vivo. Ela surge quando o canal começa a tocar, some depois de 6 segundos e volta ao apertar OK. A mensagem de status ("Carregando...") passou para o alto da tela para não ficar sobre a barra.
 - Motivo: o controle remoto não tem tecla de informação, então o OK é o único jeito de chamar a barra. Filmes não têm guia de programação.
 - Dependências: nenhuma nova foi adicionada. Os horários vêm em milissegundos do XtreamApi.Epg e a barra de progresso usa só o ProgressBar do Android.
+
+## 2026-10-24: Controle parental
+
+- Decisão: senha de 4 números, igual ao app original. Fica guardada só como "resumo embaralhado" (PBKDF2 com sal), nunca como texto, num arquivo próprio (ParentalStore.java), separado do login.
+- Motivo: se ficasse junto do login, o botão "Trocar login" apagaria a senha. Separada, o controle parental continua ligado ao trocar de login.
+- Decisão: usar PBKDF2WithHmacSHA1 com 10 mil repetições.
+- Motivo: o Android 7.1 (API 25) do TX9 não tem a versão SHA-256 do PBKDF2 (ela só existe a partir do Android 8). 10 mil repetições mantêm a conferência rápida num aparelho fraco, sem travar a tela.
+- Limite conhecido: uma senha de 4 números é proteção para crianças, não segurança forte. Quem tiver acesso aos arquivos do aparelho conseguiria descobrir a senha testando as 10 mil combinações. Por isso a trava de tentativas (abaixo) é a defesa principal.
+- Decisão: depois de 5 senhas erradas seguidas, o app trava por um tempo (30 segundos, dobrando a cada erro seguinte, no máximo 1 hora). A contagem é zerada ao acertar.
+- Decisão: a senha é digitada num teclado de números desenhado na tela (PinDialog.java), escolhido com setas e OK. Ele avisa o app assim que o 4º número é digitado, sem botão de confirmar.
+- Motivo: o controle remoto do TX9 não tem teclas de número (ver docs/TARGET_DEVICES.md). O teclado é montado por código, sem arquivo de layout, e é usado em todos os lugares: criar, trocar, desativar e abrir categoria adulta.
+- Decisão: o reconhecimento de conteúdo adulto é só pelo nome, com as mesmas palavras do app original: uma lista mais ampla para nomes de categoria e uma lista mais curta para títulos de canal, filme e série (para evitar falsos alarmes).
+- Limite conhecido: conteúdo adulto com nome comum pode passar, e categorias adultas com nome normal não ganham cadeado. Para consertar isso seria preciso o dono marcar categorias à mão (possível melhoria futura).
+- Decisão: no "Ver mais", categorias adultas ficam com cadeado e pedem a senha. A liberação vale só para aquela categoria, enquanto a pessoa está nela. Ao trocar de categoria ou sair da tela, tranca de novo. Em "Todas as categorias", itens adultos não aparecem.
+- Motivo: é o mesmo comportamento do app original e evita deixar a senha "aberta" por esquecimento.
+- Decisão: na página inicial, os itens adultos são tirados depois de buscar os 10 primeiros de cada faixa, então uma faixa pode mostrar menos de 10 cartões.
+- Motivo: evita pedir mais itens ao servidor só para completar a faixa. Menos rede e memória no TX9 (1 GB de RAM). Já no "Ver mais", se uma página inteira for escondida, o app busca a próxima sozinho.
+- Dependências: nenhuma nova foi adicionada. Tudo usa classes que já vêm no Android.
