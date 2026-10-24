@@ -257,5 +257,24 @@ Registre aqui cada decisão importante: o que foi decidido e por quê.
 - Ainda em aberto: em qual teclado ou controle fica a tecla das "três setinhas", e qual alternativa usar no controle do TX9 (por exemplo, OK longo no canal, como já prevê o docs/TARGET_DEVICES.md).
 - Ainda em aberto: a ordem das partes. Sugestão: (a) menu à esquerda e tela inicial; (b) abas Canais, Filmes e Séries com busca própria; (c) aba Ajustes e ícone de atualizar; (d) página do filme e da série com capa e sinopse; (e) player e "continuar de onde parei" com minuto exato; (f) barra Agora / A seguir e a programação com as três setinhas.
 - Dependências: nenhuma nova.
+
+- ## 2026-10-24: Nova interface, parte (a): menu à esquerda
+
+- Decisão: a página inicial ganhou um menu vertical à esquerda, só com ícones: Tela inicial, Canais, Filmes, Séries, Ajustes e, embaixo, Atualizar. A parte da direita é o conteúdo de antes (três faixas de 10 itens e a caixinha de prévia do canal).
+- Decisão: os ícones são desenhos em vetor (arquivos ic_nav_*.xml, brancos, 32dp), sem imagens e sem biblioteca nova. Ocupam quase nada de memória no TX9 (1 GB de RAM).
+- Decisão: as ligações dos ícones são PROVISÓRIAS, para o app não ficar quebrado no meio do caminho. Tela inicial leva o foco ao primeiro cartão. Canais, Filmes e Séries abrem o "Ver mais" daquele tipo. Ajustes mostra um aviso. Atualizar recarrega as três faixas (usa a mesma função do controle parental). As abas de verdade vêm nas partes (b) e (c).
+- Decisão: os botões do alto (Buscar, Controle parental, Trocar login) CONTINUAM por enquanto. Eles só saem quando a busca por aba (parte b) e a aba Ajustes (parte c) existirem.
+- Motivo: se tirássemos os botões antes, o dono ficaria sem acesso ao controle parental e à troca de login. Fazendo em partes pequenas, cada parte deixa o app inteiro funcionando.
+- Decisão: os ícones novos foram criados ANTES de ligá-los ao layout, e o layout antes do código. Assim o Actions não fica vermelho por causa de um arquivo que ainda não existe.
+- Dependências: nenhuma nova.
+
+## 2026-10-24: Tecla das três listras do controle do TX9
+
+- Fato novo (dito pelo dono): o controle do TX9 TEM um botão com três listras (botão de lista). Isso corrige o docs/TARGET_DEVICES.md, que dizia que o controle não tem tecla de menu.
+- Decisão: a programação do canal (o que está passando e os próximos 5 programas) abre com essa tecla, apertada sobre um canal. No Android essa tecla costuma chegar ao app como tecla de menu (KEYCODE_MENU).
+- Decisão: segunda via, caso a tecla chegue diferente no aparelho: segurar o OK sobre o canal também abre a programação. Assim funciona de qualquer jeito, e no teste do TX9 conferimos qual das duas vale.
+- Regra mantida: a programação só é pedida ao servidor quando a tecla é apertada, nunca antes (aparelho com 1 GB de RAM).
+- Isso será feito na parte (f) da nova aparência.
+- Dependências: nenhuma nova.
 - Fora desta etapa (de propósito): lembrar onde a pessoa parou, capa e sinopse dos episódios.
 - Teste no TX9: série abre pela página inicial e pelo "Ver mais", temporadas e episódios funcionam com as setas, o episódio toca e o próximo começa sozinho.
