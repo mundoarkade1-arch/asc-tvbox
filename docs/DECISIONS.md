@@ -63,3 +63,10 @@ Registre aqui cada decisão importante: o que foi decidido e por quê.
 - Motivo: uma categoria pode ter milhares de itens; no TX9 (1 GB de RAM) não dá para guardar tudo. O limite de 400 protege a memória; busca por nome vem em etapa futura.
 - Sem dependência nova: usa ListView e GridView do próprio Android, que reaproveitam as linhas ao rolar.
 - Trocar de categoria rápido: respostas atrasadas são ignoradas (contador de geração).
+
+
+## 2026-10-24: "Ver mais" com navegação por categorias, carregando por partes
+
+- Decisão: a página inicial continua buscando só os 10 primeiros itens de cada faixa. O cartão "Ver mais ›" no fim de cada faixa abre uma tela própria (BrowseActivity) para navegar por categorias, carregando os itens por páginas (a API ganhou o parâmetro de deslocamento, o "offset").
+- Motivo: o TX9 tem só 1 GB de RAM. Carregar a lista inteira do servidor de uma vez pode travar o aparelho. Carregar por partes mantém o app leve.
+- Nenhuma dependência nova foi adicionada nesta etapa.
