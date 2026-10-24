@@ -3,7 +3,7 @@
 Última atualização: 24/10/2026
 
 ## Fase atual
-Etapa "Episódios das séries na lista M3U" CONCLUÍDA e testada no TX9. Com isso, a lista M3U já tem página inicial, "Ver mais" por categorias e séries com episódios. Próxima etapa: guia de programação (EPG) da lista M3U, que deve ser conversada com o dono antes de ser feita.
+Etapa "Episódios das séries na lista M3U" CONCLUÍDA e testada no TX9. Com isso, a lista M3U já tem página inicial, "Ver mais" por categorias e séries com episódios. O guia de programação (EPG) da lista M3U foi conversado com o dono e ficou de fora por enquanto (ver docs/DECISIONS.md). Próxima etapa: a definir com o dono.
 
 ## Feito (testado no TX9)
 - Repositório criado e documentação preenchida (README, AGENTS, CLAUDE, llms.txt, docs/*)
@@ -65,7 +65,7 @@ Etapa "Episódios das séries na lista M3U" CONCLUÍDA e testada no TX9. Com iss
   - categories(m3uUrl, tipo): os nomes das categorias (group-title) que têm itens daquele tipo, na ordem da lista; guarda só os nomes (máximo 3000)
   - page(m3uUrl, tipo, categoria, deslocamento, limite, pularAdulto): uma página de itens de um tipo, de uma categoria ou de todas (categoria null); pula os primeiros "deslocamento" itens; itens adultos pulados não contam no deslocamento; a lista é lida desde o começo a cada chamada, mas só a página fica na memória
   - episodes(m3uUrl, tituloDaSerie): os episódios de UMA série, achados lendo a lista e juntando os itens de série cujo título (sem "S01E03") é igual ao pedido; no máximo 500; guarda só esses episódios. A classe M3uApi.Episode tem título, temporada, número e endereço (url). Quando o nome não traz "S01E03", "T1E5" ou "1x05", o episódio fica na temporada 1 com número 0.
-- M3uBrowseActivity.java: tela do "Ver mais" da lista M3U. Reaproveita activity_browse.xml, item_category.xml e item_card.xml. Categorias à esquerda (a 1ª é "Todas as categorias"), itens à direita, páginas de 40 (máximo 400). As categorias são lidas uma vez, depois que a primeira página aparece. Cadeado e senha nas categorias adultas (liberação vale só para aquela categoria). Canal e filme tocam direto pelo endereço da lista (EXTRA_URL). Série abre a M3uSeriesActivity. Sem linha "Agora" (a lista M3U ainda não tem guia).
+- M3uBrowseActivity.java: tela do "Ver mais" da lista M3U. Reaproveita activity_browse.xml, item_category.xml e item_card.xml. Categorias à esquerda (a 1ª é "Todas as categorias"), itens à direita, páginas de 40 (máximo 400). As categorias são lidas uma vez, depois que a primeira página aparece. Cadeado e senha nas categorias adultas (liberação vale só para aquela categoria). Canal e filme tocam direto pelo endereço da lista (EXTRA_URL). Série abre a M3uSeriesActivity. Sem linha "Agora" (a lista M3U não tem guia, por decisão do dono).
 - M3uSeriesActivity.java: tela da série da lista M3U. Reaproveita activity_series.xml e item_category.xml. Recebe o título da série (EXTRA_NAME), lê a lista pelo M3uApi.episodes, ordena por temporada e número e mostra temporadas à esquerda e episódios à direita. Ao escolher um episódio abre o MainActivity levando o endereço dele (EXTRA_URL) e a lista de endereços da temporada (EXTRA_LIST_URLS) com a posição (SeriesActivity.EXTRA_LIST_INDEX). Se a soma dos endereços passar de 100 mil letras, manda só o episódio escolhido (sem "próximo sozinho"). No lugar do número de identificação, manda a posição do episódio (o player exige um número).
 - AndroidManifest.xml: tem a M3uBrowseActivity e a M3uSeriesActivity registradas
 - XtreamApi.Item ganhou o campo "url" (endereço direto do vídeo). Vazio nos itens do servidor; preenchido nos canais e filmes da lista M3U. XtreamApi.streamUrl devolve esse endereço como está, quando existe.
@@ -73,12 +73,12 @@ Etapa "Episódios das séries na lista M3U" CONCLUÍDA e testada no TX9. Com iss
 - LoginActivity.java e CredentialStore.java: já guardavam o login por lista M3U (campo m3uUrl, criptografado); não mudaram.
 
 ## Próximos passos (nesta ordem)
-1. Lista M3U: guia de programação (EPG). É pesado: o app original baixa um arquivo XMLTV inteiro. ANTES de fazer, conversar com o dono sobre se vale a pena no TX9 e, se sim, como (por exemplo, ler só os canais da tela, lendo aos poucos). Também ver se a lista do dono traz o endereço do guia (url-tvg no começo da lista) e se os canais têm tvg-id.
-2. Depois, definir com o dono as próximas etapas. Fora do que já foi feito, só se o dono pedir: lembrar onde parou numa série, capa e sinopse dos episódios, passar sozinho para a próxima temporada, busca por nome.
+1. Definir com o dono a próxima etapa. Só se o dono pedir: lembrar onde parou numa série, capa e sinopse dos episódios, passar sozinho para a próxima temporada, busca por nome.
+2. Guia de programação (EPG) da lista M3U: fica para depois. Só voltar ao assunto se o dono pedir. Se voltar, a opção recomendada é ler o guia de tempos em tempos e guardar só "agora" e "a seguir" num arquivo pequeno (precisa de url-tvg e tvg-id na lista).
 
 ## Problemas em aberto
 - Armazenamento livre do TX9 e acesso à Play Store: ainda não sabemos
-- Lista M3U: ainda não tem guia de programação (ver passo 1 acima)
+- Lista M3U: não tem guia de programação, por decisão do dono (ver DECISIONS.md). Os canais da lista ficam sem "Agora", sem prévia e sem barra no player. No login por servidor o guia funciona normalmente.
 - Lista M3U: a página inicial mostra os 10 primeiros itens na ordem em que aparecem na lista; se a lista for gigante e tiver poucos itens de um tipo no começo, a leitura pode demorar até o limite de 1 minuto
 - Lista M3U, "Ver mais": cada página nova lê a lista de novo desde o começo, então páginas mais para o fim de uma lista grande demoram mais. Se a leitura bater no limite de 200 MB ou de 1 minuto, a página pode vir menor e a categoria é tratada como terminada
 - Lista M3U, "Ver mais": as categorias chegam alguns segundos depois dos primeiros itens (comportamento esperado)
