@@ -246,5 +246,16 @@ Registre aqui cada decisão importante: o que foi decidido e por quê.
 - Tela principal: ícone de atualizar, para recarregar a lista.
 - Dependências: nenhuma nova prevista. A decisão sobre cada uma será registrada aqui quando a parte for feita.
 - Como vamos fazer: uma parte de cada vez, um arquivo por vez, pedindo o arquivo atual antes, e testando no TX9 no final de cada parte.
+
+- ## 2026-10-24: Nova aparência primeiro, testes no TX9 só depois
+
+- Decisão (do dono): fazer TODA a nova aparência antes de testar no TX9. Depois da nova aparência, testamos tudo e ajustamos o que não funcionar.
+- Motivo: as telas e funções vão mudar (por exemplo, a busca deixa de ter menu de tipo e passa a ser por aba). Testar agora seria perder tempo.
+- Esta decisão vale no lugar de dois trechos da decisão "Nova interface" acima: "testando no TX9 no final de cada parte" (os testes agora ficam para o fim de TODA a nova aparência) e as linhas soltas "Fora desta etapa" e "Teste no TX9" que sobraram no final dela (são restos da decisão da série e não valem para a nova interface).
+- O "Roteiro de teste no TX9" do STATUS.md será reescrito para as telas novas no fim da nova aparência. O roteiro antigo fica guardado até lá.
+- Cuidados técnicos combinados: manter tudo leve (1 GB de RAM), pedir só o que está na tela, nunca guardar listas inteiras, foco sempre bem visível, tudo navegável só com setas, OK e Voltar, e também com o modo mouse.
+- Ainda em aberto: em qual teclado ou controle fica a tecla das "três setinhas", e qual alternativa usar no controle do TX9 (por exemplo, OK longo no canal, como já prevê o docs/TARGET_DEVICES.md).
+- Ainda em aberto: a ordem das partes. Sugestão: (a) menu à esquerda e tela inicial; (b) abas Canais, Filmes e Séries com busca própria; (c) aba Ajustes e ícone de atualizar; (d) página do filme e da série com capa e sinopse; (e) player e "continuar de onde parei" com minuto exato; (f) barra Agora / A seguir e a programação com as três setinhas.
+- Dependências: nenhuma nova.
 - Fora desta etapa (de propósito): lembrar onde a pessoa parou, capa e sinopse dos episódios.
 - Teste no TX9: série abre pela página inicial e pelo "Ver mais", temporadas e episódios funcionam com as setas, o episódio toca e o próximo começa sozinho.
