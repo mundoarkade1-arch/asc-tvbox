@@ -19,9 +19,14 @@ import java.util.regex.Pattern;
  * Lê uma lista M3U e separa canais ao vivo, filmes e séries.
  *
  * Economia de memória: a lista é lida aos poucos (linha por linha) e a leitura PARA
- * assim que cada tipo atinge o limite pedido. A lista inteira nunca fica na memória.
+ * assim que acha o que foi pedido. A lista inteira nunca fica na memória.
  * Para listas gigantes, a leitura também para depois de 200 MB ou de 1 minuto e devolve
  * o que já achou.
+ *
+ * Três funções públicas:
+ * - sample: os primeiros itens de cada tipo (página inicial).
+ * - categories: os nomes das categorias de um tipo ("Ver mais").
+ * - page: uma página de itens de um tipo, de uma categoria ou de todas ("Ver mais").
  *
  * Faz acesso à rede: NUNCA chamar na thread principal.
  * Os endereços dos vídeos costumam conter usuário e senha: nunca mostrar nem registrar em log.
@@ -35,12 +40,24 @@ public final class M3uApi {
         public final List<XtreamApi.Item> series = new ArrayList<>();
     }
 
+    /** Recebe cada item da lista. Devolve false para parar a leitura. */
+    private interface Visitor {
+        boolean entry(String url, String group, String name, String icon, String tvgId,
+                      int counter);
+    }
+
+    /** Uma tarefa que lê a lista já aberta. */
+    private interface Job {
+        void run(Reader reader) throws IOException;
+    }
+
     private static final int TIMEOUT_MS = 15000;
     private static final int MAX_REDIRECTS = 5;
     private static final long MAX_BYTES = 200L * 1024L * 1024L;
     private static final long MAX_SECONDS = 60L;
     private static final int MAX_LINE = 4096;
     private static final int MAX_NAME = 200;
+    private static final int MAX_CATEGORIES = 3000;
     private static final String USER_AGENT = "ASC-TVBox/1.0 (Android)";
 
     private static final Pattern ATTR = Pattern.compile("([\\w-]+)=\"([^\"]*)\"");
@@ -63,7 +80,7 @@ public final class M3uApi {
     private M3uApi() {
     }
 
-    // ---------- Chamada pública ----------
+    // ---------- Chamadas públicas ----------
 
     /**
      * Devolve até "limit" itens de cada tipo (canais, filmes e séries), lendo a lista só até
@@ -71,10 +88,103 @@ public final class M3uApi {
      * Se hideAdult for verdadeiro, itens adultos (pelo nome ou pela categoria) são pulados.
      */
     public static Sample sample(String m3uUrl, int limit, boolean hideAdult) throws IOException {
+        final Sample out = new Sample();
+        try {
+            readList(m3uUrl, reader -> scan(reader, out, limit, hideAdult));
+        } catch (IOException e) {
+            // Lista enorme ou conexão que caiu no meio: se já achamos algo, mostra o que deu.
+            if (out.live.isEmpty() && out.movie.isEmpty() && out.series.isEmpty()) {
+                throw e;
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Devolve os nomes das categorias (group-title) que têm itens do tipo pedido, na ordem
+     * em que aparecem na lista. Lê a lista até o fim (ou até 200 MB ou 1 minuto) e guarda
+     * só os nomes das categorias, nunca os itens.
+     */
+    public static List<String> categories(String m3uUrl, XtreamApi.Kind kind)
+            throws IOException {
+        final List<String> out = new ArrayList<>();
+        final HashSet<String> seen = new HashSet<>();
+        try {
+            readList(m3uUrl, reader -> walk(reader, (url, grp, name, icon, tvgId, counter) -> {
+                if (classify(url, grp, name) == kind && seen.add(grp)) {
+                    out.add(cut(grp));
+                }
+                return out.size() < MAX_CATEGORIES;
+            }));
+        } catch (IOException e) {
+            if (out.isEmpty()) {
+                throw e;
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Devolve uma página de itens do tipo pedido. Se "group" for null, vale qualquer categoria.
+     * Pula os primeiros "offset" itens (que já foram mostrados) e devolve até "limit".
+     * Se skipAdult for verdadeiro, itens adultos (pelo nome ou pela categoria) são pulados
+     * e NÃO contam no "offset". Séries vêm agrupadas pelo título, um item por série.
+     * A lista é lida desde o começo a cada chamada, mas só uma página fica na memória.
+     */
+    public static List<XtreamApi.Item> page(String m3uUrl, XtreamApi.Kind kind, String group,
+                                            int offset, int limit, boolean skipAdult)
+            throws IOException {
+        final List<XtreamApi.Item> out = new ArrayList<>();
+        final HashSet<String> seenSeries = new HashSet<>();
+        final int[] skipped = {0};
+        try {
+            readList(m3uUrl, reader -> walk(reader, (url, grp, name, icon, tvgId, counter) -> {
+                if (classify(url, grp, name) != kind) {
+                    return true;
+                }
+                if (group != null && !group.equals(grp)) {
+                    return true;
+                }
+                if (skipAdult && (ParentalStore.isAdultCategory(grp)
+                        || ParentalStore.isAdultName(name))) {
+                    return true;
+                }
+                String shownName = name;
+                if (kind == XtreamApi.Kind.SERIES) {
+                    shownName = seriesTitle(name);
+                    if (!seenSeries.add(shownName.toLowerCase(Locale.ROOT))) {
+                        return true;
+                    }
+                }
+                if (skipped[0] < offset) {
+                    skipped[0]++;
+                    return true;
+                }
+                if (kind == XtreamApi.Kind.SERIES) {
+                    // Série: sem endereço próprio. Os episódios são buscados quando a série abrir.
+                    out.add(new XtreamApi.Item(kind, String.valueOf(counter), cut(shownName),
+                            icon, grp, "", ""));
+                } else {
+                    out.add(new XtreamApi.Item(kind, String.valueOf(counter), cut(shownName),
+                            icon, grp, tvgId, "", url));
+                }
+                return out.size() < limit;
+            }));
+        } catch (IOException e) {
+            if (out.isEmpty()) {
+                throw e;
+            }
+        }
+        return out;
+    }
+
+    // ---------- Leitura da lista ----------
+
+    /** Abre a lista, entrega a leitura à tarefa e fecha tudo no fim. */
+    private static void readList(String m3uUrl, Job job) throws IOException {
         if (m3uUrl == null || !isHttp(m3uUrl.trim())) {
             throw new IOException("endereco");
         }
-        Sample out = new Sample();
         HttpURLConnection conn = open(m3uUrl.trim());
         try {
             int code = conn.getResponseCode();
@@ -84,7 +194,7 @@ public final class M3uApi {
             Reader reader = new InputStreamReader(
                     new LimitedStream(conn.getInputStream(), MAX_BYTES), StandardCharsets.UTF_8);
             try {
-                scan(reader, out, limit, hideAdult);
+                job.run(reader);
             } finally {
                 try {
                     reader.close();
@@ -92,25 +202,60 @@ public final class M3uApi {
                     // nada a fazer
                 }
             }
-        } catch (IOException e) {
-            // Lista enorme ou conexão que caiu no meio: se já achamos algo, mostra o que deu.
-            if (out.live.isEmpty() && out.movie.isEmpty() && out.series.isEmpty()) {
-                throw e;
-            }
         } finally {
             conn.disconnect();
         }
-        return out;
     }
 
-    // ---------- Leitura da lista ----------
+    /** Página inicial: separa os itens por tipo e para quando cada tipo chega no limite. */
+    private static void scan(Reader reader, final Sample out, final int limit,
+                             final boolean hideAdult) throws IOException {
+        final HashSet<String> seenSeries = new HashSet<>();
+        walk(reader, (url, group, name, icon, tvgId, counter) -> {
+            XtreamApi.Kind kind = classify(url, group, name);
+            List<XtreamApi.Item> target;
+            if (kind == XtreamApi.Kind.LIVE) {
+                target = out.live;
+            } else if (kind == XtreamApi.Kind.MOVIE) {
+                target = out.movie;
+            } else {
+                target = out.series;
+            }
+            if (target.size() >= limit) {
+                return true;
+            }
+            if (hideAdult && (ParentalStore.isAdultCategory(group)
+                    || ParentalStore.isAdultName(name))) {
+                return true;
+            }
 
-    private static void scan(Reader reader, Sample out, int limit, boolean hideAdult)
-            throws IOException {
+            if (kind == XtreamApi.Kind.SERIES) {
+                String seriesName = seriesTitle(name);
+                if (!seenSeries.add(seriesName.toLowerCase(Locale.ROOT))) {
+                    return true;
+                }
+                // Série: sem endereço próprio. Os episódios são buscados na lista quando a série abrir.
+                target.add(new XtreamApi.Item(kind, String.valueOf(counter), cut(seriesName),
+                        icon, group, "", ""));
+            } else {
+                target.add(new XtreamApi.Item(kind, String.valueOf(counter), cut(name),
+                        icon, group, tvgId, "", url));
+            }
+
+            // Continua lendo enquanto algum tipo ainda não chegou no limite
+            return !(out.live.size() >= limit && out.movie.size() >= limit
+                    && out.series.size() >= limit);
+        });
+    }
+
+    /**
+     * Lê a lista linha por linha e entrega cada item ao "visitor". Para quando o visitor
+     * devolver false, quando a lista acabar ou quando passar de 1 minuto.
+     */
+    private static void walk(Reader reader, Visitor visitor) throws IOException {
         long deadline = System.nanoTime() + MAX_SECONDS * 1000000000L;
         Lines lines = new Lines(reader);
         StringBuilder sb = new StringBuilder();
-        HashSet<String> seenSeries = new HashSet<>();
 
         boolean have = false;
         String name = "";
@@ -166,39 +311,8 @@ public final class M3uApi {
             }
             counter++;
 
-            XtreamApi.Kind kind = classify(line, group, name);
-            List<XtreamApi.Item> target;
-            if (kind == XtreamApi.Kind.LIVE) {
-                target = out.live;
-            } else if (kind == XtreamApi.Kind.MOVIE) {
-                target = out.movie;
-            } else {
-                target = out.series;
-            }
-            if (target.size() >= limit) {
-                continue;
-            }
-            if (hideAdult && (ParentalStore.isAdultCategory(group)
-                    || ParentalStore.isAdultName(name))) {
-                continue;
-            }
             String icon = isHttp(logo) ? logo : "";
-
-            if (kind == XtreamApi.Kind.SERIES) {
-                String seriesName = seriesTitle(name);
-                if (!seenSeries.add(seriesName.toLowerCase(Locale.ROOT))) {
-                    continue;
-                }
-                // Série: sem endereço próprio. Os episódios são buscados na lista quando a série abrir.
-                target.add(new XtreamApi.Item(kind, String.valueOf(counter), cut(seriesName),
-                        icon, group, "", ""));
-            } else {
-                target.add(new XtreamApi.Item(kind, String.valueOf(counter), cut(name),
-                        icon, group, tvgId, "", line));
-            }
-
-            if (out.live.size() >= limit && out.movie.size() >= limit
-                    && out.series.size() >= limit) {
+            if (!visitor.entry(line, group, name, icon, tvgId, counter)) {
                 return;
             }
         }
