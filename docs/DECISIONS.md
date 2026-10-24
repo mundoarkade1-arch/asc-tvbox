@@ -228,5 +228,23 @@ Registre aqui cada decisão importante: o que foi decidido e por quê.
 - Motivo: a tela da série da lista M3U já existe e foi testada na página inicial. Mostrar o aviso no "Ver mais" era um resto da etapa anterior.
 - Dependências: nenhuma nova.
 - Teste no TX9: o botão "Buscar" abre o menu, o teclado e os resultados; no "Ver mais" da lista M3U, a série abre a tela de temporadas e episódios.
+
+- ## 2026-10-24: Nova interface (decidida com o dono, ainda NÃO feita)
+
+- Decisão (combinada com o dono): mudar a aparência e a navegação do app. Nada foi feito ainda; o dono ainda pode acrescentar pedidos. Os detalhes estão em docs/STATUS.md, na seção "Nova interface (a fazer)".
+- Menu: barra vertical no lado esquerdo, só com ícones: Tela inicial, Canais, Filmes, Séries e Ajustes. A Tela inicial é sempre a que abre com o app e mostra os 10 primeiros canais, filmes e séries.
+- Motivo: o dono quer achar tudo sem sair da tela principal, usando só setas e OK.
+- Busca: cada aba (Canais, Filmes, Séries) terá a sua própria barra de pesquisa, e a busca mostra só aquele tipo. Isso substitui o botão "Buscar" com menu de tipo da página inicial atual. O teclado de letras (SearchKeyboard) e as funções de busca (XtreamApi.search e M3uApi.search) continuam servindo.
+- Aba Canais: mantém a grade com a linha "Agora: ..." embaixo de cada canal. Ganha uma barra embaixo da tela com o programa de agora e, do lado direito, o que vem depois. A tecla de "três setinhas" (lista), apertada sobre um canal, abre a programação: o que está passando e os próximos 5 programas. Isso só é pedido ao servidor quando a tecla é apertada, nunca antes.
+- Motivo: o aparelho tem só 1 GB de RAM (mesma regra do EPG por canal, sob demanda, já decidida).
+- Ponto em aberto: o controle do TX9 não tem tecla de menu ou lista (ver docs/TARGET_DEVICES.md). Falta saber em qual teclado ou controle fica a tecla das três setinhas do dono.
+- Página do filme e da série: ao escolher um filme ou uma série, abre uma página com capa e sinopse. O filme tem botão de tocar e "Continuar de onde parei". A série tem escolha de temporada, lista de episódios e "Continuar de onde parei", que vai direto ao episódio certo. Episódios vistos ficam de outra cor, e o visto pela metade fica com a cor só até a metade.
+- Isto muda duas decisões anteriores, que deixavam de fora "capa e sinopse" e "lembrar o minuto exato". O dono pediu as duas coisas agora.
+- Limites a conferir antes de fazer: a lista M3U em geral não traz sinopse; o servidor Xtream tem pedidos próprios para capa e sinopse (um filme ou uma série por vez, sem baixar tudo). O minuto exato e o "visto pela metade" exigem guardar, por filme e episódio, o minuto e a duração, num arquivo pequeno e com limite de itens, com a chave em resumo SHA-1 (como no SeriesProgress, porque o endereço da lista pode ter senha).
+- Player: botões semi-transparentes; a barra do player deve sumir mais rápido; o foco não deve cair sempre em configurações, e as setas devem poder avançar e voltar o vídeo. O comportamento atual de foco ainda precisa ser conferido no código do MainActivity antes de mexer.
+- Aba Ajustes: controle parental, mudar ou gerenciar lista, sobre o dispositivo, sobre o aplicativo e botão para verificar atualização.
+- Tela principal: ícone de atualizar, para recarregar a lista.
+- Dependências: nenhuma nova prevista. A decisão sobre cada uma será registrada aqui quando a parte for feita.
+- Como vamos fazer: uma parte de cada vez, um arquivo por vez, pedindo o arquivo atual antes, e testando no TX9 no final de cada parte.
 - Fora desta etapa (de propósito): lembrar onde a pessoa parou, capa e sinopse dos episódios.
 - Teste no TX9: série abre pela página inicial e pelo "Ver mais", temporadas e episódios funcionam com as setas, o episódio toca e o próximo começa sozinho.
