@@ -157,5 +157,22 @@ Registre aqui cada decisão importante: o que foi decidido e por quê.
 - Limite conhecido: se a leitura bater no limite de 200 MB ou de 1 minuto no meio de uma página, a página pode vir menor e a categoria é tratada como terminada.
 - Dependências: nenhuma nova.
 - Teste no TX9: o cartão "Ver mais" aparece nas 3 faixas, as categorias chegam, trocar de categoria funciona, mais itens chegam ao rolar, e canal e filme tocam.
+
+- ## 2026-10-24: Episódios das séries na lista M3U
+
+- Decisão: a tela da série da lista M3U é uma tela própria (M3uSeriesActivity), separada da SeriesActivity do servidor. Ela reaproveita os mesmos layouts (activity_series.xml e item_category.xml), então fica igual por fora.
+- Motivo: a SeriesActivity do servidor pede os episódios por número de série e já está testada no TX9. Misturar os dois tipos de login numa tela só poderia quebrar o que já funciona.
+- Decisão: a lista M3U não tem um pedido do tipo "episódios desta série". Por isso, ao abrir a série, o app lê a lista de novo, linha por linha, e junta só os itens de série cujo título (sem "S01E03") é igual ao da série escolhida. No máximo 500 episódios; só eles ficam na memória.
+- Motivo: no TX9 (1 GB de RAM) não dá para guardar a lista inteira. Trocamos tempo de leitura por memória: a tela leva alguns segundos para mostrar os episódios, e vale o mesmo limite de 200 MB ou 1 minuto das outras leituras.
+- Decisão: o M3uApi ganhou a função episodes(...) e a classe M3uApi.Episode (título, temporada, número e endereço). A temporada e o número vêm do nome ("S01E03", "T1E5" ou "1x05"). Sem isso, o episódio fica na temporada 1, sem número, na ordem da lista.
+- Decisão: o player (MainActivity) ganhou EXTRA_LIST_URLS: a lista dos endereços diretos dos episódios da temporada. Cada endereço precisa ser http ou https, no máximo 500, com o tamanho máximo de cada um conferido. Se algo vier errado, o episódio escolhido toca e só não passa para o próximo.
+- Decisão: ao terminar um episódio, o player toca o próximo da lista de endereços; no último mostra "Fim da temporada." e para. Não passa sozinho para a temporada seguinte (igual ao servidor).
+- Decisão: o player exige um número como identificação. Para os episódios da lista M3U, a tela manda a posição do episódio na temporada, que não tem outro uso.
+- Limite de segurança: o Android não aceita dados grandes demais entre telas. Se a soma dos endereços da temporada passar de 100 mil letras, a tela manda só o episódio escolhido, sem a lista (sem "próximo sozinho").
+- Decisão: a M3uSeriesActivity não pede a senha do controle parental de novo. Ela só abre a partir de itens que já passaram pelo filtro (faixas da página inicial e "Ver mais" da lista M3U), que escondem séries com nome adulto e trancam categorias adultas. É a mesma regra da tela da série do servidor.
+- Decisão: a página inicial e o "Ver mais" da lista M3U passam a abrir a M3uSeriesActivity ao escolher uma série, no lugar do aviso "os episódios chegam na próxima etapa".
+- Limite conhecido: séries com títulos escritos de jeitos diferentes na lista podem aparecer separadas ou misturadas, porque o agrupamento é só pelo título.
+- Dependências: nenhuma nova.
+- Teste no TX9: a série abre pela página inicial e pelo "Ver mais", temporadas e episódios aparecem, o episódio toca e o próximo começa sozinho.
 - Fora desta etapa (de propósito): lembrar onde a pessoa parou, capa e sinopse dos episódios.
 - Teste no TX9: série abre pela página inicial e pelo "Ver mais", temporadas e episódios funcionam com as setas, o episódio toca e o próximo começa sozinho.
