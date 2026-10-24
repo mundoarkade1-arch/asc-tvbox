@@ -174,5 +174,13 @@ Registre aqui cada decisão importante: o que foi decidido e por quê.
 - Limite conhecido: séries com títulos escritos de jeitos diferentes na lista podem aparecer separadas ou misturadas, porque o agrupamento é só pelo título.
 - Dependências: nenhuma nova.
 - Teste no TX9: a série abre pela página inicial e pelo "Ver mais", temporadas e episódios aparecem, o episódio toca e o próximo começa sozinho.
+
+- ## 2026-10-24: Guia de programação (EPG) na lista M3U: não será feito por enquanto
+
+- Decisão (combinada com o dono): não fazer o guia de programação para o login por lista M3U nesta fase. Os canais da lista M3U continuam sem a linha "Agora", sem a caixinha de prévia e sem a barra Agora / A seguir no player.
+- Motivo: a lista M3U não tem um pedido do tipo "programação deste canal". O guia viria num arquivo grande à parte (XMLTV), que é pesado para o TX9 (1 GB de RAM) e deixaria a tela lenta. O dono usa mais o login por servidor, onde o guia já funciona.
+- Login por servidor: não muda. O "Agora", a prévia e a barra do player continuam funcionando.
+- Alternativas estudadas: (B) ler o guia aos poucos só para os canais da tela, o que é lento porque cada leitura percorre o arquivo inteiro; (C) ler o guia de tempos em tempos e guardar só "agora" e "a seguir" num arquivo pequeno, o que é rápido depois da primeira leitura, mas dá mais código e depende do espaço livre no TX9. A opção C pode voltar a ser considerada se o dono pedir e se a lista trouxer o endereço do guia (url-tvg) e os canais tiverem tvg-id.
+- Dependências: nenhuma nova. Nenhum arquivo de código foi alterado nesta etapa.
 - Fora desta etapa (de propósito): lembrar onde a pessoa parou, capa e sinopse dos episódios.
 - Teste no TX9: série abre pela página inicial e pelo "Ver mais", temporadas e episódios funcionam com as setas, o episódio toca e o próximo começa sozinho.
