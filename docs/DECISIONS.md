@@ -79,3 +79,13 @@ Registre aqui cada decisão importante: o que foi decidido e por quê.
 - Alternativa descartada: baixar e ler o XMLTV inteiro. Pode voltar a ser considerada para login por lista M3U, que não tem a API do Xtream.
 - Canal sem guia mostra "Programação indisponível", sem erro.
 - Nenhuma dependência nova foi adicionada.
+
+## 2026-10-24: Prévia do EPG (caixinha na página inicial e barra no player)
+
+- Decisão: a caixinha de prévia (programa de agora, barra de progresso, horários e "A seguir") aparece só na página inicial, numa faixa fixa embaixo da tela. No "Ver mais" fica apenas a linha "Agora: ..." em cada canal.
+- Motivo: o dono achou a caixinha desnecessária no "Ver mais", porque a linha "Agora" já mostra a programação. Menos código e menos pedidos ao servidor no aparelho fraco.
+- Decisão: a caixinha espera 0,5 segundo com o foco parado no canal antes de pedir o guia ao servidor.
+- Motivo: evita pedidos à toa quando o dono passa rápido pelos canais. Economiza rede e memória no TX9 (1 GB de RAM).
+- Decisão: no player, a barra Agora / A seguir aparece só em canais ao vivo. Ela surge quando o canal começa a tocar, some depois de 6 segundos e volta ao apertar OK. A mensagem de status ("Carregando...") passou para o alto da tela para não ficar sobre a barra.
+- Motivo: o controle remoto não tem tecla de informação, então o OK é o único jeito de chamar a barra. Filmes não têm guia de programação.
+- Dependências: nenhuma nova foi adicionada. Os horários vêm em milissegundos do XtreamApi.Epg e a barra de progresso usa só o ProgressBar do Android.
