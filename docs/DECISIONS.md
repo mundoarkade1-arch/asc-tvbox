@@ -126,5 +126,20 @@ Registre aqui cada decisão importante: o que foi decidido e por quê.
 - Decisão: a SeriesActivity não pede a senha do controle parental de novo. Ela só abre a partir de itens que já passaram pelo filtro (faixas da página inicial e "Ver mais"), que escondem séries com nome adulto e trancam categorias adultas.
 - Motivo: manter a navegação simples só com setas, OK e Voltar, e gastar pouca memória (só os episódios de uma série por vez, sem capa nem sinopse por enquanto).
 - Dependências: nenhuma nova.
+
+- ## 2026-10-24: Página inicial para login por lista M3U
+
+- Decisão: a lista M3U é lida AOS POUCOS (linha por linha, direto da internet) pelo novo M3uApi.java, e a leitura PARA assim que acha 10 canais, 10 filmes e 10 séries. A lista inteira nunca fica na memória.
+- Motivo: o app original lia a lista inteira de uma vez (até 250 MB), o que não cabe no TX9 (1 GB de RAM).
+- Limites de segurança da leitura: para depois de 200 MB lidos ou de 1 minuto, e mostra o que já achou. Se não achou nada, mostra o aviso de erro.
+- Decisão: a separação em canal, filme e série usa as mesmas regras do app original: primeiro o caminho do endereço (/live/, /movie/, /series/), depois o tipo de arquivo (.m3u8 e .ts são canal; .mp4, .mkv e parecidos são filme, ou série se o nome parece episódio, como "S01E03"), depois palavras na categoria e no título.
+- Decisão: séries da lista M3U são agrupadas pelo título (sem "S01E03"), então a faixa de séries mostra uma série por cartão, e não um cartão por episódio.
+- Decisão: o item do app (XtreamApi.Item) ganhou o campo "url" (endereço direto do vídeo). Itens do servidor Xtream deixam vazio e o endereço continua sendo montado como antes. Itens da lista M3U já trazem o endereço pronto, e XtreamApi.streamUrl devolve ele como está.
+- Decisão: o player (MainActivity) aceita o endereço direto pela tela anterior (EXTRA_URL) no login por lista M3U, e só toca se o endereço começar com http ou https. O endereço nunca é mostrado nem registrado em log (costuma conter usuário e senha).
+- Decisão: no canal ao vivo da lista M3U, o player NÃO tenta trocar .m3u8 por .ts sozinho (o endereço é o que veio na lista). Esse truque só vale para o servidor Xtream.
+- Decisão: controle parental também vale na lista M3U: com ele ligado, a leitura já pula itens adultos (pela categoria "group-title" e pelo nome), usando as mesmas palavras do ParentalStore.
+- Dependências: nenhuma nova.
+- Fora desta etapa (de propósito): "Ver mais" por categorias, episódios das séries e guia de programação (EPG) da lista M3U. Cada um chega numa etapa própria. Hoje, tocar numa série da lista M3U mostra um aviso.
+- Teste no TX9: as 3 faixas aparecem, canal e filme tocam, o aviso da série aparece e o controle parental esconde o conteúdo adulto.
 - Fora desta etapa (de propósito): lembrar onde a pessoa parou, capa e sinopse dos episódios.
 - Teste no TX9: série abre pela página inicial e pelo "Ver mais", temporadas e episódios funcionam com as setas, o episódio toca e o próximo começa sozinho.
