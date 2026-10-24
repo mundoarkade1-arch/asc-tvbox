@@ -1,6 +1,8 @@
 package com.ascplay.tvbox;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -15,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -26,6 +29,8 @@ import java.util.Locale;
  * Nos canais ao vivo, cada cartão mostra o programa que passa agora (EPG por canal).
  * Ao parar o foco num canal ao vivo, uma caixinha fixa embaixo mostra a prévia:
  * programa de agora, barra de progresso, horários e "A seguir".
+ * O botão "Controle parental" ativa, troca ou desativa a senha de 4 números.
+ * Com o controle ligado, itens com nome adulto não aparecem nas faixas.
  */
 public class HomeActivity extends Activity {
 
@@ -45,6 +50,7 @@ public class HomeActivity extends Activity {
     private CredentialStore.Credentials creds;
 
     private Button btnLogout;
+    private Button btnParental;
     private LinearLayout railLive;
     private LinearLayout railMovie;
     private LinearLayout railSeries;
@@ -52,12 +58,18 @@ public class HomeActivity extends Activity {
     private TextView stMovie;
     private TextView stSeries;
 
+    // Para ignorar respostas antigas quando as faixas são recarregadas
+    private int railGen = 0;
+
     private View groupUpdate;
     private TextView tvUpdate;
     private Button btnUpdateNow;
     private Button btnUpdateLater;
     private Updater.Info pendingUpdate;
     private boolean downloading = false;
+
+    // Controle parental: teclado aberto no momento (para fechar ao sair da tela)
+    private PinDialog pinDialog;
 
     // Caixinha de prévia do canal
     private View groupPreview;
@@ -102,6 +114,7 @@ public class HomeActivity extends Activity {
         setContentView(R.layout.activity_home);
 
         btnLogout = findViewById(R.id.btn_logout);
+        btnParental = findViewById(R.id.btn_parental);
         railLive = findViewById(R.id.rail_live);
         railMovie = findViewById(R.id.rail_movie);
         railSeries = findViewById(R.id.rail_series);
@@ -123,6 +136,7 @@ public class HomeActivity extends Activity {
         pbPreview = findViewById(R.id.pb_preview);
 
         btnLogout.setOnFocusChangeListener(hideOnFocus);
+        btnParental.setOnFocusChangeListener(hideOnFocus);
         btnUpdateNow.setOnFocusChangeListener(hideOnFocus);
         btnUpdateLater.setOnFocusChangeListener(hideOnFocus);
 
@@ -132,6 +146,7 @@ public class HomeActivity extends Activity {
             startActivity(i);
             finish();
         });
+        btnParental.setOnClickListener(v -> openParentalMenu());
         btnUpdateNow.setOnClickListener(v -> startUpdate());
         btnUpdateLater.setOnClickListener(v -> dismissUpdate());
 
@@ -163,6 +178,10 @@ public class HomeActivity extends Activity {
         super.onDestroy();
         handler.removeCallbacks(previewRunnable);
         previewItem = null;
+        if (pinDialog != null) {
+            pinDialog.dismiss();
+            pinDialog = null;
+        }
     }
 
     @Override
@@ -178,6 +197,7 @@ public class HomeActivity extends Activity {
         final String server = creds.server;
         final String user = creds.user;
         final String pass = creds.pass;
+        final int gen = railGen;
         new Thread(() -> {
             List<XtreamApi.Item> items = null;
             try {
@@ -186,8 +206,33 @@ public class HomeActivity extends Activity {
                 // sem rede, servidor fora do ar ou resposta estranha: mostra aviso abaixo
             }
             final List<XtreamApi.Item> result = items;
-            runOnUiThread(() -> showRail(kind, result, rail, status));
+            runOnUiThread(() -> {
+                if (gen == railGen) {
+                    showRail(kind, result, rail, status);
+                }
+            });
         }).start();
+    }
+
+    /** Apaga as faixas e busca tudo de novo (usado quando o controle parental muda). */
+    private void reloadRails() {
+        if (!CredentialStore.MODE_XTREAM.equals(creds.mode)) {
+            return;
+        }
+        railGen++;
+        focusDone = true; // não tira o foco de onde a pessoa está
+        hidePreview();
+        LinearLayout[] rails = {railLive, railMovie, railSeries};
+        TextView[] states = {stLive, stMovie, stSeries};
+        for (int i = 0; i < rails.length; i++) {
+            rails[i].removeAllViews();
+            states[i].setTextColor(COLOR_NEUTRAL);
+            states[i].setText("Carregando...");
+            states[i].setVisibility(View.VISIBLE);
+        }
+        loadRail(XtreamApi.Kind.LIVE, railLive, stLive);
+        loadRail(XtreamApi.Kind.MOVIE, railMovie, stMovie);
+        loadRail(XtreamApi.Kind.SERIES, railSeries, stSeries);
     }
 
     private void showRail(final XtreamApi.Kind kind, List<XtreamApi.Item> items,
@@ -199,6 +244,16 @@ public class HomeActivity extends Activity {
             status.setTextColor(COLOR_ERROR);
             status.setText("Não foi possível carregar. Confira a internet e o servidor.");
             return;
+        }
+        // Controle parental ligado: tira o que tem nome adulto
+        if (ParentalStore.isEnabled(this)) {
+            List<XtreamApi.Item> allowed = new ArrayList<>();
+            for (XtreamApi.Item it : items) {
+                if (!ParentalStore.isAdultName(it.name)) {
+                    allowed.add(it);
+                }
+            }
+            items = allowed;
         }
         if (items.isEmpty()) {
             status.setTextColor(COLOR_NEUTRAL);
@@ -265,6 +320,128 @@ public class HomeActivity extends Activity {
                 now.setText("Programação indisponível");
             } else {
                 now.setText("Agora: " + epg.title);
+            }
+        });
+    }
+
+    // ---------- Controle parental ----------
+
+    private void openParentalMenu() {
+        final boolean on = ParentalStore.isEnabled(this);
+        AlertDialog.Builder b = new AlertDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
+        if (on) {
+            b.setTitle("Controle parental: ativo");
+            b.setItems(new CharSequence[]{"Trocar senha", "Desativar controle parental", "Voltar"},
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if (which == 0) {
+                                askCurrentPin("Digite a senha atual", new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        createPin();
+                                    }
+                                });
+                            } else if (which == 1) {
+                                askCurrentPin("Digite a senha para desativar", new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        ParentalStore.disable(HomeActivity.this);
+                                        Toast.makeText(HomeActivity.this,
+                                                "Controle parental desativado.",
+                                                Toast.LENGTH_SHORT).show();
+                                        reloadRails();
+                                    }
+                                });
+                            }
+                        }
+                    });
+        } else {
+            b.setTitle("Controle parental: desativado");
+            b.setItems(new CharSequence[]{"Ativar controle parental", "Voltar"},
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if (which == 0) {
+                                createPin();
+                            }
+                        }
+                    });
+        }
+        b.show();
+    }
+
+    /** Pede a senha nova (4 números). Depois pede para repetir. */
+    private void createPin() {
+        pinDialog = PinDialog.show(this, "Crie a senha (4 números)", "", new PinDialog.Listener() {
+            @Override
+            public void onPin(PinDialog d, String pin) {
+                d.dismiss();
+                confirmPin(pin);
+            }
+
+            @Override
+            public void onCancel() {
+                // saiu sem criar: nada muda
+            }
+        });
+    }
+
+    private void confirmPin(final String first) {
+        pinDialog = PinDialog.show(this, "Repita a senha", "", new PinDialog.Listener() {
+            @Override
+            public void onPin(PinDialog d, String pin) {
+                d.dismiss();
+                if (!first.equals(pin)) {
+                    Toast.makeText(HomeActivity.this,
+                            "As senhas não são iguais. Tente de novo.",
+                            Toast.LENGTH_SHORT).show();
+                    createPin();
+                    return;
+                }
+                if (ParentalStore.enable(HomeActivity.this, pin)) {
+                    Toast.makeText(HomeActivity.this,
+                            "Controle parental ativado.", Toast.LENGTH_SHORT).show();
+                    reloadRails();
+                } else {
+                    Toast.makeText(HomeActivity.this,
+                            "Não foi possível guardar a senha.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancel() {
+                // saiu sem confirmar: nada muda
+            }
+        });
+    }
+
+    /** Pede a senha atual. Se estiver certa, fecha o teclado e roda "onOk". */
+    private void askCurrentPin(String title, final Runnable onOk) {
+        pinDialog = PinDialog.show(this, title, "", new PinDialog.Listener() {
+            @Override
+            public void onPin(PinDialog d, String pin) {
+                long wait = ParentalStore.lockedSeconds(HomeActivity.this);
+                if (wait > 0) {
+                    d.setMessage("Muitas tentativas. Aguarde " + wait + " segundos.", true);
+                    return;
+                }
+                if (ParentalStore.check(HomeActivity.this, pin)) {
+                    d.dismiss();
+                    onOk.run();
+                    return;
+                }
+                wait = ParentalStore.lockedSeconds(HomeActivity.this);
+                if (wait > 0) {
+                    d.setMessage("Muitas tentativas. Aguarde " + wait + " segundos.", true);
+                } else {
+                    d.setMessage("Senha incorreta.", true);
+                }
+            }
+
+            @Override
+            public void onCancel() {
+                // saiu sem digitar: nada muda
             }
         });
     }
