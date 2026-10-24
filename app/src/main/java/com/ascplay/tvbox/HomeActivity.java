@@ -17,6 +17,7 @@ import java.util.List;
  * Página inicial: 10 primeiros canais, filmes e séries.
  * Para servidor com login (Xtream), busca só o começo de cada lista (nunca a lista inteira).
  * No fim de cada faixa há o cartão "Ver mais ›", que abre a navegação por categorias.
+ * Nos canais ao vivo, cada cartão mostra o programa que passa agora (EPG por canal).
  */
 public class HomeActivity extends Activity {
 
@@ -107,6 +108,7 @@ public class HomeActivity extends Activity {
     public void onLowMemory() {
         super.onLowMemory();
         ImageLoader.clear();
+        EpgCache.clear();
     }
 
     // ---------- Faixas de canais, filmes e séries ----------
@@ -155,6 +157,13 @@ public class HomeActivity extends Activity {
             initial.setText(firstLetter(item.name));
             ImageLoader.load(logo, item.icon);
 
+            if (item.kind == XtreamApi.Kind.LIVE) {
+                TextView now = card.findViewById(R.id.tv_now);
+                now.setText("");
+                now.setVisibility(View.VISIBLE);
+                loadNow(item, now);
+            }
+
             card.setOnClickListener(v -> openItem(item));
             rail.addView(card);
             if (first == null) {
@@ -175,6 +184,20 @@ public class HomeActivity extends Activity {
             focusDone = true;
             first.requestFocus();
         }
+    }
+
+    /** Pede ao servidor o programa de agora e escreve na linha do cartão. */
+    private void loadNow(XtreamApi.Item item, final TextView now) {
+        EpgCache.get(creds.server, creds.user, creds.pass, item.id, epg -> {
+            if (isFinishing() || isDestroyed()) {
+                return;
+            }
+            if (epg == null) {
+                now.setText("Programação indisponível");
+            } else {
+                now.setText("Agora: " + epg.title);
+            }
+        });
     }
 
     private static String firstLetter(String name) {
