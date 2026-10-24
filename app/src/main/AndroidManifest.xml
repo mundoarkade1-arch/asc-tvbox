@@ -43,6 +43,12 @@
             android:screenOrientation="landscape" />
 
         <activity
+            android:name=".M3uBrowseActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="false"
+            android:screenOrientation="landscape" />
+
+        <activity
             android:name=".SeriesActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="false"
