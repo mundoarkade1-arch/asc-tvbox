@@ -31,6 +31,12 @@
         </activity>
 
         <activity
+            android:name=".HomeActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="false"
+            android:screenOrientation="landscape" />
+
+        <activity
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="false"
