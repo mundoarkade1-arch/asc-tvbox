@@ -49,9 +49,20 @@ public final class XtreamApi {
         public final String categoryId;
         public final String epgId;
         public final String ext;
+        /**
+         * Endereço direto do vídeo. Só é usado por itens de lista M3U (que já trazem o endereço
+         * pronto). Nos itens do servidor Xtream fica vazio e o endereço é montado em streamUrl.
+         * Contém usuário e senha em muitas listas: nunca mostrar nem registrar em log.
+         */
+        public final String url;
 
         Item(Kind kind, String id, String name, String icon, String categoryId,
              String epgId, String ext) {
+            this(kind, id, name, icon, categoryId, epgId, ext, "");
+        }
+
+        Item(Kind kind, String id, String name, String icon, String categoryId,
+             String epgId, String ext, String url) {
             this.kind = kind;
             this.id = id;
             this.name = name;
@@ -59,6 +70,7 @@ public final class XtreamApi {
             this.categoryId = categoryId;
             this.epgId = epgId;
             this.ext = ext;
+            this.url = url == null ? "" : url;
         }
     }
 
@@ -340,8 +352,14 @@ public final class XtreamApi {
         }
     }
 
-    /** Endereço para tocar um canal, filme ou episódio. Séries inteiras precisam dos episódios. */
+    /**
+     * Endereço para tocar um canal, filme ou episódio. Séries inteiras precisam dos episódios.
+     * Itens de lista M3U já trazem o endereço pronto (item.url): ele é devolvido como está.
+     */
     public static String streamUrl(String server, String user, String pass, Item item) {
+        if (item.url != null && !item.url.isEmpty()) {
+            return item.url;
+        }
         String base = server + "/";
         String u = Uri.encode(user) + "/" + Uri.encode(pass) + "/";
         if (item.kind == Kind.LIVE) {
