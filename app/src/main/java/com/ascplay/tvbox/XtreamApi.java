@@ -1,6 +1,7 @@
 package com.ascplay.tvbox;
 
 import android.net.Uri;
+import android.util.Base64;
 import android.util.JsonReader;
 import android.util.JsonToken;
 
@@ -60,11 +61,45 @@ public final class XtreamApi {
         }
     }
 
+    /**
+     * Programação de um canal: o que passa agora e o que vem a seguir.
+     * Horários em milissegundos (como System.currentTimeMillis()).
+     * nextTitle fica vazio e nextStart fica 0 quando não há "a seguir".
+     */
+    public static final class Epg {
+        public final String title;
+        public final long start;
+        public final long end;
+        public final String nextTitle;
+        public final long nextStart;
+
+        Epg(String title, long start, long end, String nextTitle, long nextStart) {
+            this.title = title;
+            this.start = start;
+            this.end = end;
+            this.nextTitle = nextTitle;
+            this.nextStart = nextStart;
+        }
+    }
+
+    private static final class Slot {
+        final String title;
+        final long start;
+        final long end;
+
+        Slot(String title, long start, long end) {
+            this.title = title;
+            this.start = start;
+            this.end = end;
+        }
+    }
+
     private static final int TIMEOUT_MS = 15000;
     private static final int MAX_REDIRECTS = 5;
     private static final long MAX_BYTES = 80L * 1024L * 1024L;
     private static final int MAX_CATEGORIES = 3000;
     private static final int MAX_NAME = 200;
+    private static final int MAX_EPG_SLOTS = 8;
     private static final String USER_AGENT = "ASC-TVBox/1.0 (Android)";
 
     private XtreamApi() {
@@ -175,224 +210,55 @@ public final class XtreamApi {
         }
     }
 
-    /** Endereço para tocar um canal ou filme. Séries precisam de episódios (etapa futura). */
-    public static String streamUrl(String server, String user, String pass, Item item) {
-        String base = server + "/";
-        String u = Uri.encode(user) + "/" + Uri.encode(pass) + "/";
-        if (item.kind == Kind.LIVE) {
-            return base + "live/" + u + item.id + ".m3u8";
-        }
-        if (item.kind == Kind.MOVIE) {
-            String ext = item.ext.isEmpty() ? "mp4" : item.ext;
-            return base + "movie/" + u + item.id + "." + ext;
-        }
-        return null;
-    }
-
-    // ---------- Leitura de um item ----------
-
-    private static Item readItem(JsonReader r, Kind kind) throws IOException {
-        String id = "";
-        String name = "";
-        String icon = "";
-        String cat = "";
-        String epg = "";
-        String ext = "";
-        r.beginObject();
-        while (r.hasNext()) {
-            String key = r.nextName();
-            switch (key) {
-                case "stream_id":
-                    if (kind != Kind.SERIES) {
-                        id = readText(r);
-                    } else {
-                        r.skipValue();
-                    }
-                    break;
-                case "series_id":
-                    if (kind == Kind.SERIES) {
-                        id = readText(r);
-                    } else {
-                        r.skipValue();
-                    }
-                    break;
-                case "name":
-                    name = readText(r);
-                    break;
-                case "stream_icon":
-                case "cover":
-                    String v = readText(r);
-                    if (icon.isEmpty()) {
-                        icon = v;
-                    }
-                    break;
-                case "category_id":
-                    cat = readText(r);
-                    break;
-                case "epg_channel_id":
-                    epg = readText(r);
-                    break;
-                case "container_extension":
-                    ext = readText(r);
-                    break;
-                default:
-                    r.skipValue();
-                    break;
-            }
-        }
-        r.endObject();
-
-        if (!isNumber(id) || name.isEmpty()) {
+    /**
+     * Programação de UM canal (o que passa agora e o que vem a seguir).
+     * Devolve null se o servidor não tem guia para o canal ou se nada passa agora.
+     * Pede poucos programas por vez, nunca o guia inteiro.
+     */
+    public static Epg epg(String server, String user, String pass, String streamId)
+            throws IOException {
+        if (!isNumber(streamId)) {
             return null;
         }
-        String lowerIcon = icon.toLowerCase();
-        if (!lowerIcon.startsWith("http://") && !lowerIcon.startsWith("https://")) {
-            icon = "";
-        }
-        if (!ext.matches("[A-Za-z0-9]{1,5}")) {
-            ext = "";
-        }
-        return new Item(kind, id, cut(name), icon, cat, epg.trim(), ext);
-    }
-
-    // ---------- Ajudas ----------
-
-    private static String categoriesAction(Kind kind) {
-        switch (kind) {
-            case MOVIE:
-                return "get_vod_categories";
-            case SERIES:
-                return "get_series_categories";
-            default:
-                return "get_live_categories";
-        }
-    }
-
-    private static String itemsAction(Kind kind) {
-        switch (kind) {
-            case MOVIE:
-                return "get_vod_streams";
-            case SERIES:
-                return "get_series";
-            default:
-                return "get_live_streams";
-        }
-    }
-
-    private static String apiUrl(String server, String user, String pass, String action)
-            throws IOException {
+        String url = apiUrl(server, user, pass, "get_short_epg")
+                + "&stream_id=" + streamId + "&limit=4";
+        HttpURLConnection conn = open(url);
         try {
-            return server + "/player_api.php?username=" + URLEncoder.encode(user, "UTF-8")
-                    + "&password=" + URLEncoder.encode(pass, "UTF-8")
-                    + "&action=" + action;
-        } catch (Exception e) {
-            throw new IOException("endereco");
-        }
-    }
-
-    /** Lê texto, número ou nulo como texto. Qualquer outra coisa é ignorada. */
-    private static String readText(JsonReader r) throws IOException {
-        JsonToken t = r.peek();
-        if (t == JsonToken.STRING || t == JsonToken.NUMBER) {
-            return r.nextString().trim();
-        }
-        if (t == JsonToken.NULL) {
-            r.nextNull();
-            return "";
-        }
-        r.skipValue();
-        return "";
-    }
-
-    private static boolean isNumber(String s) {
-        return s != null && s.matches("\\d{1,12}");
-    }
-
-    private static String cut(String s) {
-        return s.length() > MAX_NAME ? s.substring(0, MAX_NAME) : s;
-    }
-
-    private static void checkOk(HttpURLConnection conn) throws IOException {
-        int code = conn.getResponseCode();
-        if (code != 200) {
-            throw new IOException("resposta " + code);
-        }
-    }
-
-    private static JsonReader reader(HttpURLConnection conn) throws IOException {
-        InputStream in = new BufferedInputStream(new LimitedStream(conn.getInputStream(), MAX_BYTES));
-        JsonReader r = new JsonReader(new InputStreamReader(in, StandardCharsets.UTF_8));
-        r.setLenient(true);
-        return r;
-    }
-
-    private static void closeQuietly(JsonReader r) {
-        try {
-            r.close();
-        } catch (IOException ignored) {
-            // nada a fazer
-        }
-    }
-
-    /** Abre o endereço seguindo redirecionamentos (inclusive de http para https). */
-    private static HttpURLConnection open(String address) throws IOException {
-        URL url = new URL(address);
-        for (int i = 0; i <= MAX_REDIRECTS; i++) {
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setConnectTimeout(TIMEOUT_MS);
-            conn.setReadTimeout(TIMEOUT_MS);
-            conn.setInstanceFollowRedirects(false);
-            conn.setRequestProperty("User-Agent", USER_AGENT);
-            int code = conn.getResponseCode();
-            if (code == 301 || code == 302 || code == 303 || code == 307 || code == 308) {
-                String location = conn.getHeaderField("Location");
-                conn.disconnect();
-                if (location == null || location.isEmpty()) {
-                    throw new IOException("redirecionamento sem destino");
+            checkOk(conn);
+            JsonReader r = reader(conn);
+            try {
+                List<Slot> slots = new ArrayList<>();
+                if (r.peek() != JsonToken.BEGIN_OBJECT) {
+                    // Sem guia: alguns servidores devolvem uma lista vazia
+                    return null;
                 }
-                url = new URL(url, location);
-                String protocol = url.getProtocol();
-                if (!"http".equals(protocol) && !"https".equals(protocol)) {
-                    throw new IOException("redirecionamento invalido");
+                r.beginObject();
+                while (r.hasNext()) {
+                    String key = r.nextName();
+                    if ("epg_listings".equals(key) && r.peek() == JsonToken.BEGIN_ARRAY) {
+                        r.beginArray();
+                        while (r.hasNext() && slots.size() < MAX_EPG_SLOTS) {
+                            if (r.peek() != JsonToken.BEGIN_OBJECT) {
+                                r.skipValue();
+                                continue;
+                            }
+                            Slot s = readSlot(r);
+                            if (s != null) {
+                                slots.add(s);
+                            }
+                        }
+                        while (r.hasNext()) {
+                            r.skipValue();
+                        }
+                        r.endArray();
+                    } else {
+                        r.skipValue();
+                    }
                 }
-                continue;
-            }
-            return conn;
-        }
-        throw new IOException("redirecionamentos demais");
-    }
+                r.endObject();
 
-    /** Corta a leitura se a resposta passar do limite de bytes. */
-    private static final class LimitedStream extends FilterInputStream {
-        private long left;
-
-        LimitedStream(InputStream in, long max) {
-            super(in);
-            this.left = max;
-        }
-
-        @Override
-        public int read() throws IOException {
-            if (left <= 0) {
-                throw new IOException("resposta grande demais");
-            }
-            int b = super.read();
-            if (b >= 0) {
-                left--;
-            }
-            return b;
-        }
-
-        @Override
-        public int read(byte[] buf, int off, int len) throws IOException {
-            if (left <= 0) {
-                throw new IOException("resposta grande demais");
-            }
-            int n = super.read(buf, off, (int) Math.min(len, left));
-            if (n > 0) {
-                left -= n;
-            }
-            return n;
-        }
-    }
-}
+                long now = System.currentTimeMillis();
+                for (int i = 0; i < slots.size(); i++) {
+                    Slot s = slots.get(i);
+                    if (s.start <= now && now < s.end) {
+                        if (i + 1 < slots.size()) {
