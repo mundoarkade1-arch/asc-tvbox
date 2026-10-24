@@ -16,6 +16,7 @@ import java.util.List;
 /**
  * Página inicial: 10 primeiros canais, filmes e séries.
  * Para servidor com login (Xtream), busca só o começo de cada lista (nunca a lista inteira).
+ * No fim de cada faixa há o cartão "Ver mais ›", que abre a navegação por categorias.
  */
 public class HomeActivity extends Activity {
 
@@ -122,11 +123,12 @@ public class HomeActivity extends Activity {
                 // sem rede, servidor fora do ar ou resposta estranha: mostra aviso abaixo
             }
             final List<XtreamApi.Item> result = items;
-            runOnUiThread(() -> showRail(result, rail, status));
+            runOnUiThread(() -> showRail(kind, result, rail, status));
         }).start();
     }
 
-    private void showRail(List<XtreamApi.Item> items, LinearLayout rail, TextView status) {
+    private void showRail(final XtreamApi.Kind kind, List<XtreamApi.Item> items,
+                          LinearLayout rail, TextView status) {
         if (isFinishing() || isDestroyed()) {
             return;
         }
@@ -159,6 +161,16 @@ public class HomeActivity extends Activity {
                 first = card;
             }
         }
+
+        // Cartão "Ver mais ›" no fim da faixa
+        View more = inflater.inflate(R.layout.item_card, rail, false);
+        TextView moreInitial = more.findViewById(R.id.tv_initial);
+        TextView moreName = more.findViewById(R.id.tv_name);
+        moreName.setText("Ver mais ›");
+        moreInitial.setText("›");
+        more.setOnClickListener(v -> openBrowse(kind));
+        rail.addView(more);
+
         if (!focusDone && first != null && groupUpdate.getVisibility() != View.VISIBLE) {
             focusDone = true;
             first.requestFocus();
@@ -171,6 +183,12 @@ public class HomeActivity extends Activity {
             return "?";
         }
         return new String(Character.toChars(s.codePointAt(0))).toUpperCase();
+    }
+
+    private void openBrowse(XtreamApi.Kind kind) {
+        Intent i = new Intent(this, BrowseActivity.class);
+        i.putExtra(EXTRA_KIND, kind.name());
+        startActivity(i);
     }
 
     private void openItem(XtreamApi.Item item) {
