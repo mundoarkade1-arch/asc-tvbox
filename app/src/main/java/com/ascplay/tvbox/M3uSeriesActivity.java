@@ -25,8 +25,9 @@ import java.util.List;
  * título (M3uApi.episodes), no máximo 500. Só os episódios desta série ficam na memória.
  *
  * Ao escolher um episódio, abre o player (MainActivity) levando o endereço dele e a lista de
- * endereços da mesma temporada, para o player tocar o próximo sozinho no fim. Se a lista de
- * endereços for grande demais para passar entre telas, vai só o episódio escolhido.
+ * endereços de TODOS os episódios da série, em ordem (temporadas normais primeiro, "Especiais"
+ * no fim), para o player tocar o próximo sozinho, inclusive passando para a temporada seguinte.
+ * Se a lista de endereços for grande demais para passar entre telas, vai só o episódio escolhido.
  *
  * Esta tela só é aberta a partir de itens que já passaram pelo controle parental
  * (página inicial e "Ver mais"), por isso não repete a conferência da senha.
@@ -205,26 +206,46 @@ public class M3uSeriesActivity extends Activity {
         }
         M3uApi.Episode chosen = shown.get(position);
 
+        // Fila de reprodução: temporadas normais em ordem, e os "Especiais" (temporada 0) no fim.
+        ArrayList<M3uApi.Episode> queue = new ArrayList<>();
+        for (M3uApi.Episode e : allEpisodes) {
+            if (e.season != 0) {
+                queue.add(e);
+            }
+        }
+        for (M3uApi.Episode e : allEpisodes) {
+            if (e.season == 0) {
+                queue.add(e);
+            }
+        }
+        int index = 0;
+        for (int n = 0; n < queue.size(); n++) {
+            if (queue.get(n) == chosen) {
+                index = n;
+                break;
+            }
+        }
+
         Intent i = new Intent(this, MainActivity.class);
         i.putExtra(HomeActivity.EXTRA_KIND, XtreamApi.Kind.EPISODE.name());
-        // O player pede um número de identificação: usamos a posição do episódio na temporada
-        i.putExtra(HomeActivity.EXTRA_ID, String.valueOf(position + 1));
+        // O player pede um número de identificação: usamos a posição do episódio na fila
+        i.putExtra(HomeActivity.EXTRA_ID, String.valueOf(index + 1));
         i.putExtra(HomeActivity.EXTRA_EXT, "");
         i.putExtra(HomeActivity.EXTRA_NAME, episodeLabel(chosen));
         i.putExtra(MainActivity.EXTRA_URL, chosen.url);
 
-        // Manda a lista dos endereços da temporada, se couber (para tocar o próximo sozinho)
+        // Manda a lista dos endereços da série, se couber (para tocar o próximo sozinho)
         long chars = 0;
-        for (M3uApi.Episode e : shown) {
+        for (M3uApi.Episode e : queue) {
             chars += e.url.length();
         }
         if (chars <= MAX_LIST_CHARS) {
             ArrayList<String> urls = new ArrayList<>();
-            for (M3uApi.Episode e : shown) {
+            for (M3uApi.Episode e : queue) {
                 urls.add(e.url);
             }
             i.putStringArrayListExtra(MainActivity.EXTRA_LIST_URLS, urls);
-            i.putExtra(SeriesActivity.EXTRA_LIST_INDEX, position);
+            i.putExtra(SeriesActivity.EXTRA_LIST_INDEX, index);
         }
         startActivity(i);
     }
