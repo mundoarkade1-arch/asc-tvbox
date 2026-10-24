@@ -116,3 +116,15 @@ Registre aqui cada decisão importante: o que foi decidido e por quê.
 - Decisão (combinada com o dono): a série abre numa tela própria, com temporadas à esquerda e episódios à direita. Ao terminar um episódio, o próximo da mesma temporada toca sozinho.
 - Fora desta etapa: lembrar onde a pessoa parou, capa e sinopse da série. Podem entrar depois, se o dono pedir.
 - Dependências: nenhuma nova foi adicionada.
+
+## 2026-10-24: Episódios de séries (tela da série e próximo episódio automático)
+
+- Decisão: ao escolher uma série, abre a SeriesActivity. À esquerda ficam as temporadas, à direita os episódios da temporada escolhida. Ao mexer nas temporadas com as setas, a lista de episódios troca sozinha. OK numa temporada leva o foco para os episódios. OK num episódio abre o player.
+- Decisão: os episódios são pedidos ao servidor só quando a pessoa abre a série (get_series_info), no máximo 500, e ficam em ordem de temporada e de número do episódio. Temporada 0 aparece como "Especiais".
+- Decisão: a tela da série manda ao player a lista dos episódios da MESMA temporada (números de identificação e extensões) e a posição do episódio escolhido. O player confere tudo (só números e letras, no máximo 500). Se algo vier errado, toca só o episódio escolhido e não passa para o próximo.
+- Decisão: quando um episódio termina, o player toca sozinho o próximo da mesma temporada, sem a barra Agora / A seguir. No último episódio da temporada, mostra "Fim da temporada." e para. Não passa sozinho para a temporada seguinte.
+- Decisão: a SeriesActivity não pede a senha do controle parental de novo. Ela só abre a partir de itens que já passaram pelo filtro (faixas da página inicial e "Ver mais"), que escondem séries com nome adulto e trancam categorias adultas.
+- Motivo: manter a navegação simples só com setas, OK e Voltar, e gastar pouca memória (só os episódios de uma série por vez, sem capa nem sinopse por enquanto).
+- Dependências: nenhuma nova.
+- Fora desta etapa (de propósito): lembrar onde a pessoa parou, capa e sinopse dos episódios.
+- Teste no TX9: série abre pela página inicial e pelo "Ver mais", temporadas e episódios funcionam com as setas, o episódio toca e o próximo começa sozinho.
