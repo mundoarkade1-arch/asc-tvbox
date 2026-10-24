@@ -1,17 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0C0A0B">
+    android:background="#000000">
+
+    <androidx.media3.ui.PlayerView
+        android:id="@+id/player_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:show_buffering="when_playing"
+        app:use_controller="true" />
 
     <TextView
-        android:id="@+id/welcome"
-        android:layout_width="wrap_content"
+        android:id="@+id/status"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:gravity="center"
-        android:text="@string/welcome"
-        android:textColor="#F6F2F3"
-        android:textSize="32sp" />
+        android:layout_gravity="bottom"
+        android:background="#99000000"
+        android:padding="12dp"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp"
+        android:visibility="gone" />
 
 </FrameLayout>
