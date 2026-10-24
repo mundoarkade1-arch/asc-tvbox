@@ -36,11 +36,13 @@ import java.util.Locale;
  * de progresso, os horários e o "A seguir". Ela aparece quando o canal começa a tocar,
  * some depois de alguns segundos e volta ao apertar OK. (Lista M3U ainda não tem guia.)
  *
- * Nos episódios de série, a tela da série manda a lista de episódios da temporada:
- * - servidor Xtream: lista de números (ids) e extensões;
- * - lista M3U: lista de endereços diretos (EXTRA_LIST_URLS).
+ * Nos episódios de série, a tela da série manda a lista de episódios:
+ * - servidor Xtream: lista de números (ids) e extensões de TODA a série, em ordem
+ *   (temporadas normais primeiro, "Especiais" no fim);
+ * - lista M3U: lista de endereços diretos da temporada (EXTRA_LIST_URLS).
  * Quando um episódio termina, o player toca sozinho o próximo da lista.
- * No último episódio da temporada, mostra "Fim da temporada." e para.
+ * No servidor, no último episódio da série mostra "Fim da série." e para.
+ * Na lista M3U, no último episódio da temporada mostra "Fim da temporada." e para.
  */
 @OptIn(markerClass = UnstableApi.class)
 public class MainActivity extends Activity {
@@ -65,7 +67,7 @@ public class MainActivity extends Activity {
     private String streamUrl;
     private boolean triedTs = false;
 
-    // Episódios da temporada (só quando está tocando um episódio de série)
+    // Fila de episódios (só quando está tocando um episódio de série)
     private ArrayList<String> listIds = null;
     private ArrayList<String> listExts = null;
     // Lista M3U: endereços diretos dos episódios da temporada
@@ -162,8 +164,8 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Lê a lista de episódios da temporada que a tela da série (servidor) mandou.
-     * Se algo vier errado, não usa a lista: o episódio escolhido toca normalmente
+     * Lê a fila de episódios da série que a tela da série (servidor) mandou.
+     * Se algo vier errado, não usa a fila: o episódio escolhido toca normalmente
      * e só não passa para o próximo sozinho.
      */
     private void readEpisodeList() {
@@ -273,7 +275,7 @@ public class MainActivity extends Activity {
                         showNowbar();
                     }
                 } else if (state == Player.STATE_ENDED) {
-                    // Terminou um episódio: toca o próximo da mesma temporada
+                    // Terminou um episódio: toca o próximo da fila
                     if (item != null && item.kind == XtreamApi.Kind.EPISODE) {
                         playNextEpisode();
                     }
@@ -309,7 +311,12 @@ public class MainActivity extends Activity {
         player.setPlayWhenReady(true);
     }
 
-    /** Passa para o próximo episódio da temporada. No último, avisa que acabou. */
+    /**
+     * Passa para o próximo episódio da fila.
+     * Servidor: a fila tem a série toda, então passa sozinho para a temporada seguinte;
+     * no último episódio avisa "Fim da série.".
+     * Lista M3U: a fila é só a temporada; no último avisa "Fim da temporada.".
+     */
     private void playNextEpisode() {
         int next = listIndex + 1;
 
@@ -329,7 +336,7 @@ public class MainActivity extends Activity {
 
         // Servidor: a lista tem números e extensões, e o endereço é montado aqui
         if (listIds == null || listExts == null || next >= listIds.size()) {
-            showStatus("Fim da temporada.");
+            showStatus("Fim da série.");
             return;
         }
         listIndex = next;
