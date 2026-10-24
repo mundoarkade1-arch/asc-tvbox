@@ -26,6 +26,7 @@ import java.util.Set;
  * Esquerda: categorias. Direita: itens, carregados por páginas de 40 (máximo de 400 por categoria).
  * Nunca baixa a lista inteira: pede ao servidor só a página necessária.
  * Nos canais ao vivo, cada cartão mostra o programa que passa agora (EPG por canal).
+ * Ao escolher uma série, abre a tela da série (temporadas e episódios).
  *
  * Controle parental (quando ligado): categorias adultas mostram um cadeado e pedem a senha
  * de 4 números para abrir. A liberação vale só para aquela categoria, enquanto a pessoa está
@@ -382,8 +383,10 @@ public class BrowseActivity extends Activity {
 
     private void openItem(XtreamApi.Item item) {
         if (item.kind == XtreamApi.Kind.SERIES) {
-            Toast.makeText(this, "Séries: os episódios chegam na próxima etapa.",
-                    Toast.LENGTH_SHORT).show();
+            Intent s = new Intent(this, SeriesActivity.class);
+            s.putExtra(HomeActivity.EXTRA_ID, item.id);
+            s.putExtra(HomeActivity.EXTRA_NAME, item.name);
+            startActivity(s);
             return;
         }
         Intent i = new Intent(this, MainActivity.class);
