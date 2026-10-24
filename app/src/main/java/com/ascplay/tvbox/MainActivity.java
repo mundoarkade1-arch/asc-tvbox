@@ -28,24 +28,29 @@ import java.util.Locale;
 
 /**
  * Player: toca o canal, filme ou episódio escolhido.
- * O endereço (com usuário e senha) é montado aqui, a partir do login salvo.
- * Nunca mostra nem registra o endereço, porque ele contém a senha.
+ * No login por servidor (Xtream), o endereço (com usuário e senha) é montado aqui, a partir
+ * do login salvo. No login por lista M3U, o endereço direto do vídeo chega pela tela anterior
+ * (EXTRA_URL). Nunca mostra nem registra o endereço, porque ele contém a senha.
  *
- * Nos canais ao vivo, uma barra embaixo mostra o programa de agora, a barra de
- * progresso, os horários e o "A seguir". Ela aparece quando o canal começa a tocar,
- * some depois de alguns segundos e volta ao apertar OK.
+ * Nos canais ao vivo do servidor Xtream, uma barra embaixo mostra o programa de agora, a barra
+ * de progresso, os horários e o "A seguir". Ela aparece quando o canal começa a tocar,
+ * some depois de alguns segundos e volta ao apertar OK. (Lista M3U ainda não tem guia.)
  *
- * Nos episódios de série, a tela da série manda a lista de episódios da temporada.
- * Quando um episódio termina, o player toca sozinho o próximo da lista.
+ * Nos episódios de série do servidor Xtream, a tela da série manda a lista de episódios da
+ * temporada. Quando um episódio termina, o player toca sozinho o próximo da lista.
  * No último episódio da temporada, mostra "Fim da temporada." e para.
  */
 @OptIn(markerClass = UnstableApi.class)
 public class MainActivity extends Activity {
 
+    /** Endereço direto do vídeo (só no login por lista M3U). */
+    public static final String EXTRA_URL = "url";
+
     private static final String USER_AGENT = "ASC-TVBox/1.0 (Android)";
     private static final int TIMEOUT_MS = 15000;
     private static final long NOWBAR_HIDE_MS = 6000L;
     private static final int MAX_LIST = 500;
+    private static final int MAX_URL = 4096;
 
     private PlayerView playerView;
     private TextView status;
@@ -97,7 +102,9 @@ public class MainActivity extends Activity {
         pbNowbar = findViewById(R.id.pb_nowbar);
 
         creds = CredentialStore.load(this);
-        if (creds == null || !CredentialStore.MODE_XTREAM.equals(creds.mode)) {
+        boolean xtream = creds != null && CredentialStore.MODE_XTREAM.equals(creds.mode);
+        boolean m3u = creds != null && CredentialStore.MODE_M3U.equals(creds.mode);
+        if (!xtream && !m3u) {
             showStatus("Nada para tocar. Volte e escolha um canal ou filme.");
             return;
         }
@@ -120,12 +127,28 @@ public class MainActivity extends Activity {
         if (ext == null || !ext.matches("[A-Za-z0-9]{0,5}")) {
             ext = "";
         }
-        item = new XtreamApi.Item(kind, id, name == null ? "" : name, "", "", "", ext);
+
+        // Lista M3U: o endereço do vídeo já vem pronto e precisa ser http ou https
+        String url = "";
+        if (m3u) {
+            url = getIntent().getStringExtra(EXTRA_URL);
+            if (!isHttp(url) || url.length() > MAX_URL) {
+                showStatus("Nada para tocar. Volte e escolha um canal ou filme.");
+                return;
+            }
+        }
+
+        item = new XtreamApi.Item(kind, id, name == null ? "" : name, "", "", "", ext, url);
         streamUrl = XtreamApi.streamUrl(creds.server, creds.user, creds.pass, item);
 
-        if (kind == XtreamApi.Kind.EPISODE) {
+        if (xtream && kind == XtreamApi.Kind.EPISODE) {
             readEpisodeList();
         }
+    }
+
+    private static boolean isHttp(String s) {
+        return s != null && (s.regionMatches(true, 0, "http://", 0, 7)
+                || s.regionMatches(true, 0, "https://", 0, 8));
     }
 
     /**
@@ -227,9 +250,10 @@ public class MainActivity extends Activity {
 
             @Override
             public void onPlayerError(PlaybackException error) {
-                // Canal ao vivo: se o servidor não entregou HLS (.m3u8), tenta uma vez o .ts.
-                if (item != null && item.kind == XtreamApi.Kind.LIVE && !triedTs
-                        && streamUrl != null && streamUrl.endsWith(".m3u8")) {
+                // Canal ao vivo do servidor: se não entregou HLS (.m3u8), tenta uma vez o .ts.
+                // (Na lista M3U o endereço é o que veio na lista: não mexemos nele.)
+                if (item != null && item.kind == XtreamApi.Kind.LIVE && item.url.isEmpty()
+                        && !triedTs && streamUrl != null && streamUrl.endsWith(".m3u8")) {
                     triedTs = true;
                     streamUrl = streamUrl.substring(0, streamUrl.length() - ".m3u8".length()) + ".ts";
                     playCurrent();
@@ -283,7 +307,8 @@ public class MainActivity extends Activity {
     // ---------- Barra Agora / A seguir ----------
 
     private void showNowbar() {
-        if (item == null || creds == null || item.kind != XtreamApi.Kind.LIVE) {
+        if (item == null || creds == null || item.kind != XtreamApi.Kind.LIVE
+                || !CredentialStore.MODE_XTREAM.equals(creds.mode)) {
             return;
         }
         handler.removeCallbacks(hideNowbar);
