@@ -107,3 +107,12 @@ Registre aqui cada decisão importante: o que foi decidido e por quê.
 - Decisão: na página inicial, os itens adultos são tirados depois de buscar os 10 primeiros de cada faixa, então uma faixa pode mostrar menos de 10 cartões.
 - Motivo: evita pedir mais itens ao servidor só para completar a faixa. Menos rede e memória no TX9 (1 GB de RAM). Já no "Ver mais", se uma página inteira for escondida, o app busca a próxima sozinho.
 - Dependências: nenhuma nova foi adicionada. Tudo usa classes que já vêm no Android.
+
+## 2026-10-24: Episódios de séries (parte de dados)
+
+- Decisão: os episódios são pedidos ao servidor só quando a pessoa abre uma série (get_series_info, UMA série por vez). Nunca se baixa a lista de todos os episódios de todas as séries.
+- Motivo: o TX9 tem só 1 GB de RAM. A resposta é lida aos poucos (streaming) e a leitura para ao chegar em 500 episódios por série.
+- Decisão: episódio é um tipo à parte (XtreamApi.Kind.EPISODE e a classe XtreamApi.Episode), que só serve para tocar e não aparece em listas. O endereço de reprodução é /series/usuario/senha/id.extensão.
+- Decisão (combinada com o dono): a série abre numa tela própria, com temporadas à esquerda e episódios à direita. Ao terminar um episódio, o próximo da mesma temporada toca sozinho.
+- Fora desta etapa: lembrar onde a pessoa parou, capa e sinopse da série. Podem entrar depois, se o dono pedir.
+- Dependências: nenhuma nova foi adicionada.
