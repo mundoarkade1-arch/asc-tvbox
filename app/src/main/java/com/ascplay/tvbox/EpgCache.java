@@ -27,20 +27,20 @@ public final class EpgCache {
     private static final int MAX_ENTRIES = 80;
     private static final long TTL_MS = 60000L;
 
-    private static final class Entry {
+    private static final class CacheEntry {
         final XtreamApi.Epg epg;
         final long savedAt;
 
-        Entry(XtreamApi.Epg epg, long savedAt) {
+        CacheEntry(XtreamApi.Epg epg, long savedAt) {
             this.epg = epg;
             this.savedAt = savedAt;
         }
     }
 
-    private static final Map<String, Entry> CACHE =
-            new LinkedHashMap<String, Entry>(16, 0.75f, true) {
+    private static final Map<String, CacheEntry> CACHE =
+            new LinkedHashMap<String, CacheEntry>(16, 0.75f, true) {
                 @Override
-                protected boolean removeEldestEntry(Map.Entry<String, Entry> eldest) {
+                protected boolean removeEldestEntry(Map.Entry<String, CacheEntry> eldest) {
                     return size() > MAX_ENTRIES;
                 }
             };
@@ -56,7 +56,7 @@ public final class EpgCache {
      * Não faz acesso à rede. Pode ser chamado na thread principal.
      */
     public static XtreamApi.Epg peek(String server, String user, String streamId) {
-        Entry e = fresh(key(server, user, streamId));
+        CacheEntry e = fresh(key(server, user, streamId));
         return e == null ? null : e.epg;
     }
 
@@ -68,7 +68,7 @@ public final class EpgCache {
     public static void get(final String server, final String user, final String pass,
                            final String streamId, final Listener listener) {
         final String key = key(server, user, streamId);
-        Entry e = fresh(key);
+        CacheEntry e = fresh(key);
         if (e != null) {
             listener.onEpg(e.epg);
             return;
@@ -86,7 +86,7 @@ public final class EpgCache {
                 }
                 if (ok) {
                     synchronized (CACHE) {
-                        CACHE.put(key, new Entry(result, System.currentTimeMillis()));
+                        CACHE.put(key, new CacheEntry(result, System.currentTimeMillis()));
                     }
                 }
                 final XtreamApi.Epg out = result;
@@ -114,8 +114,8 @@ public final class EpgCache {
     }
 
     /** Entrada guardada que ainda vale: menos de 1 minuto e o programa ainda não acabou. */
-    private static Entry fresh(String key) {
-        Entry e;
+    private static CacheEntry fresh(String key) {
+        CacheEntry e;
         synchronized (CACHE) {
             e = CACHE.get(key);
         }
