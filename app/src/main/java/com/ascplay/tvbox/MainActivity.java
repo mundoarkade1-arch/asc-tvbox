@@ -34,22 +34,21 @@ import java.util.Locale;
  *
  * Nos canais ao vivo do servidor Xtream, uma barra embaixo mostra o programa de agora, a barra
  * de progresso, os horários e o "A seguir". Ela aparece quando o canal começa a tocar,
- * some depois de alguns segundos e volta ao apertar OK. (Lista M3U ainda não tem guia.)
+ * some depois de alguns segundos e volta ao apertar OK. (Lista M3U não tem guia.)
  *
- * Nos episódios de série, a tela da série manda a lista de episódios:
- * - servidor Xtream: lista de números (ids) e extensões de TODA a série, em ordem
- *   (temporadas normais primeiro, "Especiais" no fim);
- * - lista M3U: lista de endereços diretos da temporada (EXTRA_LIST_URLS).
- * Quando um episódio termina, o player toca sozinho o próximo da lista.
- * No servidor, no último episódio da série mostra "Fim da série." e para.
- * Na lista M3U, no último episódio da temporada mostra "Fim da temporada." e para.
+ * Nos episódios de série, a tela da série manda a fila de episódios da série toda, em ordem
+ * (temporadas normais primeiro, "Especiais" no fim):
+ * - servidor Xtream: lista de números (ids) e extensões;
+ * - lista M3U: lista de endereços diretos (EXTRA_LIST_URLS).
+ * Quando um episódio termina, o player toca sozinho o próximo da fila, inclusive passando
+ * para a temporada seguinte. No último episódio da série mostra "Fim da série." e para.
  */
 @OptIn(markerClass = UnstableApi.class)
 public class MainActivity extends Activity {
 
     /** Endereço direto do vídeo (só no login por lista M3U). */
     public static final String EXTRA_URL = "url";
-    /** Lista dos endereços diretos dos episódios da temporada (só na lista M3U). */
+    /** Lista dos endereços diretos dos episódios da série (só na lista M3U). */
     public static final String EXTRA_LIST_URLS = "list_urls";
 
     private static final String USER_AGENT = "ASC-TVBox/1.0 (Android)";
@@ -70,7 +69,7 @@ public class MainActivity extends Activity {
     // Fila de episódios (só quando está tocando um episódio de série)
     private ArrayList<String> listIds = null;
     private ArrayList<String> listExts = null;
-    // Lista M3U: endereços diretos dos episódios da temporada
+    // Lista M3U: endereços diretos dos episódios da série
     private ArrayList<String> listUrls = null;
     private int listIndex = -1;
 
@@ -191,8 +190,8 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Lê a lista de endereços dos episódios da temporada que a tela da série (lista M3U) mandou.
-     * Cada endereço precisa ser http ou https. Se algo vier errado, não usa a lista: o episódio
+     * Lê a fila de endereços dos episódios da série que a tela da série (lista M3U) mandou.
+     * Cada endereço precisa ser http ou https. Se algo vier errado, não usa a fila: o episódio
      * escolhido toca normalmente e só não passa para o próximo sozinho.
      */
     private void readM3uEpisodeList() {
@@ -312,10 +311,8 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Passa para o próximo episódio da fila.
-     * Servidor: a fila tem a série toda, então passa sozinho para a temporada seguinte;
-     * no último episódio avisa "Fim da série.".
-     * Lista M3U: a fila é só a temporada; no último avisa "Fim da temporada.".
+     * Passa para o próximo episódio da fila. A fila tem a série toda, então passa sozinho
+     * para a temporada seguinte. No último episódio da série avisa "Fim da série.".
      */
     private void playNextEpisode() {
         int next = listIndex + 1;
@@ -323,7 +320,7 @@ public class MainActivity extends Activity {
         // Lista M3U: a lista tem os endereços prontos
         if (listUrls != null) {
             if (next >= listUrls.size()) {
-                showStatus("Fim da temporada.");
+                showStatus("Fim da série.");
                 return;
             }
             listIndex = next;
