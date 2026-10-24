@@ -22,4 +22,11 @@
     <string name="err_expired">Conta vencida ou desativada.</string>
     <string name="err_not_m3u">O link não parece ser uma lista M3U válida.</string>
     <string name="err_unknown">Não foi possível entrar. Tente de novo.</string>
+
+    <string name="update_available">Nova versão disponível: %1$s</string>
+    <string name="btn_update_now">Atualizar</string>
+    <string name="btn_update_later">Depois</string>
+    <string name="msg_downloading">Baixando atualização... %1$d%%</string>
+    <string name="msg_downloading_unknown">Baixando atualização...</string>
+    <string name="msg_installer_opened">Abrindo o instalador...</string>
 </resources>
