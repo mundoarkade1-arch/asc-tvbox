@@ -1,0 +1,14 @@
+# asc-tvbox
+
+> App dedicado para rodar em TV boxes antigos, substituindo o app ASC que não funciona neles.
+
+## Comece por aqui
+- AGENTS.md: regras e ordem de leitura
+- README.md: visão geral
+- docs/STATUS.md: onde paramos e próximos passos
+
+## Documentação
+- docs/TARGET_DEVICES.md: aparelhos-alvo e limitações
+- docs/ORIGINAL_APP.md: o que o app ASC original faz
+- docs/ARCHITECTURE.md: como o app será organizado
+- docs/DECISIONS.md: decisões tomadas e motivos
