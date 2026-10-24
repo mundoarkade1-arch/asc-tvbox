@@ -23,10 +23,11 @@ import java.util.regex.Pattern;
  * Para listas gigantes, a leitura também para depois de 200 MB ou de 1 minuto e devolve
  * o que já achou.
  *
- * Três funções públicas:
+ * Quatro funções públicas:
  * - sample: os primeiros itens de cada tipo (página inicial).
  * - categories: os nomes das categorias de um tipo ("Ver mais").
  * - page: uma página de itens de um tipo, de uma categoria ou de todas ("Ver mais").
+ * - episodes: os episódios de UMA série, achados pelo título (tela da série).
  *
  * Faz acesso à rede: NUNCA chamar na thread principal.
  * Os endereços dos vídeos costumam conter usuário e senha: nunca mostrar nem registrar em log.
@@ -38,6 +39,25 @@ public final class M3uApi {
         public final List<XtreamApi.Item> live = new ArrayList<>();
         public final List<XtreamApi.Item> movie = new ArrayList<>();
         public final List<XtreamApi.Item> series = new ArrayList<>();
+    }
+
+    /**
+     * Um episódio de série da lista M3U. "season" é a temporada e "number" o número do
+     * episódio (1 e 0 quando o nome não diz). "url" é o endereço direto do vídeo e costuma
+     * conter usuário e senha: nunca mostrar nem registrar em log.
+     */
+    public static final class Episode {
+        public final String title;
+        public final int season;
+        public final int number;
+        public final String url;
+
+        Episode(String title, int season, int number, String url) {
+            this.title = title;
+            this.season = season;
+            this.number = number;
+            this.url = url;
+        }
     }
 
     /** Recebe cada item da lista. Devolve false para parar a leitura. */
@@ -58,11 +78,15 @@ public final class M3uApi {
     private static final int MAX_LINE = 4096;
     private static final int MAX_NAME = 200;
     private static final int MAX_CATEGORIES = 3000;
+    private static final int MAX_EPISODES = 500;
     private static final String USER_AGENT = "ASC-TVBox/1.0 (Android)";
 
     private static final Pattern ATTR = Pattern.compile("([\\w-]+)=\"([^\"]*)\"");
     private static final Pattern EP = Pattern.compile(
             "\\bS\\d{1,2}\\s?E\\d{1,3}\\b|\\bT\\d{1,2}\\s?E\\d{1,3}\\b|\\b\\d{1,2}x\\d{2,3}\\b|temporada",
+            Pattern.CASE_INSENSITIVE);
+    private static final Pattern SEASON_EP = Pattern.compile(
+            "\\b[ST](\\d{1,2})\\s?E(\\d{1,3})\\b|\\b(\\d{1,2})x(\\d{2,3})\\b",
             Pattern.CASE_INSENSITIVE);
     private static final Pattern VIDEO_EXT = Pattern.compile(
             "\\.(mp4|mkv|avi|mov|wmv|flv|mpg|mpeg|webm)$");
@@ -169,6 +193,49 @@ public final class M3uApi {
                             icon, grp, tvgId, "", url));
                 }
                 return out.size() < limit;
+            }));
+        } catch (IOException e) {
+            if (out.isEmpty()) {
+                throw e;
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Devolve os episódios de UMA série, achados lendo a lista e juntando os itens de série
+     * cujo título (sem "S01E03") é igual a "seriesName". No máximo 500 episódios, na ordem em
+     * que aparecem na lista. Só os episódios dessa série ficam na memória.
+     * A tela da série só abre a partir de itens que já passaram pelo controle parental,
+     * por isso aqui não se repete essa conferência.
+     */
+    public static List<Episode> episodes(String m3uUrl, String seriesName) throws IOException {
+        final List<Episode> out = new ArrayList<>();
+        final String wanted = seriesName == null ? ""
+                : cut(seriesName.trim()).toLowerCase(Locale.ROOT);
+        if (wanted.isEmpty()) {
+            return out;
+        }
+        try {
+            readList(m3uUrl, reader -> walk(reader, (url, grp, name, icon, tvgId, counter) -> {
+                if (classify(url, grp, name) != XtreamApi.Kind.SERIES) {
+                    return true;
+                }
+                String title = cut(seriesTitle(name)).toLowerCase(Locale.ROOT);
+                if (!title.equals(wanted)) {
+                    return true;
+                }
+                int season = 1;
+                int number = 0;
+                Matcher m = SEASON_EP.matcher(name);
+                if (m.find()) {
+                    String s = m.group(1) != null ? m.group(1) : m.group(3);
+                    String e = m.group(2) != null ? m.group(2) : m.group(4);
+                    season = parseIntSafe(s, 1);
+                    number = parseIntSafe(e, 0);
+                }
+                out.add(new Episode(cut(name), season, number, url));
+                return out.size() < MAX_EPISODES;
             }));
         } catch (IOException e) {
             if (out.isEmpty()) {
@@ -371,6 +438,17 @@ public final class M3uApi {
 
     private static String cut(String s) {
         return s.length() > MAX_NAME ? s.substring(0, MAX_NAME) : s;
+    }
+
+    private static int parseIntSafe(String s, int fallback) {
+        if (s == null) {
+            return fallback;
+        }
+        try {
+            return Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
     }
 
     /** Abre o endereço seguindo redirecionamentos (inclusive de http para https). */
