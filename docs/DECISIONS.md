@@ -31,3 +31,21 @@ Registre aqui cada decisão importante: o que foi decidido e por quê.
 - Plugin do Android Gradle: versão 8.5.2.
 - Sem os Secrets, o workflow gera um APK de teste com chave temporária e não publica em Releases.
 - versionCode e versionName vêm das variáveis VERSION_CODE e VERSION_NAME (número da execução do workflow), lidas em variáveis simples no app/build.gradle (a primeira forma, direto dentro de defaultConfig, dava erro "Value is null").
+
+## 2026-10-24: Tela de login e guarda das credenciais
+
+- Duas formas de entrar na mesma tela: "Servidor e login" (DNS/Xtream Codes) e "Lista M3U" (link).
+- CredentialStore.java guarda o login no armazenamento privado do app (SharedPreferences privado), criptografado com AES-GCM e chave do Android Keystore (Android 6.0+). Se o Keystore falhar no aparelho (comum em TV box barato), guarda em Base64 no mesmo armazenamento privado, em vez de travar. Se não conseguir ler, apaga e pede o login de novo. Nenhuma biblioteca extra.
+- LoginChecker.java confere o login antes de salvar. Xtream: consulta player_api.php e exige user_info.auth = 1, status Active e exp_date no futuro. M3U: lê só os primeiros 4 KB e confere se começa com #EXTM3U ou #EXTINF (não baixa a lista inteira). Usa HttpURLConnection (sem OkHttp), segue redirecionamentos, timeout de 15 s e não escreve senhas nem endereços em log.
+- Resposta 4xx do servidor é tratada como login recusado ("Usuário ou senha incorretos"). Servidores que respondem 401 sem cabeçalho de autenticação geram IOException no Android ("authentication challenge"); isso também é tratado como login recusado.
+- Interface da tela de login: sem bibliotecas de UI, foco visível por selector (borda branca de 4 dp), tudo navegável só com setas e OK. Testado no TX9.
+- Por enquanto o app sempre abre pela tela de login e, após sucesso, abre a MainActivity (que ainda toca só um stream HLS de teste). Quando existir a página inicial, o app deve pular o login se houver credenciais salvas.
+
+## 2026-10-24: Atualização automática pelo app (em andamento)
+
+- Motivo: o dono não usa computador para instalar; passar APK por pen drive a cada versão é inviável.
+- Como funciona: o workflow publica, junto do APK, um version.json com {code, name, url, sha256}. O app consulta https://github.com/mundoarkade1-arch/asc-tvbox/releases/latest/download/version.json ao abrir, compara "code" com o versionCode instalado e, se for maior, mostra aviso com Atualizar/Depois. Ao aceitar, baixa o APK para o cache privado, confere o SHA-256 e abre o instalador do Android via FileProvider.
+- Segurança: só aceita URL https que comece com https://github.com/mundoarkade1-arch/asc-tvbox/releases/download/. O Android ainda confere a assinatura (chave diferente = recusado).
+- Limites do Android: o usuário precisa confirmar a instalação com o controle (sem root não dá para instalar sozinho). A primeira versão com o atualizador ainda é instalada por pen drive.
+- Única dependência nova: androidx.core:core:1.13.1 (FileProvider). Justificativa: é a forma oficial e compatível com Android 7.1 de entregar o APK ao instalador.
+- Ler o versionCode instalado com PackageManager (o BuildConfig não é gerado por padrão no Android Gradle Plugin 8).
