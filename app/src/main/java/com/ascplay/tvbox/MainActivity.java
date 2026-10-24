@@ -42,6 +42,9 @@ import java.util.Locale;
  * - lista M3U: lista de endereços diretos (EXTRA_LIST_URLS).
  * Quando um episódio termina, o player toca sozinho o próximo da fila, inclusive passando
  * para a temporada seguinte. No último episódio da série mostra "Fim da série." e para.
+ *
+ * Quando um episódio começa a tocar, anota a posição dele na fila (SeriesProgress), para a
+ * tela da série abrir no episódio certo da próxima vez. A chave da série vem em EXTRA_SERIES_KEY.
  */
 @OptIn(markerClass = UnstableApi.class)
 public class MainActivity extends Activity {
@@ -50,12 +53,15 @@ public class MainActivity extends Activity {
     public static final String EXTRA_URL = "url";
     /** Lista dos endereços diretos dos episódios da série (só na lista M3U). */
     public static final String EXTRA_LIST_URLS = "list_urls";
+    /** Chave que identifica a série (usada só para lembrar onde a pessoa parou). */
+    public static final String EXTRA_SERIES_KEY = "series_key";
 
     private static final String USER_AGENT = "ASC-TVBox/1.0 (Android)";
     private static final int TIMEOUT_MS = 15000;
     private static final long NOWBAR_HIDE_MS = 6000L;
     private static final int MAX_LIST = 500;
     private static final int MAX_URL = 4096;
+    private static final int MAX_KEY = 8192;
 
     private PlayerView playerView;
     private TextView status;
@@ -72,6 +78,10 @@ public class MainActivity extends Activity {
     // Lista M3U: endereços diretos dos episódios da série
     private ArrayList<String> listUrls = null;
     private int listIndex = -1;
+
+    // Lembrar onde parou
+    private String seriesKey = null;
+    private int savedIndex = -1;
 
     // Barra Agora / A seguir
     private View groupNowbar;
@@ -153,6 +163,10 @@ public class MainActivity extends Activity {
                 readEpisodeList();
             } else {
                 readM3uEpisodeList();
+            }
+            String key = getIntent().getStringExtra(EXTRA_SERIES_KEY);
+            if (key != null && !key.isEmpty() && key.length() <= MAX_KEY) {
+                seriesKey = key;
             }
         }
     }
@@ -269,6 +283,7 @@ public class MainActivity extends Activity {
                     showStatus("Carregando...");
                 } else if (state == Player.STATE_READY) {
                     status.setVisibility(View.GONE);
+                    saveProgress();
                     if (!nowbarShownOnce) {
                         nowbarShownOnce = true;
                         showNowbar();
@@ -308,6 +323,16 @@ public class MainActivity extends Activity {
         player.setMediaItem(MediaItem.fromUri(Uri.parse(streamUrl)));
         player.prepare();
         player.setPlayWhenReady(true);
+    }
+
+    /** Anota o episódio que começou a tocar (uma vez por episódio). */
+    private void saveProgress() {
+        if (item == null || item.kind != XtreamApi.Kind.EPISODE
+                || seriesKey == null || listIndex < 0 || listIndex == savedIndex) {
+            return;
+        }
+        savedIndex = listIndex;
+        SeriesProgress.save(this, seriesKey, listIndex);
     }
 
     /**
