@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ASC TV Box</string>
-    <string name="welcome">ASC TV Box\nApp em construção</string>
+
+    <string name="login_title">Entrar</string>
+    <string name="mode_xtream">Servidor e login</string>
+    <string name="mode_m3u">Lista M3U</string>
+    <string name="hint_server">Servidor (ex.: http://servidor.com:8080)</string>
+    <string name="hint_user">Usuário</string>
+    <string name="hint_pass">Senha</string>
+    <string name="hint_m3u">Link da lista M3U (http://...)</string>
+    <string name="btn_enter">Entrar</string>
+
+    <string name="msg_checking">Verificando...</string>
+    <string name="msg_ok">Login feito!</string>
+
+    <string name="err_empty">Preencha todos os campos.</string>
+    <string name="err_server">Endereço do servidor inválido.</string>
+    <string name="err_url">Link inválido. Use http:// ou https://</string>
+    <string name="err_network">Sem conexão com o servidor. Confira o endereço e a internet.</string>
+    <string name="err_auth">Usuário ou senha incorretos.</string>
+    <string name="err_expired">Conta vencida ou desativada.</string>
+    <string name="err_not_m3u">O link não parece ser uma lista M3U válida.</string>
+    <string name="err_unknown">Não foi possível entrar. Tente de novo.</string>
 </resources>
