@@ -123,6 +123,15 @@ public final class XtreamApi {
      */
     public static List<Item> items(String server, String user, String pass, Kind kind,
                                    String categoryId, int limit) throws IOException {
+        return items(server, user, pass, kind, categoryId, 0, limit);
+    }
+
+    /**
+     * Igual ao anterior, mas pula os primeiros "offset" itens (para carregar por páginas).
+     * Os itens pulados são lidos e descartados na hora, sem ficar na memória.
+     */
+    public static List<Item> items(String server, String user, String pass, Kind kind,
+                                   String categoryId, int offset, int limit) throws IOException {
         String url = apiUrl(server, user, pass, itemsAction(kind));
         if (categoryId != null && isNumber(categoryId)) {
             url += "&category_id=" + categoryId;
@@ -137,6 +146,7 @@ public final class XtreamApi {
                     throw new IOException("resposta invalida");
                 }
                 r.beginArray();
+                int skipped = 0;
                 while (r.hasNext() && out.size() < limit) {
                     if (r.peek() != JsonToken.BEGIN_OBJECT) {
                         r.skipValue();
@@ -148,6 +158,10 @@ public final class XtreamApi {
                     }
                     // Alguns servidores ignoram o filtro de categoria: conferimos aqui.
                     if (categoryId != null && !categoryId.equals(item.categoryId)) {
+                        continue;
+                    }
+                    if (skipped < offset) {
+                        skipped++;
                         continue;
                     }
                     out.add(item);
