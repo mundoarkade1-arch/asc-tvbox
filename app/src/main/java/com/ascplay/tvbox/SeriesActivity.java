@@ -26,6 +26,9 @@ import java.util.List;
  * da série, em ordem (temporadas normais primeiro, "Especiais" no fim), para o player tocar
  * o próximo sozinho no fim, inclusive passando para a temporada seguinte.
  *
+ * Lembra onde a pessoa parou (SeriesProgress): ao abrir a série, vai para a temporada certa
+ * e deixa o último episódio selecionado.
+ *
  * Esta tela só é aberta a partir de itens que já passaram pelo controle parental
  * (página inicial e "Ver mais"), por isso não repete a conferência da senha.
  */
@@ -43,6 +46,7 @@ public class SeriesActivity extends Activity {
 
     private CredentialStore.Credentials creds;
     private String seriesName = "";
+    private String seriesKey = "";
 
     private TextView tvTitle;
     private TextView tvStatus;
@@ -71,6 +75,8 @@ public class SeriesActivity extends Activity {
             return;
         }
         seriesName = name == null ? "" : name;
+        // Chave da série para lembrar onde parou (o player só guarda um resumo embaralhado dela)
+        seriesKey = "xt|" + creds.server + "|" + creds.user + "|" + id;
 
         setContentView(R.layout.activity_series);
         tvTitle = findViewById(R.id.tv_title);
@@ -169,6 +175,31 @@ public class SeriesActivity extends Activity {
 
         tvStatus.setVisibility(View.GONE);
         currentSeason = -1;
+
+        // Se a pessoa já assistiu esta série, abre no episódio onde parou
+        XtreamApi.Episode resume = null;
+        int saved = SeriesProgress.load(this, seriesKey);
+        if (saved >= 0) {
+            List<XtreamApi.Episode> queue = buildQueue();
+            if (saved < queue.size()) {
+                resume = queue.get(saved);
+            }
+        }
+        if (resume != null) {
+            int seasonPos = seasons.indexOf(resume.season);
+            if (seasonPos < 0) {
+                seasonPos = 0;
+            }
+            showSeason(seasonPos);
+            lvSeasons.setSelection(seasonPos);
+            int epPos = shown.indexOf(resume);
+            if (epPos >= 0) {
+                lvEpisodes.setSelection(epPos);
+            }
+            lvEpisodes.requestFocus();
+            return;
+        }
+
         showSeason(0);
         if (seasons.size() == 1) {
             lvEpisodes.requestFocus();
@@ -201,13 +232,8 @@ public class SeriesActivity extends Activity {
         }
     }
 
-    private void playEpisode(int position) {
-        if (position < 0 || position >= shown.size()) {
-            return;
-        }
-        XtreamApi.Episode chosen = shown.get(position);
-
-        // Fila de reprodução: temporadas normais em ordem, e os "Especiais" (temporada 0) no fim.
+    /** Fila de reprodução: temporadas normais em ordem, e os "Especiais" (temporada 0) no fim. */
+    private ArrayList<XtreamApi.Episode> buildQueue() {
         ArrayList<XtreamApi.Episode> queue = new ArrayList<>();
         for (XtreamApi.Episode e : allEpisodes) {
             if (e.season != 0) {
@@ -219,7 +245,16 @@ public class SeriesActivity extends Activity {
                 queue.add(e);
             }
         }
+        return queue;
+    }
 
+    private void playEpisode(int position) {
+        if (position < 0 || position >= shown.size()) {
+            return;
+        }
+        XtreamApi.Episode chosen = shown.get(position);
+
+        ArrayList<XtreamApi.Episode> queue = buildQueue();
         ArrayList<String> ids = new ArrayList<>();
         ArrayList<String> exts = new ArrayList<>();
         int index = 0;
@@ -240,6 +275,7 @@ public class SeriesActivity extends Activity {
         i.putStringArrayListExtra(EXTRA_LIST_IDS, ids);
         i.putStringArrayListExtra(EXTRA_LIST_EXTS, exts);
         i.putExtra(EXTRA_LIST_INDEX, index);
+        i.putExtra(MainActivity.EXTRA_SERIES_KEY, seriesKey);
         startActivity(i);
     }
 
