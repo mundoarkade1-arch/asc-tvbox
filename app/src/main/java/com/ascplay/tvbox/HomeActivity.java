@@ -25,6 +25,8 @@ import java.util.List;
  * com a programação do canal (o que passa agora e os próximos programas).
  * Ao escolher uma série, abre a tela da série (temporadas e episódios), levando a capa do item.
  * Ao escolher um filme, abre a página do filme (MovieActivity), com capa e sinopse.
+ * Ao escolher um canal ao vivo, o player pode trocar de canal com cima e baixo (R4):
+ * esta tela manda EXTRA_QUEUE = true e nenhuma categoria (nula = todas as categorias).
  *
  * Lista M3U: lê a lista aos poucos, só até achar 10 itens de cada tipo (M3uApi).
  * O cartão "Ver mais ›" abre a navegação por categorias da lista M3U (M3uBrowseActivity).
@@ -465,6 +467,10 @@ public class HomeActivity extends Activity {
         i.putExtra(EXTRA_NAME, item.name);
         if (item.kind == XtreamApi.Kind.MOVIE) {
             i.putExtra(MovieActivity.EXTRA_ICON, item.icon);
+        }
+        if (item.kind == XtreamApi.Kind.LIVE) {
+            // R4: o player troca de canal com cima e baixo. Categoria não enviada = todas.
+            i.putExtra(MainActivity.EXTRA_QUEUE, true);
         }
         if (isM3u()) {
             i.putExtra(MainActivity.EXTRA_URL, item.url);
