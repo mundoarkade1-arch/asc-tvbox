@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -50,6 +51,9 @@ import java.util.Locale;
  * Filme e episódio: anota o MINUTO exato (PlaybackProgress) a cada 10 segundos, ao sair da tela
  * e ao terminar (marca como visto). Canal ao vivo não anota nada. O recado EXTRA_START_MS faz o
  * primeiro vídeo começar naquele minuto ("Continuar de onde parei").
+ *
+ * Controles: em filme e episódio, as setas esquerda e direita voltam e avançam 10 segundos
+ * direto (o foco não fica preso nos botões). A barra de controles fica semi-transparente.
  */
 @OptIn(markerClass = UnstableApi.class)
 public class MainActivity extends Activity {
@@ -69,6 +73,11 @@ public class MainActivity extends Activity {
     private static final long SAVE_EVERY_MS = 10000L;
     private static final long MIN_START_MS = 5000L;
     private static final long MAX_START_MS = 100L * 3600L * 1000L;
+    // Setas esquerda e direita: quanto pular, e o intervalo mínimo entre dois pulos
+    private static final long SEEK_MS = 10000L;
+    private static final long SEEK_MIN_GAP_MS = 120L;
+    // Quanto a barra de controles fica visível (1.0 = nada transparente)
+    private static final float CONTROLLER_ALPHA = 0.65f;
     private static final int MAX_LIST = 500;
     private static final int MAX_URL = 4096;
     private static final int MAX_KEY = 8192;
@@ -95,6 +104,9 @@ public class MainActivity extends Activity {
 
     // Minuto onde o próximo vídeo deve começar (0 = do começo). Usado uma vez.
     private long pendingStartMs = 0L;
+
+    // Hora do último pulo com as setas (para não pular rápido demais ao segurar a tecla)
+    private long lastSeekAt = 0L;
 
     // Barra Agora / A seguir
     private View groupNowbar;
@@ -130,6 +142,8 @@ public class MainActivity extends Activity {
 
         playerView = findViewById(R.id.player_view);
         status = findViewById(R.id.status);
+
+        makeControllerTransparent();
 
         groupNowbar = findViewById(R.id.group_nowbar);
         tvNbChannel = findViewById(R.id.tv_nb_channel);
@@ -197,6 +211,21 @@ public class MainActivity extends Activity {
             if (key != null && !key.isEmpty() && key.length() <= MAX_KEY) {
                 seriesKey = key;
             }
+        }
+    }
+
+    /**
+     * Deixa a barra de controles do player semi-transparente (dá para ver o vídeo por trás).
+     * Se a barra não for achada, não faz nada e o player continua normal.
+     */
+    private void makeControllerTransparent() {
+        int id = getResources().getIdentifier("exo_controller", "id", getPackageName());
+        if (id == 0) {
+            return;
+        }
+        View controller = playerView.findViewById(id);
+        if (controller != null) {
+            controller.setAlpha(CONTROLLER_ALPHA);
         }
     }
 
@@ -280,11 +309,25 @@ public class MainActivity extends Activity {
         nowbarToken++;
     }
 
-    /** Ao apertar OK num canal ao vivo, mostra a barra Agora / A seguir. */
+    /**
+     * Teclas do player.
+     * - Filme e episódio: seta esquerda volta 10 segundos e seta direita avança 10 segundos,
+     *   direto (o foco não fica preso nos botões).
+     * - Canal ao vivo: ao apertar OK, mostra a barra Agora / A seguir.
+     */
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
+        int code = event.getKeyCode();
+
+        if ((code == KeyEvent.KEYCODE_DPAD_LEFT || code == KeyEvent.KEYCODE_DPAD_RIGHT)
+                && canSeekWithArrows()) {
+            if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                seekBy(code == KeyEvent.KEYCODE_DPAD_RIGHT ? SEEK_MS : -SEEK_MS);
+            }
+            return true;
+        }
+
         if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
-            int code = event.getKeyCode();
             if (code == KeyEvent.KEYCODE_DPAD_CENTER
                     || code == KeyEvent.KEYCODE_ENTER
                     || code == KeyEvent.KEYCODE_NUMPAD_ENTER) {
@@ -292,6 +335,38 @@ public class MainActivity extends Activity {
             }
         }
         return super.dispatchKeyEvent(event);
+    }
+
+    /** As setas só pulam o vídeo em filme e episódio que já estão carregando ou tocando. */
+    private boolean canSeekWithArrows() {
+        if (player == null || item == null) {
+            return false;
+        }
+        if (item.kind != XtreamApi.Kind.MOVIE && item.kind != XtreamApi.Kind.EPISODE) {
+            return false;
+        }
+        int state = player.getPlaybackState();
+        return state != Player.STATE_IDLE && state != Player.STATE_ENDED;
+    }
+
+    /** Pula para frente (valor positivo) ou para trás (valor negativo) e mostra a barra. */
+    private void seekBy(long deltaMs) {
+        long now = SystemClock.elapsedRealtime();
+        if (now - lastSeekAt < SEEK_MIN_GAP_MS) {
+            return;
+        }
+        lastSeekAt = now;
+
+        long target = player.getCurrentPosition() + deltaMs;
+        if (target < 0) {
+            target = 0;
+        }
+        long duration = player.getDuration();
+        if (duration != C.TIME_UNSET && duration > 0 && target > duration) {
+            target = duration;
+        }
+        player.seekTo(target);
+        playerView.showController();
     }
 
     private void startPlayer() {
