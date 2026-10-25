@@ -28,7 +28,7 @@ import java.util.Set;
  * Esquerda: categorias. Direita: itens, carregados por páginas de 40 (máximo de 400 por categoria).
  * Nunca baixa a lista inteira: pede ao servidor só a página necessária.
  * Nos canais ao vivo, cada cartão mostra o programa que passa agora (EPG por canal).
- * Ao escolher uma série, abre a tela da série (temporadas e episódios).
+ * Ao escolher uma série, abre a tela da série (temporadas e episódios), levando a capa do item.
  * Ao escolher um filme, abre a página do filme (MovieActivity), com capa e sinopse.
  *
  * Menu à esquerda (só ícones): ligado pelo NavBar. Troca de aba, volta à tela inicial e
@@ -478,6 +478,7 @@ public class BrowseActivity extends Activity {
             Intent s = new Intent(this, SeriesActivity.class);
             s.putExtra(HomeActivity.EXTRA_ID, item.id);
             s.putExtra(HomeActivity.EXTRA_NAME, item.name);
+            s.putExtra(MovieActivity.EXTRA_ICON, item.icon);
             startActivity(s);
             return;
         }
