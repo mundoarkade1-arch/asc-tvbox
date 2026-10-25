@@ -16,7 +16,7 @@ Outros: res/values/strings.xml, res/xml/file_paths.xml, AndroidManifest.xml, app
 - item_card.xml (cartão, tem tv_now), item_category.xml (linha de lista).
 
 ## Menu à esquerda
-- layout_nav.xml: coluna group_nav (88dp), botões nav_home, nav_live, nav_movie, nav_series, nav_settings e nav_refresh (ImageButton 64dp, só ícone, fundo bg_button). Incluído (escondido por padrão) em activity_browse.xml e activity_settings.xml.
+- layout_nav.xml: coluna group_nav (200dp), botões nav_home, nav_live, nav_movie, nav_series, nav_settings e nav_refresh. Cada botão é um TextView (56dp de altura, fundo bg_button, clickable e focusable) com o ícone à esquerda (drawableLeft) e o nome ao lado: Tela inicial, Canais, Filmes, Séries, Ajustes, Atualizar. Incluído (escondido por padrão) em activity_browse.xml e activity_settings.xml.
 - NavBar.java: NavBar.bind(activity, abaAtual, aoAtualizar). Só usa os ids e o clique, não o tipo do botão. Tela inicial volta à HomeActivity; Canais, Filmes e Séries trocam de aba e fecham a de antes; Ajustes abre a SettingsActivity.
 - Ícones: ic_nav_home, ic_nav_live, ic_nav_movie, ic_nav_series, ic_nav_settings, ic_nav_refresh (brancos, 32dp). Fundos: bg_button, bg_card, bg_field.
 
@@ -44,3 +44,4 @@ Outros: res/values/strings.xml, res/xml/file_paths.xml, AndroidManifest.xml, app
 - Controle parental: abrir Ajustes não pede a senha (só trocar ou desativar). "Trocar de lista" não apaga o login antigo; o novo o substitui.
 - Player: setas esquerda e direita pulam 10 s só em filme e episódio (mínimo 120 ms entre pulos). Controles semi-transparentes com setAlpha(0.65) no exo_controller (se não aparecer o efeito, trocar por layout próprio). Cores de episódio visto são no texto, não no fundo. Em canal ao vivo, as setas ainda NÃO trocam de canal (Rodada 1, R4).
 - Programação do canal: abre com a tecla de menu (três listras) ou segurando o OK (o tempo varia por controle).
+- Menu com texto (R1): ainda não testado no TX9. Se algum nome não couber nos 200dp, reduzir o tamanho da letra ou alargar a coluna.
