@@ -171,5 +171,17 @@
 - Séries (activity_series.xml) e Ajustes (activity_settings.xml): a ordem já estava certa (temporadas e episódios lado a lado; opções e detalhe sem foco). Sem mudança de foco.
 - Correção achada junto: o include do menu em activity_browse.xml e activity_settings.xml ainda estava com 88dp. Passou para 200dp, igual ao menu novo da R1. Sem isso, os nomes ficariam cortados.
 - Sem dependências novas.
+
+- ## 25/10/2026 - Rodada 1, R4 (trocar de canal com as setas), parte 1
+
+- Nova classe ChannelQueue.java: fila de canais ao vivo. Ordem: todas as categorias, uma depois da outra, a partir do canal que toca. Só UMA categoria fica na memória por vez (páginas de 40, máx. 400). Motivo: 1 GB de RAM e a regra do dono (lista única passando de categoria sozinha).
+- Servidor: categoria = número; lista M3U: categoria = nome do grupo; nula = "Todas as categorias" (fila única).
+- Fim da lista: ESCOLHA DO AGENTE, o dono não lembrou: dá a volta (último -> primeiro e primeiro -> último). Ele testa e pode pedir "parar".
+- Parental ligado: categorias adultas são puladas e canais com nome adulto não entram, menos na categoria de onde a pessoa saiu.
+- MainActivity.java: cima/baixo só em canal ao vivo e só se a tela mandar EXTRA_QUEUE (true) e EXTRA_QUEUE_CAT. Sem EXTRA_QUEUE nada muda. Motivo: classe e player primeiro, telas depois (código antes de quem usa).
+- Depois de trocar: servidor mostra a barra Agora / A seguir; lista M3U mostra o nome do canal (Toast), pois não tem guia.
+- Limite: se o canal tocado não estiver nos primeiros 400 da categoria, as setas ficam desligadas (sem erro).
+- Falta: HomeActivity, BrowseActivity, M3uBrowseActivity e SearchActivity mandarem EXTRA_QUEUE e EXTRA_QUEUE_CAT.
+- Sem dependências novas.
 - Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
