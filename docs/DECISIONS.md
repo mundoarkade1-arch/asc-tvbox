@@ -44,5 +44,20 @@
 - Decisão: a ordem de trabalho foi: layout novo, depois a classe nova, depois o registro no AndroidManifest.xml, depois o NavBar, depois a HomeActivity (código) e por último o layout da página inicial (sem os dois botões). Assim o Actions ficou verde em todos os passos.
 - Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
+
+- ## 2026-10-24: Nova interface, parte (d): página do filme e da série (início)
+
+- Decisão: a página do filme e da série é a MESMA nos dois logins (servidor e lista M3U). Escolha do dono ("opção A"). Na lista M3U, que quase nunca traz sinopse, a página mostra a imagem do item, o nome, os botões e o texto "Sem sinopse nesta lista".
+- Motivo: o visual e o "Continuar de onde parei" ficam iguais nos dois logins. A alternativa (filme da lista M3U tocando direto, sem página) deixaria esses filmes sem o botão "Continuar".
+- Decisão: a parte (d) é feita em DOIS TEMPOS. Agora: páginas com capa, sinopse e botão Tocar (filme) e com capa, sinopse, temporadas e episódios (série). Depois, na parte (e): ligar o "Continuar de onde parei" e as cores de episódio visto.
+- Motivo: o "Continuar" e as cores precisam do minuto exato, e o arquivo de minutos só nasce na parte (e). Assim as páginas ficam prontas sem esperar o player.
+- Decisão: capa e sinopse vêm do servidor com um pedido por item (get_vod_info para filme e get_series_info para série), pela função XtreamApi.details. Lê só o bloco "info" e para.
+- Motivo: aparelho com 1 GB de RAM. Nunca baixar a lista inteira só para mostrar uma sinopse.
+- Decisão: details() devolve um resultado vazio (sem erro) quando o servidor não informa nada, e a tela mostra a página sem sinopse. Erros de rede viram IOException e a tela os trata.
+- Motivo: os servidores Xtream usam nomes de campo um pouco diferentes. A página precisa abrir mesmo sem capa ou sem sinopse.
+- Decisão: ordem de trabalho da parte (d): primeiro a função details (nada usa ainda), depois o layout novo, depois a tela nova, depois o registro no AndroidManifest.xml, e só no fim mudar os lugares que tocam o filme direto. A página da série vem depois da do filme.
+- Motivo: o Actions não fica vermelho em nenhum passo.
+- Dependências: nenhuma nova.
+- Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
 - Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
