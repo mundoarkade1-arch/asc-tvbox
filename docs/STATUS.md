@@ -1,54 +1,57 @@
-Olá! Vou te passar a continuação de um projeto que já está bem adiantado. Antes de responder qualquer coisa, leia estes arquivos do meu repositório (público), nesta ordem:
+# Status do projeto
 
-1. https://raw.githubusercontent.com/mundoarkade1-arch/asc-tvbox/main/docs/STATUS.md
-2. https://raw.githubusercontent.com/mundoarkade1-arch/asc-tvbox/main/docs/ARQUIVOS.md
-3. https://raw.githubusercontent.com/mundoarkade1-arch/asc-tvbox/main/docs/DECISIONS.md
-4. https://raw.githubusercontent.com/mundoarkade1-arch/asc-tvbox/main/AGENTS.md
-5. https://raw.githubusercontent.com/mundoarkade1-arch/asc-tvbox/main/docs/TARGET_DEVICES.md
-6. https://raw.githubusercontent.com/mundoarkade1-arch/asc-tvbox/main/docs/ORIGINAL_APP.md
+Última atualização: 25/10/2026 (passagem organizada)
+Regras de trabalho: AGENTS.md. Mapa e limites: docs/ARQUIVOS.md. Montagem e versão: docs/ARCHITECTURE.md. Decisões: docs/DECISIONS.md.
 
-Se algum link não abrir, ou se o texto parecer antigo (o STATUS.md deve ter uma seção "Rodada 1: ajustes pedidos pelo dono após o 1º teste" e o DECISIONS.md deve ter uma entrada "2026-10-25: Primeiro teste no TX9 e Rodada 1 de ajustes"), me avise que eu colo o texto aqui. O GitHub às vezes demora uns minutos para mostrar a versão nova. Você só consegue abrir os arquivos .md por link, não os de código; por isso, antes de editar qualquer arquivo de código, peça que eu cole o conteúdo atual dele e devolva o arquivo COMPLETO. Nunca reescreva um arquivo de código "de memória". Os arquivos de código que os agentes anteriores escreveram NÃO estão na sua memória: sempre peça o arquivo atual.
+## Fase atual
+A nova aparência (partes a a f) está pronta no código e VERDE no Actions. O dono fez o PRIMEIRO TESTE no TX9 em 25/10/2026. O que ele aprovou: a barra Agora (esquerda) e A seguir (direita) no player do canal. Ele pediu 4 ajustes (Rodada 1). NENHUM foi começado.
 
-## Resumo do projeto
-Meu app de IPTV (ASC play, antigo, em Capacitor/WebView, repositório https://github.com/mundoarkade1-arch/asc-play) não roda no meu TV box antigo. Criamos um app NOVO, nativo em Java com ExoPlayer, leve, no repositório asc-tvbox (https://github.com/mundoarkade1-arch/asc-tvbox). A decisão por app nativo já foi tomada; não reabra sem motivo forte. O comportamento do app original está em docs/ORIGINAL_APP.md.
-- Aparelho de teste: TX9, Amlogic S905W, Android 7.1, 1 GB de RAM, tela 1080p.
-- Controle remoto só com setas, OK, voltar, home, "função mouse" e uma tecla de três listras (chega como tecla de menu, a confirmar).
-- O app tem: login por lista M3U ou servidor (DNS, usuário, senha), página inicial, abas Canais/Filmes/Séries com busca própria, páginas de filme e série, "Continuar de onde parei", EPG (só servidor), controle parental, Ajustes e atualização automática.
+## Já feito (uma linha cada; detalhes em ARQUIVOS.md e DECISIONS.md)
+- Base: login por servidor e lista M3U, atualização automática, controle parental, página inicial com 3 faixas, "Ver mais" por categorias, séries (próxima temporada sozinha, onde parou), busca por nome, EPG por canal (só servidor).
+- (a) menu à esquerda e tela inicial. (b) abas com pesquisa própria. (c) aba Ajustes. (d) páginas de filme e série com capa e sinopse. (e) player: setas pulam 10 s, barra some em 3 s, controles semi-transparentes; "Continuar de onde parei" com minuto exato; episódios vistos em verde. (f) janela da programação (tecla das três listras ou OK segurado).
 
-## Onde paramos
-A nova aparência (partes a a f) está feita e verde. Eu fiz o primeiro teste no TX9 e pedi 4 ajustes (R1 a R4 no STATUS.md). NADA deles foi começado. Faça uma por vez, na ordem.
+## Rodada 1: a fazer, UMA por vez, nesta ordem
+R1. Menu da esquerda com TEXTO
+- Pedido: ao lado do ícone, escrever Tela inicial, Canais, Filmes, Séries, Ajustes (e Atualizar).
+- Plano: trocar os botões por ícone + texto lado a lado e alargar a coluna. NavBar.java não muda. HomeActivity guarda os botões como View, então não depende do tipo.
+- Arquivos: layout_nav.xml e depois activity_home.xml (tem a cópia do menu). Conferir a largura nas telas que incluem o layout_nav (abas e Ajustes).
 
-## Como vamos trabalhar (importante)
-- Eu sou LEIGO em programação. Explique em português simples e MUITO FÁCIL, com frases curtas. Não use palavras técnicas sem explicar. Não me mande procurar pasta nem trecho de arquivo; prefiro COPIAR E COLAR o arquivo inteiro. Não coloque blocos de exemplo que pareçam campos para eu preencher.
-- Eu não uso terminal nem instalo programas. Tudo é feito pelo site do GitHub. O APK é gerado pelo GitHub Actions e chega ao TX9 pela atualização automática do app.
-- Me guie UM PASSO POR VEZ, numerando cada ação pequena. Para cada arquivo me dê um LINK DIRETO:
-  - para LER/EDITAR: https://github.com/mundoarkade1-arch/asc-tvbox/edit/main/<caminho do arquivo>
-  - para CRIAR: https://github.com/mundoarkade1-arch/asc-tvbox/new/main/<pasta>?filename=<NomeDoArquivo>
-  - código Java: app/src/main/java/com/ascplay/tvbox/ ; layouts: app/src/main/res/layout/
-- Para eu te mostrar um arquivo: abro o link de edição, Ctrl+A, Ctrl+C e colo aqui, sem clicar em Commit.
-- Para eu salvar um arquivo: Ctrl+A, Delete, colo o código completo (pelo botão Copy do bloco), clico em Commit changes e, na janelinha, em Commit changes de novo.
-- Espere eu responder "feito" ou "verde" (e se o Actions ficou verde) antes do próximo passo. Se eu não disser se ficou verde, pergunte.
-- Quando houver erro no build, eu mando um print ou o texto do erro do Actions. Você corrige.
-- Eu falo por voz (ditado), então o que eu escrevo pode ter palavras trocadas. Se algo não fizer sentido, me pergunte.
-- Não me mande zip nem comandos no terminal. Nunca peça senhas nem a chave de assinatura. Não me peça para colar o meu link de lista M3U (pode ter senha).
-- Cada arquivo de código deve ser completo. Não adicione dependências sem justificar em docs/DECISIONS.md.
-- Ao final de cada etapa, me dê o STATUS.md atualizado (arquivo inteiro, mantenha CURTO como está) e o trecho novo do DECISIONS.md (só acrescentado no final: Ctrl+End, Enter duas vezes, colar). Se mudar algo do mapa de arquivos ou dos limites, me dê também o docs/ARQUIVOS.md atualizado. Não repita no STATUS.md o que já está no ARQUIVOS.md.
+R2. Tela inicial SEM a caixinha de prévia
+- Pedido: ao parar o foco num canal da tela inicial, NÃO mostrar programa de agora, barra de progresso nem "A seguir".
+- Plano: HomeActivity.java deixa de chamar schedulePreview, fetchPreview e showPreview. CUIDADO: previewItem também decide se a tecla de menu e o OK segurado abrem a programação (EpgDialog). Trocar por uma variável própria ("canal ao vivo com o foco"). Só depois tirar group_preview do activity_home.xml (código primeiro, layout depois).
+- Arquivos: HomeActivity.java, activity_home.xml.
 
-## Lições já aprendidas (evite repetir)
-- Arquivos grandes às vezes são cortados na colagem (erro "reached end of file while parsing"). Se acontecer, peça só as últimas linhas e mande SÓ o pedaço que falta, para colar no final (Ctrl+End, Enter, colar).
-- Já colei o código de um arquivo no lugar do outro (erro "class X is public, should be declared in a file named X.java"). Antes de cada bloco, deixe claro o nome do arquivo e o link, e mande UM de cada vez, esperando o "verde".
-- Ao mudar código e layout juntos: primeiro o código que deixa de usar o item, depois o layout. Classe nova primeiro, registro no AndroidManifest.xml depois, e só então ligue os botões.
-- Não use nome de classe interna igual a classes do Java (ex.: "Entry").
-- Android 7.1 não tem PBKDF2 com SHA-256 (já resolvido no ParentalStore).
-- Ao mexer em tela que funciona no login por servidor, crie tela irmã para a lista M3U.
-- Sempre ler a lista M3U aos poucos, nunca guardar a lista inteira.
-- O STATUS.md pode estar certo e o arquivo no GitHub desatualizado, ou o contrário: antes de mexer em código, peça o arquivo atual.
+R3. Ordem do foco nas abas: menu, categorias, itens
+- Pedido: da esquerda para a direita: menu, categorias, canais/itens. Hoje, indo para a esquerda a partir dos itens, o foco PULA as categorias e vai ao menu.
+- Causa provável (CONFIRMAR lendo o código): a lista de categorias não recebe o foco, ou a grade de itens aponta a seta esquerda direto ao menu (nextFocusLeft).
+- Valer também para a lista M3U, a tela de Séries (temporadas e episódios) e Ajustes.
+- Arquivos: activity_browse.xml, BrowseActivity.java, M3uBrowseActivity.java; conferir activity_series.xml e activity_settings.xml.
 
-## Primeiras tarefas, nesta ordem
-1. Confirme em poucas linhas que leu tudo e repita, em frases curtas, os 4 ajustes (R1 a R4).
-2. Me faça as duas perguntas em aberto do STATUS.md (uma por vez): (a) manter a linha "Agora: ..." embaixo do cartão do canal na tela inicial? (b) no player, a seta para cima e para baixo passa só pelos canais da categoria aberta ou por todos? Pergunte também se lembrei de mais pedidos.
-3. Comece pela R1 (menu com texto), UM ARQUIVO POR VEZ, pedindo o arquivo atual antes de cada um (layout_nav.xml e depois activity_home.xml).
-4. Depois R2, R3 e R4, uma por vez, com STATUS.md e DECISIONS.md no fim de cada uma.
-5. No fim da Rodada 1, reescreva o roteiro de teste curto para o TX9 e eu respondo em palavras simples.
+R4. Player de canal ao vivo: trocar de canal com as setas
+- Pedido: seta para CIMA volta ao canal anterior, seta para BAIXO vai ao próximo. OK continua mostrando a barra Agora / A seguir. Hoje, depois que a barra some, nenhuma tecla funciona (só Voltar).
+- Causa provável (CONFIRMAR): em canal ao vivo, o MainActivity não trata as setas com os controles escondidos.
+- Plano: quem abre o canal manda ao player a lista dos canais ao vivo daquela tela (ids e nomes, máx. uns 500, no estilo dos extras da fila de séries). Ao trocar, atualizar nome e barra Agora / A seguir. Lista M3U: o canal vem com endereço (url), não com id.
+- Arquivos: MainActivity.java, activity_main.xml, HomeActivity.java, BrowseActivity.java, M3uBrowseActivity.java, SearchActivity.java.
 
-Quando eu responder "feito" ou "verde" a cada passo, siga para o próximo.
+## Perguntas abertas para o dono (uma por vez)
+1. (R2) Manter a linha "Agora: ..." embaixo do cartão do canal na tela inicial? (Na aba Canais ela fica, como ele pediu.)
+2. (R4) Seta para cima e para baixo passa só pelos canais da categoria aberta (suposição atual) ou por todos?
+3. A tecla das três listras abriu a programação no TX9? (anotar se foi a tecla ou o OK segurado)
+4. Ele lembrou de mais pedidos? (anotar como Rodada 2)
+
+## Ideias que precisam do OK do dono
+- Fazer o Actions ignorar mudanças só em textos (.md): hoje cada texto salvo gera um APK e uma versão nova, e o TX9 oferece "atualizar" sem mudança no app.
+
+## Conferir no TX9 depois da Rodada 1
+- Menu: texto e foco visíveis; ordem menu, categorias, itens; Atualizar funciona.
+- Tela inicial: sem caixinha; tecla das três listras ou OK segurado abre a programação; OK normal toca.
+- Canal ao vivo: setas cima e baixo trocam de canal; OK mostra a barra.
+- Filme: capa e sinopse (anotar campo que faltar), Continuar com foco, minuto certo, visto em 95%.
+- Série: capa e sinopse, Continuar no episódio e minuto certos, verde de visto, próxima temporada sozinha, "Fim da série.".
+- Player de filme e episódio: setas pulam 10 s, barra some em 3 s, controles semi-transparentes, Home e voltar continua do mesmo minuto.
+- Busca por aba (só o tipo da aba, "acao" acha "Ação", sem resultado, controle parental). Ajustes (parental, trocar lista, dispositivo: anotar espaço livre em TARGET_DEVICES.md, aplicativo, atualização). Tudo também na lista M3U.
+
+## Próximos passos
+1. Fazer as perguntas abertas, uma por vez.
+2. R1, R2, R3 e R4, uma por vez, com STATUS e DECISIONS ao fim de cada uma.
+3. Reescrever o roteiro de teste e o dono testar de novo no TX9.
