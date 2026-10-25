@@ -3,6 +3,7 @@ package com.ascplay.tvbox;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,6 +29,8 @@ import java.util.Set;
  * Esquerda: categorias. Direita: itens, carregados por páginas de 40 (máximo de 400 por categoria).
  * Nunca baixa a lista inteira: pede ao servidor só a página necessária.
  * Nos canais ao vivo, cada cartão mostra o programa que passa agora (EPG por canal).
+ * Sobre um canal ao vivo, a tecla das três listras ou segurar o OK abre a janela com a
+ * programação do canal (o que passa agora e os próximos programas).
  * Ao escolher uma série, abre a tela da série (temporadas e episódios), levando a capa do item.
  * Ao escolher um filme, abre a página do filme (MovieActivity), com capa e sinopse.
  *
@@ -169,6 +172,55 @@ public class BrowseActivity extends Activity {
         super.onLowMemory();
         ImageLoader.clear();
         EpgCache.clear();
+    }
+
+    // ---------- Programação do canal (tecla das três listras) ----------
+
+    /**
+     * Com o foco na grade de itens e um canal ao vivo selecionado:
+     * - a tecla das três listras (menu) abre a janela da programação do canal;
+     * - OK segurado faz o mesmo (segunda via).
+     * Em qualquer outro lugar, as teclas funcionam como antes.
+     */
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        int code = event.getKeyCode();
+        boolean okKey = code == KeyEvent.KEYCODE_DPAD_CENTER
+                || code == KeyEvent.KEYCODE_ENTER
+                || code == KeyEvent.KEYCODE_NUMPAD_ENTER;
+
+        if (event.getAction() == KeyEvent.ACTION_DOWN
+                && ((code == KeyEvent.KEYCODE_MENU && event.getRepeatCount() == 0)
+                || (okKey && event.getRepeatCount() == 1))) {
+            XtreamApi.Item selected = selectedLiveItem();
+            if (selected != null) {
+                gvItems.setPressed(false);
+                openSchedule(selected);
+                return true;
+            }
+        }
+        if (code == KeyEvent.KEYCODE_MENU && selectedLiveItem() != null) {
+            return true; // a tecla das três listras não faz mais nada aqui
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    /** O canal ao vivo selecionado na grade, ou null se o foco está em outro lugar. */
+    private XtreamApi.Item selectedLiveItem() {
+        if (kind != XtreamApi.Kind.LIVE || gvItems == null || !gvItems.hasFocus()) {
+            return null;
+        }
+        int position = gvItems.getSelectedItemPosition();
+        if (position < 0 || position >= items.size()) {
+            return null;
+        }
+        XtreamApi.Item item = items.get(position);
+        return item.kind == XtreamApi.Kind.LIVE ? item : null;
+    }
+
+    /** Abre a janela da programação de um canal. */
+    private void openSchedule(XtreamApi.Item item) {
+        EpgDialog.show(this, creds.server, creds.user, creds.pass, item.id, item.name);
     }
 
     // ---------- Menu à esquerda ----------
