@@ -7,82 +7,141 @@
 
     <LinearLayout
         android:id="@+id/group_nav"
-        android:layout_width="88dp"
+        android:layout_width="200dp"
         android:layout_height="match_parent"
         android:background="#151113"
-        android:gravity="center_horizontal"
         android:orientation="vertical"
         android:paddingTop="20dp"
         android:paddingBottom="20dp">
 
-        <ImageButton
+        <TextView
             android:id="@+id/nav_home"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
             android:layout_marginBottom="10dp"
             android:background="@drawable/bg_button"
+            android:clickable="true"
             android:contentDescription="Tela inicial"
+            android:drawableLeft="@drawable/ic_nav_home"
+            android:drawablePadding="12dp"
             android:focusable="true"
-            android:scaleType="center"
-            android:src="@drawable/ic_nav_home" />
+            android:gravity="center_vertical"
+            android:paddingLeft="12dp"
+            android:paddingRight="8dp"
+            android:singleLine="true"
+            android:text="Tela inicial"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp" />
 
-        <ImageButton
+        <TextView
             android:id="@+id/nav_live"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
             android:layout_marginBottom="10dp"
             android:background="@drawable/bg_button"
+            android:clickable="true"
             android:contentDescription="Canais"
+            android:drawableLeft="@drawable/ic_nav_live"
+            android:drawablePadding="12dp"
             android:focusable="true"
-            android:scaleType="center"
-            android:src="@drawable/ic_nav_live" />
+            android:gravity="center_vertical"
+            android:paddingLeft="12dp"
+            android:paddingRight="8dp"
+            android:singleLine="true"
+            android:text="Canais"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp" />
 
-        <ImageButton
+        <TextView
             android:id="@+id/nav_movie"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
             android:layout_marginBottom="10dp"
             android:background="@drawable/bg_button"
+            android:clickable="true"
             android:contentDescription="Filmes"
+            android:drawableLeft="@drawable/ic_nav_movie"
+            android:drawablePadding="12dp"
             android:focusable="true"
-            android:scaleType="center"
-            android:src="@drawable/ic_nav_movie" />
+            android:gravity="center_vertical"
+            android:paddingLeft="12dp"
+            android:paddingRight="8dp"
+            android:singleLine="true"
+            android:text="Filmes"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp" />
 
-        <ImageButton
+        <TextView
             android:id="@+id/nav_series"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
             android:layout_marginBottom="10dp"
             android:background="@drawable/bg_button"
+            android:clickable="true"
             android:contentDescription="Séries"
+            android:drawableLeft="@drawable/ic_nav_series"
+            android:drawablePadding="12dp"
             android:focusable="true"
-            android:scaleType="center"
-            android:src="@drawable/ic_nav_series" />
+            android:gravity="center_vertical"
+            android:paddingLeft="12dp"
+            android:paddingRight="8dp"
+            android:singleLine="true"
+            android:text="Séries"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp" />
 
-        <ImageButton
+        <TextView
             android:id="@+id/nav_settings"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
             android:background="@drawable/bg_button"
+            android:clickable="true"
             android:contentDescription="Ajustes"
+            android:drawableLeft="@drawable/ic_nav_settings"
+            android:drawablePadding="12dp"
             android:focusable="true"
-            android:scaleType="center"
-            android:src="@drawable/ic_nav_settings" />
+            android:gravity="center_vertical"
+            android:paddingLeft="12dp"
+            android:paddingRight="8dp"
+            android:singleLine="true"
+            android:text="Ajustes"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp" />
 
         <View
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1" />
 
-        <ImageButton
+        <TextView
             android:id="@+id/nav_refresh"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
             android:background="@drawable/bg_button"
+            android:clickable="true"
             android:contentDescription="Atualizar lista"
+            android:drawableLeft="@drawable/ic_nav_refresh"
+            android:drawablePadding="12dp"
             android:focusable="true"
-            android:scaleType="center"
-            android:src="@drawable/ic_nav_refresh" />
+            android:gravity="center_vertical"
+            android:paddingLeft="12dp"
+            android:paddingRight="8dp"
+            android:singleLine="true"
+            android:text="Atualizar"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp" />
     </LinearLayout>
 
     <LinearLayout
