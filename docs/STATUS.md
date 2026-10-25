@@ -7,9 +7,9 @@ FASE ATUAL (decidida com o dono em 24/10/2026): MUDAR TODA A APARÊNCIA E A NAVE
 
 Andamento da nova aparência (uma parte de cada vez):
 - (a) Menu à esquerda + Tela inicial: FEITA (verde no Actions, ainda NÃO testada no TX9).
-- (b) Abas Canais, Filmes e Séries com busca própria: FEITA (verde no Actions, ainda NÃO testada no TX9). Veja "Parte (b)" abaixo.
-- (c) Aba Ajustes e ícone de atualizar: o ícone de atualizar já existe no menu; a aba Ajustes a fazer. PRÓXIMO PASSO.
-- (d) Página do filme e da série com capa e sinopse: a fazer
+- (b) Abas Canais, Filmes e Séries com busca própria: FEITA (verde, NÃO testada no TX9). Veja "Parte (b)" abaixo.
+- (c) Aba Ajustes: FEITA (verde, NÃO testada no TX9). Veja "Parte (c)" abaixo. Os botões "Controle parental" e "Trocar login" já saíram do alto da página inicial.
+- (d) Página do filme e da série com capa e sinopse: a fazer. PRÓXIMO PASSO (falar com o dono sobre o que mostrar na lista M3U, que em geral não tem sinopse).
 - (e) Player (botões transparentes, barra que some rápido, foco livre) e "continuar de onde parei" com minuto exato: a fazer
 - (f) Barra Agora / A seguir e a programação com a tecla das três listras: a fazer
 
@@ -41,31 +41,40 @@ O guia de programação (EPG) da lista M3U ficou de fora por decisão do dono (v
 - Busca por nome: botão "Pesquisar ..." em cada aba, teclado de letras, tela de resultados. Servidor e lista M3U.
 - "Ver mais" da lista M3U: série abre a M3uSeriesActivity (antes mostrava um aviso).
 - Parte (a) da nova aparência: menu vertical à esquerda na página inicial, só com ícones.
-- Parte (b) da nova aparência: botão "Pesquisar ..." nas telas de aba (servidor e lista M3U), menu à esquerda dentro das duas abas (servidor e lista M3U) e botão "Buscar" removido da página inicial.
+- Parte (b) da nova aparência: botão "Pesquisar ..." nas telas de aba (servidor e lista M3U), menu à esquerda dentro das duas abas e botão "Buscar" removido da página inicial.
+- Parte (c) da nova aparência: aba Ajustes (SettingsActivity) com controle parental, trocar de lista, sobre o dispositivo, sobre o aplicativo e verificar atualização. Botões "Controle parental" e "Trocar login" removidos da página inicial.
 
 ## Parte (a): menu à esquerda na página inicial (feita, verde, NÃO testada no TX9)
 - Menu vertical à esquerda, com 6 ícones: Tela inicial, Canais, Filmes, Séries, Ajustes e (embaixo) Atualizar.
 - Tela inicial: leva o foco para o primeiro canal (ou filme, ou série) já carregado.
 - Canais, Filmes e Séries: abrem a aba (tela BrowseActivity ou M3uBrowseActivity).
-- Ajustes: POR ENQUANTO só mostra um aviso na tela. A aba de verdade é a parte (c).
-- Atualizar: recarrega as três faixas (mesma função usada pelo controle parental).
-- Os botões do alto que sobraram na página inicial são "Controle parental" e "Trocar login". Eles saem na parte (c). O botão "Buscar" já saiu na parte (b).
+- Ajustes: abre a SettingsActivity (a partir da parte c).
+- Atualizar: recarrega as três faixas.
 - A caixinha de prévia do canal continua embaixo, só na parte da direita (ao lado do menu).
 - Os botões do menu usam o fundo bg_button, que já existia. A CONFERIR no TX9: se o foco (item selecionado) aparece bem visível nos ícones.
 
 ## Parte (b): abas com busca própria (FEITA, verde, NÃO testada no TX9)
 - As telas de aba (BrowseActivity do servidor e M3uBrowseActivity da lista M3U) têm um botão "Pesquisar canais", "Pesquisar filmes" ou "Pesquisar séries" no alto, ao lado do título. OK nele abre o teclado de letras (SearchKeyboard) e, ao buscar, abre a SearchActivity SÓ com aquele tipo.
-- O menu à esquerda aparece dentro das DUAS abas (servidor e lista M3U), ligado pelo NavBar.java. Dentro da aba: Tela inicial volta à página inicial; Canais/Filmes/Séries trocam de aba (a aba de antes fecha); Ajustes mostra aviso; Atualizar recarrega a categoria aberta. No servidor também limpa o cache do guia; na lista M3U não há guia para limpar.
+- O menu à esquerda aparece dentro das DUAS abas (servidor e lista M3U), ligado pelo NavBar.java. Dentro da aba: Tela inicial volta à página inicial; Canais/Filmes/Séries trocam de aba (a aba de antes fecha); Ajustes abre a tela Ajustes (a aba de antes fecha); Atualizar recarrega a categoria aberta. No servidor também limpa o cache do guia; na lista M3U não há guia para limpar.
 - O botão "Buscar" e o menu de tipo (Canais, Filmes, Séries) saíram da página inicial (HomeActivity.java e activity_home.xml).
 - DECIDIDO com o dono: a tela de resultados da busca (SearchActivity) fica SEM o menu à esquerda. A busca sempre nasce de uma aba e o Voltar leva de volta a ela.
+
+## Parte (c): aba Ajustes (FEITA, verde, NÃO testada no TX9)
+- Tela nova SettingsActivity (layout activity_settings.xml): menu à esquerda, lista de 5 opções no meio (ListView, escolhe com setas e OK) e, à direita, uma área de texto (tv_detail) que mostra as informações.
+- Opções: (1) Controle parental: ativar, trocar a senha ou desativar (mesmas telas e regras de antes, com senha de 4 números); (2) Trocar de lista: abre o login e fecha todas as telas de antes; (3) Sobre o dispositivo: modelo, versão do Android, memória (total e livre agora), armazenamento (livre e total) e tamanho da tela; (4) Sobre o aplicativo: versão instalada; (5) Verificar atualização: procura versão nova; se achar, a linha vira "Instalar atualização" e OK instala.
+- Abre pelo ícone Ajustes do menu (página inicial e abas). Dentro de Ajustes, o ícone Ajustes não faz nada.
+- A página inicial não tem mais os botões "Controle parental" e "Trocar login". Quando a pessoa volta de Ajustes, a página inicial confere se o controle parental mudou e, se mudou, recarrega as faixas sozinha (onResume).
+- O aviso "Login não reconhecido" da página inicial agora manda a pessoa para Ajustes, em "Trocar de lista".
+- O aviso de atualização na página inicial (Instalar agora / Depois) continua como era.
+- A resposta de "Sobre o dispositivo" vai dizer quanto espaço livre o TX9 tem. Quando testar, anotar em TARGET_DEVICES.md ("Armazenamento livre").
 
 ## Nova interface - pedidos do dono em 24/10/2026
 Ainda vão chegar mais pedidos. Ordem e detalhes combinados com o dono, um passo de cada vez.
 
 ### Menu e telas principais
-- Menu vertical no lado ESQUERDO, só com ícones: Tela inicial, Canais, Filmes, Séries e Ajustes. (FEITO na parte a; dentro das abas do servidor e da lista M3U na parte b)
+- Menu vertical no lado ESQUERDO, só com ícones: Tela inicial, Canais, Filmes, Séries e Ajustes. (FEITO nas partes a, b e c)
 - A Tela inicial é sempre a que abre com o app. Na parte grande da direita mostra as indicações: 10 primeiros canais, 10 primeiros filmes, 10 primeiras séries.
-- Cada aba (Canais, Filmes, Séries) tem a sua barra de pesquisa, e a busca mostra SÓ aquele tipo (no lugar do botão "Buscar" e do menu de tipo de antes). (FEITO na parte b)
+- Cada aba (Canais, Filmes, Séries) tem a sua barra de pesquisa, e a busca mostra SÓ aquele tipo. (FEITO na parte b)
 - Ícone de atualizar na tela principal, para recarregar a lista. (FEITO na parte a)
 
 ### Aba Canais
@@ -90,9 +99,9 @@ Ainda vão chegar mais pedidos. Ordem e detalhes combinados com o dono, um passo
 - A barra do player demora muito para sumir: deve sumir mais rápido.
 - Hoje o foco sempre cai na opção de configurações. O dono quer o foco livre para avançar e voltar o vídeo com as setas.
 
-### Aba Ajustes
+### Aba Ajustes (FEITA na parte c)
 - Controle parental.
-- Mudar de lista / gerenciar lista.
+- Mudar de lista / gerenciar lista (feito como "Trocar de lista").
 - Sobre o dispositivo.
 - Sobre o aplicativo.
 - Botão para verificar se há atualização.
@@ -106,8 +115,9 @@ Ainda vão chegar mais pedidos. Ordem e detalhes combinados com o dono, um passo
 
 ## Roteiro de teste no TX9 (ainda NÃO feito)
 DECIDIDO pelo dono em 24/10/2026: os testes ficam para DEPOIS da nova aparência. No fim da nova aparência, este roteiro será reescrito para as telas novas. Os passos numerados abaixo são do app ANTES da nova aparência e vão mudar (por exemplo, a busca agora é por aba).
-Itens novos da parte (a) para incluir no roteiro: (i) o menu à esquerda aparece com os 6 ícones; (ii) o foco nos ícones é bem visível; (iii) ir com a seta para a esquerda a partir de um canal chega ao menu, e para a direita volta ao conteúdo; (iv) o ícone da Tela inicial leva ao primeiro canal; (v) Canais, Filmes e Séries abrem a aba; (vi) Ajustes mostra o aviso; (vii) Atualizar recarrega as faixas.
+Itens novos da parte (a) para incluir no roteiro: (i) o menu à esquerda aparece com os 6 ícones; (ii) o foco nos ícones é bem visível; (iii) ir com a seta para a esquerda a partir de um canal chega ao menu, e para a direita volta ao conteúdo; (iv) o ícone da Tela inicial leva ao primeiro canal; (v) Canais, Filmes e Séries abrem a aba; (vi) Ajustes abre a tela Ajustes; (vii) Atualizar recarrega as faixas.
 Itens novos da parte (b) para incluir no roteiro: (viii) dentro de uma aba, o botão "Pesquisar ..." aparece no alto e se chega nele com a seta para cima; (ix) OK no botão abre o teclado de letras e o resultado mostra SÓ o tipo da aba; (x) dentro da aba, a seta para a esquerda a partir da lista de categorias chega ao menu; (xi) trocar de aba pelo menu funciona e Voltar não empilha abas repetidas; (xii) o ícone Atualizar dentro da aba recarrega a categoria aberta; (xiii) o ícone Tela inicial volta à página inicial; (xiv) o mesmo na lista M3U (menu já ligado na M3uBrowseActivity); (xv) a página inicial não tem mais o botão "Buscar"; (xvi) a tela de resultados da busca não tem menu (esperado).
+Itens novos da parte (c) para incluir no roteiro: (xvii) a página inicial não tem mais os botões "Controle parental" e "Trocar login"; (xviii) o ícone Ajustes abre a tela Ajustes, tanto na página inicial quanto nas abas; (xix) a lista de 5 opções se escolhe com setas e OK, e a seta para a esquerda chega ao menu; (xx) Controle parental: ativar, trocar a senha e desativar funcionam, e ao voltar para a página inicial as faixas recarregam sozinhas (itens adultos somem ou voltam); (xxi) "Trocar de lista" abre o login; (xxii) "Sobre o dispositivo" mostra modelo, Android, memória, armazenamento e tela (anotar o espaço livre em TARGET_DEVICES.md); (xxiii) "Sobre o aplicativo" mostra a versão; (xxiv) "Verificar atualização" mostra "Nenhuma atualização encontrada agora." ou muda a linha para "Instalar atualização"; (xxv) dentro de Ajustes, o ícone Atualizar não faz nada (esperado) e o ícone Tela inicial volta à página inicial.
 1. Próxima temporada (servidor): abrir uma série com 2 ou mais temporadas, tocar o ÚLTIMO episódio da Temporada 1, avançar o vídeo até o fim com a seta para a direita. Deve começar sozinho o 1º episódio da Temporada 2. No último episódio da série deve aparecer "Fim da série.".
 2. Próxima temporada (lista M3U): o mesmo teste, numa série da lista M3U.
 3. Onde parou (servidor): tocar o episódio 3 da Temporada 2, apertar Voltar até sair, abrir a mesma série. Deve abrir na Temporada 2 com o episódio 3 já selecionado.
@@ -120,21 +130,23 @@ Itens novos da parte (b) para incluir no roteiro: (viii) dentro de uma aba, o bo
 10. "Ver mais" da lista M3U: entrar em Séries, escolher uma série. Deve abrir a tela da série (temporadas e episódios), sem aviso.
 11. Conferir que o que já funcionava continua: tocar um canal, um filme e abrir as abas.
 
-## Arquivos do menu à esquerda (partes a e b)
+## Arquivos do menu à esquerda (partes a, b e c)
 - Ícones (pasta app/src/main/res/drawable/): ic_nav_home.xml, ic_nav_live.xml, ic_nav_movie.xml, ic_nav_series.xml, ic_nav_settings.xml, ic_nav_refresh.xml. Cada um é um desenho branco de 32dp.
 - layout_nav.xml (pasta layout): o menu guardado num arquivo só. Coluna de 88dp com id group_nav e os botões nav_home, nav_live, nav_movie, nav_series, nav_settings e, embaixo, nav_refresh (ImageButton, 64dp, fundo bg_button).
-- activity_home.xml: tem o MESMO menu escrito direto dentro dele (não usa o layout_nav.xml, de propósito, para não mexer numa tela que já funciona). Duas colunas: menu à esquerda, conteúdo à direita. Botões do alto: só "Controle parental" e "Trocar login" (o "Buscar" saiu).
+- activity_home.xml: tem o MESMO menu escrito direto dentro dele (não usa o layout_nav.xml, de propósito, para não mexer numa tela que já funciona). Duas colunas: menu à esquerda, conteúdo à direita. No alto só o título "ASC TV Box" (os botões "Buscar", "Controle parental" e "Trocar login" saíram). Se mudar um menu, mudar o outro.
 - activity_browse.xml: tem o layout_nav.xml incluído (include, id group_nav) ESCONDIDO (gone) por padrão. Só as telas que chamam o NavBar mostram o menu. A SearchActivity reaproveita este layout e por isso o menu fica escondido nela (de propósito). Tem também o botão btn_search_bar (escondido por padrão; as telas de aba mostram).
-- NavBar.java: classe pequena que mostra o menu e liga os 6 botões. NavBar.bind(activity, abaAtual, aoAtualizar). Constantes HOME, LIVE, MOVIE, SERIES, SETTINGS. Tela inicial volta à HomeActivity (CLEAR_TOP). Canais/Filmes/Séries trocam de aba: abre a BrowseActivity (servidor) ou a M3uBrowseActivity (lista M3U) conforme o login e fecha a aba de antes, sem animação; se já está na aba, não faz nada. Ajustes mostra um Toast. Atualizar roda o que a tela mandar.
-- HomeActivity.java: liga os 6 botões do menu da própria página inicial (goToFirstCard, openSection, Toast de Ajustes, reloadRails). Não tem mais código de busca.
+- activity_settings.xml: layout da aba Ajustes. Inclui o layout_nav.xml (escondido por padrão; a SettingsActivity mostra pelo NavBar). Lista lv_settings (340dp) e área de texto tv_detail.
+- NavBar.java: classe pequena que mostra o menu e liga os 6 botões. NavBar.bind(activity, abaAtual, aoAtualizar). Constantes HOME, LIVE, MOVIE, SERIES, SETTINGS. Tela inicial volta à HomeActivity (CLEAR_TOP). Canais/Filmes/Séries trocam de aba: abre a BrowseActivity (servidor) ou a M3uBrowseActivity (lista M3U) conforme o login e fecha a aba de antes, sem animação; se já está na aba, não faz nada. Ajustes abre a SettingsActivity e fecha a tela de antes, sem animação; se já está em Ajustes, não faz nada. Atualizar roda o que a tela mandar (se não mandar nada, não faz nada).
+- HomeActivity.java: liga os 6 botões do menu da própria página inicial (goToFirstCard, openSection, Ajustes abre a SettingsActivity, reloadRails). Não tem mais código de busca, de controle parental nem de trocar login. No onResume recarrega as faixas se o controle parental mudou.
 - BrowseActivity.java: chama NavBar.bind(this, navCurrent(), () -> refreshCurrent()); refreshCurrent() limpa o EpgCache e recarrega a categoria aberta.
 - M3uBrowseActivity.java: chama NavBar.bind(this, navCurrent(), () -> refreshCurrent()); refreshCurrent() recarrega a categoria aberta (selectCategory na posição atual). Sem cache de guia para limpar.
+- SettingsActivity.java: aba Ajustes. Chama NavBar.bind(this, NavBar.SETTINGS, null). Lista de 5 linhas (RowAdapter com item_category.xml, setFocusable(false), como as outras listas). Controle parental usa ParentalStore e PinDialog (mesmas regras de antes). Trocar de lista abre a LoginActivity com EXTRA_SHOW_LOGIN e as flags NEW_TASK + CLEAR_TASK. Sobre o dispositivo usa Build, ActivityManager.MemoryInfo, StatFs e DisplayMetrics. Sobre o aplicativo usa PackageManager.getPackageInfo. Atualização usa Updater.checkAsync e Updater.downloadAndInstallAsync (mesmas funções da página inicial).
 
 ## Arquivos do EPG
 - XtreamApi.java: função epg(...) que pede ao servidor a programação de UM canal (get_short_epg, até 4 programas) e devolve o programa de agora e o "a seguir". Horários em milissegundos.
 - EpgCache.java: guarda na memória até 80 canais por 1 minuto cada; no máximo 2 pedidos ao servidor ao mesmo tempo; avisa sempre na thread principal. Tem clear().
 - item_card.xml: tem a linha tv_now (usada para o "Agora: ...")
-- HomeActivity.java: liga a linha tv_now e a caixinha de prévia ao EpgCache (espera 0,5 segundo parado no canal); tem o menu do controle parental e esconde itens adultos das faixas; no servidor, série abre a SeriesActivity e "Ver mais" abre a BrowseActivity; na lista M3U carrega as faixas pelo M3uApi, manda o endereço do vídeo ao player, abre a M3uSeriesActivity nas séries e a M3uBrowseActivity no "Ver mais"; tem o menu à esquerda
+- HomeActivity.java: liga a linha tv_now e a caixinha de prévia ao EpgCache (espera 0,5 segundo parado no canal); esconde itens adultos das faixas; no servidor, série abre a SeriesActivity e "Ver mais" abre a BrowseActivity; na lista M3U carrega as faixas pelo M3uApi, manda o endereço do vídeo ao player, abre a M3uSeriesActivity nas séries e a M3uBrowseActivity no "Ver mais"; tem o menu à esquerda
 - BrowseActivity.java: aba/"Ver mais" do servidor, liga a linha tv_now ao EpgCache; cadeado e senha nas categorias adultas; série abre a SeriesActivity; botão Pesquisar do tipo da tela; menu à esquerda (NavBar)
 - activity_main.xml: tem a barra Agora / A seguir (group_nowbar) e a mensagem de status no alto da tela
 - MainActivity.java: ver "Arquivos dos episódios" abaixo
@@ -142,6 +154,7 @@ Itens novos da parte (b) para incluir no roteiro: (viii) dentro de uma aba, o bo
 ## Arquivos do controle parental
 - ParentalStore.java: liga e desliga o controle; guarda a senha embaralhada (PBKDF2 com SHA-1, porque o Android 7.1 não tem SHA-256 nesse método) num arquivo próprio, separado do login; confere a senha; trava depois de 5 erros; reconhece categorias e nomes adultos (isAdultCategory, isAdultName)
 - PinDialog.java: teclado de números na tela (1 a 9, 0, Apagar e Sair); avisa o app quando o 4º número é digitado
+- O menu do controle parental (ativar, trocar senha, desativar) agora fica na SettingsActivity (antes ficava na HomeActivity).
 
 ## Arquivos dos episódios de séries
 - XtreamApi.java: tipo Kind.EPISODE, classe Episode (id, title, season, number, ext) e função episodes(server, user, pass, seriesId), no máximo 500, lendo aos poucos. streamUrl(...) monta o endereço de um episódio.
@@ -150,7 +163,7 @@ Itens novos da parte (b) para incluir no roteiro: (viii) dentro de uma aba, o bo
 - M3uSeriesActivity.java (lista M3U): igual, mas os episódios vêm do M3uApi.episodes; manda a fila de endereços (MainActivity.EXTRA_LIST_URLS) e a chave "m3u|endereçoDaLista|títuloDaSérie". Se a soma dos endereços passar de 100 mil letras, manda só o episódio escolhido. No lugar do número de identificação manda a posição na fila (+1).
 - SeriesProgress.java: guarda a posição do episódio na fila de cada série (SharedPreferences "series_progress"). A chave é um SHA-1 da chave da série (nunca texto, porque o endereço da lista pode ter senha). Máximo de 50 séries; as mais antigas são esquecidas. Funções save(ctx, chave, posição) e load(ctx, chave) (devolve -1 se não há nada).
 - MainActivity.java (player): toca canal, filme e episódio. Tem EXTRA_URL, EXTRA_LIST_URLS e EXTRA_SERIES_KEY. Quando o episódio começa a tocar (STATE_READY) anota a posição no SeriesProgress. Ao terminar um episódio toca o próximo da fila (passa para a temporada seguinte); no último mostra "Fim da série." (servidor e lista M3U). Barra Agora / A seguir só em canal ao vivo do servidor.
-- AndroidManifest.xml: tem LoginActivity, HomeActivity, BrowseActivity, M3uBrowseActivity, SeriesActivity, M3uSeriesActivity, SearchActivity e MainActivity registradas.
+- AndroidManifest.xml: tem LoginActivity, HomeActivity, BrowseActivity, M3uBrowseActivity, SettingsActivity, SeriesActivity, M3uSeriesActivity, SearchActivity e MainActivity registradas.
 
 ## Arquivos da lista M3U
 - M3uApi.java: lê a lista linha por linha direto da internet, sem guardá-la inteira. Para depois de 200 MB ou 1 minuto. Separa canal, filme e série pelas mesmas regras do app original. Séries agrupadas pelo título (sem "S01E03"). Toda a leitura passa por uma função interna (walk). Tem 5 funções públicas:
@@ -170,19 +183,21 @@ Itens novos da parte (b) para incluir no roteiro: (viii) dentro de uma aba, o bo
 - SearchActivity.java: tela de resultados. Recebe HomeActivity.EXTRA_KIND (LIVE, MOVIE ou SERIES) e SearchActivity.EXTRA_QUERY. Reaproveita activity_browse.xml e esconde a lista de categorias por código. Até 100 resultados. Canal e filmes tocam; série abre a SeriesActivity ou a M3uSeriesActivity. Aberta só pelo botão Pesquisar das abas. SEM menu à esquerda (decisão do dono).
 
 ## Próximos passos (nesta ordem)
-1. Parte (c): aba Ajustes (controle parental, mudar/gerenciar lista, sobre o dispositivo, sobre o aplicativo, verificar atualização). Aí saem os botões "Controle parental" e "Trocar login" do alto da página inicial.
-2. Parte (d): página do filme e da série com capa e sinopse (falar com o dono sobre a lista M3U, que em geral não tem sinopse).
-3. Parte (e): player e "continuar de onde parei" com minuto exato.
-4. Parte (f): barra Agora / A seguir e a programação com a tecla das três listras (e OK longo como segunda via).
-5. No fim da nova aparência: reescrever o roteiro de teste para as telas novas e testar tudo no TX9.
+1. Parte (d): página do filme e da série com capa e sinopse (falar com o dono sobre a lista M3U, que em geral não tem sinopse).
+2. Parte (e): player e "continuar de onde parei" com minuto exato.
+3. Parte (f): barra Agora / A seguir e a programação com a tecla das três listras (e OK longo como segunda via).
+4. No fim da nova aparência: reescrever o roteiro de teste para as telas novas e testar tudo no TX9.
 
 ## Problemas em aberto
-- Armazenamento livre do TX9 e acesso à Play Store: ainda não sabemos
+- Armazenamento livre do TX9 e acesso à Play Store: ainda não sabemos. A tela Ajustes > "Sobre o dispositivo" vai mostrar o espaço livre; anotar em TARGET_DEVICES.md depois do teste.
 - Etapas 3, 1 e 4 (e o conserto do "Ver mais" da lista M3U) ainda sem teste no TX9 (os testes ficam para depois da nova aparência)
 - Tecla das três listras: o dono confirmou que o controle do TX9 tem esse botão. Falta conferir no TX9 se ele chega ao app como tecla de menu. Segunda via prevista: OK longo no canal.
-- Menu à esquerda: usa o fundo bg_button; falta conferir no TX9 se o foco nos ícones fica bem visível, e se a seta para a esquerda chega ao menu a partir da lista de categorias (ListView) das abas (servidor e lista M3U)
+- Menu à esquerda: usa o fundo bg_button; falta conferir no TX9 se o foco nos ícones fica bem visível, e se a seta para a esquerda chega ao menu a partir da lista de categorias (ListView) das abas e da lista de opções de Ajustes
 - Menu à esquerda: o menu da página inicial é uma cópia do layout_nav.xml (duplicado de propósito). Se um dia mudar um, mudar o outro
 - Parte (b): trocar de aba fecha a aba de antes. Voltar sai para a tela anterior à primeira aba (normalmente a página inicial)
+- Parte (c): dentro de Ajustes, o ícone Atualizar do menu não faz nada (não há lista para recarregar). A conferir no teste se o dono estranha; se estranhar, esconder o ícone ou mostrar um aviso.
+- Parte (c): "Trocar de lista" abre o login sem apagar o login salvo; o login novo substitui o antigo. A conferir no teste que Voltar no login não deixa o app numa tela quebrada.
+- Parte (c): o menu do controle parental (ativar, trocar senha, desativar) não pede a senha para ABRIR Ajustes, só para trocar ou desativar (igual era na página inicial).
 - Lista M3U: não tem guia de programação, por decisão do dono (ver DECISIONS.md)
 - Lista M3U: a página inicial mostra os 10 primeiros itens na ordem da lista; se a lista for gigante e tiver poucos itens de um tipo no começo, a leitura pode demorar até 1 minuto
 - Lista M3U, "Ver mais": cada página nova lê a lista de novo desde o começo, então páginas do fim de uma lista grande demoram mais. Se bater no limite de 200 MB ou 1 minuto, a página pode vir menor e a categoria é tratada como terminada
