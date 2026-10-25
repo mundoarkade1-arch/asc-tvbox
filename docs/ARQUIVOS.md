@@ -7,16 +7,16 @@ Outros: res/values/strings.xml, res/xml/file_paths.xml, AndroidManifest.xml, app
 ## Telas
 - LoginActivity (activity_login.xml) + LoginChecker + CredentialStore: login por servidor (DNS, usuário, senha) ou lista M3U (campo m3uUrl, criptografado). LoginChecker confere antes de salvar: servidor via player_api.php (conta ativa e não vencida) e M3U lendo só o começo (precisa começar com #EXTM3U ou #EXTINF). Segue até 5 redirecionamentos, espera 15 s, não registra senha em log. Roda fora da thread principal.
 - HomeActivity (activity_home.xml): página inicial, 3 faixas de 10 itens (canais, filmes, séries) e cartão "Ver mais". O menu à esquerda está ESCRITO DIRETO neste layout (cópia do layout_nav.xml, de propósito): mudou um, mude o outro. Tem o aviso de atualização. NÃO tem caixinha de prévia (removida na R2). A variável focusedLive guarda o canal ao vivo (servidor) com o foco, só para a tecla de menu e o OK segurado abrirem a programação.
-- BrowseActivity (servidor) e M3uBrowseActivity (lista M3U), activity_browse.xml: abas Canais, Filmes e Séries (categorias + itens, botão "Pesquisar ...").
+- BrowseActivity (servidor) e M3uBrowseActivity (lista M3U), activity_browse.xml: abas Canais, Filmes e Séries (categorias + itens, botão "Pesquisar ..."). Ordem do foco: menu, categorias, itens. No dispatchKeyEvent, seta esquerda na primeira coluna da grade chama goToCategories (R3). Da lista de categorias, esquerda vai ao menu.
 - SearchActivity: resultados da busca (até 100). Reaproveita activity_browse.xml, SEM menu (decisão do dono).
 - SettingsActivity (activity_settings.xml): controle parental, trocar de lista, sobre o dispositivo, sobre o aplicativo, verificar atualização.
 - MovieActivity (activity_movie.xml): capa, informações, sinopse, Tocar e Continuar de onde parei.
-- SeriesActivity (servidor) e M3uSeriesActivity (lista M3U), activity_series.xml: capa, sinopse (4 linhas, sem foco), Continuar, temporadas à esquerda, episódios à direita.
+- SeriesActivity (servidor) e M3uSeriesActivity (lista M3U), activity_series.xml: capa, sinopse (4 linhas, sem foco), Continuar, temporadas à esquerda, episódios à direita. Sem menu à esquerda.
 - MainActivity (activity_main.xml): player ExoPlayer de canal, filme e episódio. Extras: EXTRA_URL, EXTRA_LIST_URLS, EXTRA_LIST_IDS, EXTRA_LIST_EXTS, EXTRA_LIST_INDEX, EXTRA_SERIES_KEY, EXTRA_START_MS. Barra Agora (esquerda) e A seguir (direita) só em canal ao vivo do servidor.
 - item_card.xml (cartão, tem tv_now), item_category.xml (linha de lista).
 
 ## Menu à esquerda
-- layout_nav.xml: coluna group_nav (200dp), botões nav_home, nav_live, nav_movie, nav_series, nav_settings e nav_refresh. Cada botão é um TextView (56dp de altura, fundo bg_button, clickable e focusable) com o ícone à esquerda (drawableLeft) e o nome ao lado: Tela inicial, Canais, Filmes, Séries, Ajustes, Atualizar. Incluído (escondido por padrão) em activity_browse.xml e activity_settings.xml.
+- layout_nav.xml: coluna group_nav (200dp), botões nav_home, nav_live, nav_movie, nav_series, nav_settings e nav_refresh. Cada botão é um TextView (56dp de altura, fundo bg_button, clickable e focusable) com o ícone à esquerda (drawableLeft) e o nome ao lado: Tela inicial, Canais, Filmes, Séries, Ajustes, Atualizar. Incluído (escondido por padrão, também com 200dp no include) em activity_browse.xml e activity_settings.xml.
 - NavBar.java: NavBar.bind(activity, abaAtual, aoAtualizar). Só usa os ids e o clique, não o tipo do botão. Tela inicial volta à HomeActivity; Canais, Filmes e Séries trocam de aba e fecham a de antes; Ajustes abre a SettingsActivity.
 - Ícones: ic_nav_home, ic_nav_live, ic_nav_movie, ic_nav_series, ic_nav_settings, ic_nav_refresh (brancos, 32dp). Fundos: bg_button, bg_card, bg_field.
 
@@ -34,7 +34,7 @@ Outros: res/values/strings.xml, res/xml/file_paths.xml, AndroidManifest.xml, app
 
 ## Regras técnicas que valem sempre
 - Lista M3U: o "id" dos itens é só o número de ordem; o player exige um número como id.
-- Telas de lista usam ListView com item_category.xml; a lista controla o foco (linha com setFocusable(false)).
+- Telas de lista usam ListView com item_category.xml; a lista controla o foco (linha com setFocusable(false)). Por isso a ordem do foco entre lista e grade é tratada no código (dispatchKeyEvent), não no layout.
 - Ver também as regras de código no AGENTS.md.
 
 ## Limites conhecidos (não são erros)
@@ -44,4 +44,5 @@ Outros: res/values/strings.xml, res/xml/file_paths.xml, AndroidManifest.xml, app
 - Controle parental: abrir Ajustes não pede a senha (só trocar ou desativar). "Trocar de lista" não apaga o login antigo; o novo o substitui.
 - Player: setas esquerda e direita pulam 10 s só em filme e episódio (mínimo 120 ms entre pulos). Controles semi-transparentes com setAlpha(0.65) no exo_controller (se não aparecer o efeito, trocar por layout próprio). Cores de episódio visto são no texto, não no fundo. Em canal ao vivo, as setas ainda NÃO trocam de canal (Rodada 1, R4).
 - Programação do canal: abre com a tecla de menu (três listras) ou segurando o OK (o tempo varia por controle).
-- Menu com texto (R1) e tela inicial sem caixinha de prévia (R2): ainda não testados no TX9. Se algum nome do menu não couber nos 200dp, reduzir o tamanho da letra ou alargar a coluna.
+- Menu com texto (R1), tela inicial sem caixinha (R2) e ordem do foco nas abas (R3): ainda não testados no TX9. Se algum nome do menu não couber nos 200dp, reduzir o tamanho da letra ou alargar a coluna.
+- Ordem do foco: a seta esquerda na primeira coluna da grade vai às categorias. Se o número de colunas mudar com o tamanho da tela, a regra continua valendo (usa getNumColumns).
