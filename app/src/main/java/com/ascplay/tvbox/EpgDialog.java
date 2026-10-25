@@ -115,12 +115,17 @@ public final class EpgDialog {
 
         dialog.setContentView(root);
 
-        // A tecla das três listras, apertada de novo, fecha a janela
+        // A tecla das três listras, APERTADA de novo, fecha a janela.
+        // Só conta o aperto (ACTION_DOWN, primeira vez): a "tecla solta" (ACTION_UP) do aperto
+        // que abriu a janela chega aqui também e não pode fechá-la.
         dialog.setOnKeyListener(new Dialog.OnKeyListener() {
             @Override
             public boolean onKey(android.content.DialogInterface d, int keyCode, KeyEvent event) {
-                if (keyCode == KeyEvent.KEYCODE_MENU && event.getAction() == KeyEvent.ACTION_UP) {
-                    dialog.dismiss();
+                if (keyCode == KeyEvent.KEYCODE_MENU) {
+                    if (event.getAction() == KeyEvent.ACTION_DOWN
+                            && event.getRepeatCount() == 0) {
+                        dialog.dismiss();
+                    }
                     return true;
                 }
                 return false;
