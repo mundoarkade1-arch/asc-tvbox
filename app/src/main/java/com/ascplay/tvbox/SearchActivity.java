@@ -23,7 +23,8 @@ import java.util.List;
  * Lista M3U: M3uApi.search faz o mesmo, linha por linha. No máximo 100 resultados.
  * Controle parental ligado: itens adultos não aparecem.
  *
- * Ao escolher um resultado: canal e filme tocam; série abre a tela da série.
+ * Ao escolher um resultado: canal toca direto; filme abre a página do filme (MovieActivity);
+ * série abre a tela da série.
  * O texto da busca nunca é registrado em log.
  */
 public class SearchActivity extends Activity {
@@ -152,11 +153,16 @@ public class SearchActivity extends Activity {
             startActivity(s);
             return;
         }
-        Intent i = new Intent(this, MainActivity.class);
+        // Filme: abre a página do filme (capa e sinopse). Canal ao vivo: toca direto.
+        Intent i = new Intent(this,
+                item.kind == XtreamApi.Kind.MOVIE ? MovieActivity.class : MainActivity.class);
         i.putExtra(HomeActivity.EXTRA_KIND, item.kind.name());
         i.putExtra(HomeActivity.EXTRA_ID, item.id);
         i.putExtra(HomeActivity.EXTRA_EXT, item.ext);
         i.putExtra(HomeActivity.EXTRA_NAME, item.name);
+        if (item.kind == XtreamApi.Kind.MOVIE) {
+            i.putExtra(MovieActivity.EXTRA_ICON, item.icon);
+        }
         if (m3u) {
             i.putExtra(MainActivity.EXTRA_URL, item.url);
         }
