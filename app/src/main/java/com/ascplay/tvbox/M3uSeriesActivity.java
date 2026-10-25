@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -18,8 +19,10 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Tela da série para o login por lista M3U: à esquerda as temporadas, à direita os episódios
- * da temporada escolhida. Recebe o título da série (HomeActivity.EXTRA_NAME).
+ * Tela da série para o login por lista M3U: no alto a capa do item e o título (a lista M3U não
+ * tem sinopse: aparece "Sem sinopse nesta lista."); embaixo, à esquerda as temporadas e à
+ * direita os episódios da temporada escolhida. Recebe o título da série (HomeActivity.EXTRA_NAME)
+ * e, se houver, o endereço da capa (MovieActivity.EXTRA_ICON).
  *
  * Os episódios são achados lendo a lista aos poucos e juntando os itens de série com o mesmo
  * título (M3uApi.episodes), no máximo 500. Só os episódios desta série ficam na memória.
@@ -49,6 +52,8 @@ public class M3uSeriesActivity extends Activity {
 
     private TextView tvTitle;
     private TextView tvStatus;
+    private TextView tvPlot;
+    private ImageView ivCover;
     private ListView lvSeasons;
     private ListView lvEpisodes;
 
@@ -67,6 +72,7 @@ public class M3uSeriesActivity extends Activity {
 
         creds = CredentialStore.load(this);
         String name = getIntent().getStringExtra(HomeActivity.EXTRA_NAME);
+        String icon = getIntent().getStringExtra(MovieActivity.EXTRA_ICON);
         if (creds == null || !CredentialStore.MODE_M3U.equals(creds.mode)
                 || creds.m3uUrl == null || name == null || name.trim().isEmpty()) {
             finish();
@@ -80,10 +86,18 @@ public class M3uSeriesActivity extends Activity {
         setContentView(R.layout.activity_series);
         tvTitle = findViewById(R.id.tv_title);
         tvStatus = findViewById(R.id.tv_status);
+        tvPlot = findViewById(R.id.tv_plot);
+        ivCover = findViewById(R.id.iv_cover);
         lvSeasons = findViewById(R.id.lv_seasons);
         lvEpisodes = findViewById(R.id.lv_episodes);
 
         tvTitle.setText(seriesName);
+        // A lista M3U não traz sinopse
+        tvPlot.setTextColor(COLOR_NEUTRAL);
+        tvPlot.setText("Sem sinopse nesta lista.");
+        if (icon != null && !icon.isEmpty()) {
+            ImageLoader.load(ivCover, icon);
+        }
         lvSeasons.setDividerHeight(dp(6));
         lvEpisodes.setDividerHeight(dp(6));
 
@@ -115,6 +129,12 @@ public class M3uSeriesActivity extends Activity {
 
         showStatus("Carregando...", COLOR_NEUTRAL);
         loadEpisodes();
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        ImageLoader.clear();
     }
 
     // ---------- Carregar os episódios ----------
