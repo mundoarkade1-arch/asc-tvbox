@@ -29,6 +29,7 @@ import java.util.Set;
  * Nunca baixa a lista inteira: pede ao servidor só a página necessária.
  * Nos canais ao vivo, cada cartão mostra o programa que passa agora (EPG por canal).
  * Ao escolher uma série, abre a tela da série (temporadas e episódios).
+ * Ao escolher um filme, abre a página do filme (MovieActivity), com capa e sinopse.
  *
  * Menu à esquerda (só ícones): ligado pelo NavBar. Troca de aba, volta à tela inicial e
  * recarrega a categoria aberta (ícone Atualizar).
@@ -480,11 +481,16 @@ public class BrowseActivity extends Activity {
             startActivity(s);
             return;
         }
-        Intent i = new Intent(this, MainActivity.class);
+        // Filme: abre a página do filme (capa e sinopse). Canal ao vivo: toca direto.
+        Intent i = new Intent(this,
+                item.kind == XtreamApi.Kind.MOVIE ? MovieActivity.class : MainActivity.class);
         i.putExtra(HomeActivity.EXTRA_KIND, item.kind.name());
         i.putExtra(HomeActivity.EXTRA_ID, item.id);
         i.putExtra(HomeActivity.EXTRA_EXT, item.ext);
         i.putExtra(HomeActivity.EXTRA_NAME, item.name);
+        if (item.kind == XtreamApi.Kind.MOVIE) {
+            i.putExtra(MovieActivity.EXTRA_ICON, item.icon);
+        }
         startActivity(i);
     }
 
