@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.OptIn;
 import androidx.media3.common.C;
@@ -40,6 +41,11 @@ import java.util.Locale;
  * A tecla das três listras (ou segurar o OK) abre a janela com a programação do canal
  * (o que passa agora e os próximos programas), pedida ao servidor só nessa hora.
  *
+ * Canal ao vivo: seta para baixo vai ao próximo canal e seta para cima ao anterior (R4).
+ * A fila de canais (ChannelQueue) segue a ordem das categorias, começando no canal que toca.
+ * A tela que abriu o canal manda EXTRA_QUEUE (true) e EXTRA_QUEUE_CAT (categoria de onde
+ * veio; nulo = todas). Sem EXTRA_QUEUE, as setas cima e baixo não fazem nada de novo.
+ *
  * Nos episódios de série, a tela da série manda a fila de episódios da série toda, em ordem
  * (temporadas normais primeiro, "Especiais" no fim):
  * - servidor Xtream: lista de números (ids) e extensões;
@@ -68,6 +74,10 @@ public class MainActivity extends Activity {
     public static final String EXTRA_SERIES_KEY = "series_key";
     /** Minuto (em milissegundos) onde o primeiro vídeo deve começar. Sem isso, começa do zero. */
     public static final String EXTRA_START_MS = "start_ms";
+    /** Verdadeiro: o canal ao vivo pode trocar de canal com as setas cima e baixo. */
+    public static final String EXTRA_QUEUE = "channel_queue";
+    /** Categoria de onde o canal veio (servidor: número; lista M3U: nome). Nulo = todas. */
+    public static final String EXTRA_QUEUE_CAT = "channel_queue_cat";
 
     private static final String USER_AGENT = "ASC-TVBox/1.0 (Android)";
     private static final int TIMEOUT_MS = 15000;
@@ -99,6 +109,9 @@ public class MainActivity extends Activity {
     // Lista M3U: endereços diretos dos episódios da série
     private ArrayList<String> listUrls = null;
     private int listIndex = -1;
+
+    // Troca de canal com as setas (só canal ao vivo)
+    private ChannelQueue channelQueue = null;
 
     // Lembrar onde parou
     private String seriesKey = null;
@@ -214,6 +227,30 @@ public class MainActivity extends Activity {
                 seriesKey = key;
             }
         }
+
+        // Canal ao vivo: prepara a troca de canal com as setas cima e baixo
+        if (kind == XtreamApi.Kind.LIVE && getIntent().getBooleanExtra(EXTRA_QUEUE, false)) {
+            String cat = getIntent().getStringExtra(EXTRA_QUEUE_CAT);
+            String currentKey = m3u ? url : id;
+            channelQueue = new ChannelQueue(m3u, creds.server, creds.user, creds.pass,
+                    creds.m3uUrl, cat, ParentalStore.isEnabled(this), currentKey,
+                    new ChannelQueue.Listener() {
+                        @Override
+                        public void onChannel(XtreamApi.Item next) {
+                            switchChannel(next);
+                        }
+
+                        @Override
+                        public void onFail() {
+                            if (!isFinishing() && !isDestroyed()) {
+                                Toast.makeText(MainActivity.this,
+                                        "Não foi possível trocar de canal.",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+            channelQueue.start();
+        }
     }
 
     /**
@@ -309,12 +346,17 @@ public class MainActivity extends Activity {
         handler.removeCallbacks(hideNowbar);
         handler.removeCallbacks(saveTick);
         nowbarToken++;
+        if (channelQueue != null) {
+            channelQueue.close();
+            channelQueue = null;
+        }
     }
 
     /**
      * Teclas do player.
      * - Filme e episódio: seta esquerda volta 10 segundos e seta direita avança 10 segundos,
      *   direto (o foco não fica preso nos botões).
+     * - Canal ao vivo: seta para baixo = próximo canal, seta para cima = canal anterior.
      * - Canal ao vivo: ao apertar OK, mostra a barra Agora / A seguir.
      * - Canal ao vivo do servidor: a tecla das três listras (menu), ou segurar o OK,
      *   abre a janela com a programação do canal.
@@ -327,6 +369,19 @@ public class MainActivity extends Activity {
         if (code == KeyEvent.KEYCODE_MENU && canShowSchedule()) {
             if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
                 openSchedule();
+            }
+            return true;
+        }
+
+        // Canal ao vivo: cima e baixo trocam de canal
+        if ((code == KeyEvent.KEYCODE_DPAD_UP || code == KeyEvent.KEYCODE_DPAD_DOWN)
+                && canChangeChannel()) {
+            if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
+                if (code == KeyEvent.KEYCODE_DPAD_DOWN) {
+                    channelQueue.next();
+                } else {
+                    channelQueue.previous();
+                }
             }
             return true;
         }
@@ -351,6 +406,36 @@ public class MainActivity extends Activity {
             }
         }
         return super.dispatchKeyEvent(event);
+    }
+
+    /** Só canal ao vivo, com a fila de canais pronta, troca de canal com as setas. */
+    private boolean canChangeChannel() {
+        return channelQueue != null && channelQueue.isReady() && item != null
+                && item.kind == XtreamApi.Kind.LIVE;
+    }
+
+    /** Toca o canal novo escolhido pelas setas cima e baixo. */
+    private void switchChannel(XtreamApi.Item next) {
+        if (isFinishing() || isDestroyed() || next == null || creds == null || player == null) {
+            return;
+        }
+        boolean m3u = CredentialStore.MODE_M3U.equals(creds.mode);
+        String ext = next.ext;
+        if (ext == null || !ext.matches("[A-Za-z0-9]{0,5}")) {
+            ext = "";
+        }
+        String url = m3u && next.url != null ? next.url : "";
+        item = new XtreamApi.Item(XtreamApi.Kind.LIVE, next.id, next.name == null ? "" : next.name,
+                "", "", "", ext, url);
+        streamUrl = XtreamApi.streamUrl(creds.server, creds.user, creds.pass, item);
+        triedTs = false;
+        playCurrent();
+        if (m3u) {
+            // Lista M3U não tem guia: mostra só o nome do canal
+            Toast.makeText(this, item.name, Toast.LENGTH_SHORT).show();
+        } else {
+            showNowbar();
+        }
     }
 
     /** A programação só existe para canal ao vivo do servidor (a lista M3U não tem guia). */
