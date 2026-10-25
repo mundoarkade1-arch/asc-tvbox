@@ -6,13 +6,14 @@ import android.view.View;
 import android.widget.Toast;
 
 /**
- * Menu à esquerda (só ícones) das telas de abas (Canais, Filmes e Séries).
+ * Menu à esquerda (só ícones) das telas de abas (Canais, Filmes, Séries e Ajustes).
  * O desenho do menu está em layout_nav.xml. Esta classe só liga os botões.
  *
  * - Tela inicial: volta para a HomeActivity.
  * - Canais, Filmes, Séries: troca de aba (abre a tela do servidor ou da lista M3U,
  *   conforme o login, e fecha a aba de antes). Se já está na aba, não faz nada.
- * - Ajustes: por enquanto só mostra um aviso (a aba chega em outra parte).
+ * - Ajustes: abre a SettingsActivity e fecha a aba de antes. Se já está em Ajustes,
+ *   não faz nada.
  * - Atualizar: roda o que a tela mandar (recarregar a lista da aba).
  */
 final class NavBar {
@@ -39,9 +40,7 @@ final class NavBar {
         click(activity, R.id.nav_movie, v -> goTab(activity, current, MOVIE, XtreamApi.Kind.MOVIE));
         click(activity, R.id.nav_series,
                 v -> goTab(activity, current, SERIES, XtreamApi.Kind.SERIES));
-        click(activity, R.id.nav_settings, v -> Toast.makeText(activity,
-                "A aba Ajustes chega em breve. Por enquanto, use os botões da tela inicial.",
-                Toast.LENGTH_SHORT).show());
+        click(activity, R.id.nav_settings, v -> goSettings(activity, current));
         click(activity, R.id.nav_refresh, v -> {
             if (onRefresh != null) {
                 Toast.makeText(activity, "Atualizando a lista...", Toast.LENGTH_SHORT).show();
@@ -72,6 +71,15 @@ final class NavBar {
         Intent i = new Intent(activity, m3u ? M3uBrowseActivity.class : BrowseActivity.class);
         i.putExtra(HomeActivity.EXTRA_KIND, kind.name());
         activity.startActivity(i);
+        activity.finish();
+        activity.overridePendingTransition(0, 0);
+    }
+
+    private static void goSettings(Activity activity, int current) {
+        if (current == SETTINGS) {
+            return;
+        }
+        activity.startActivity(new Intent(activity, SettingsActivity.class));
         activity.finish();
         activity.overridePendingTransition(0, 0);
     }
