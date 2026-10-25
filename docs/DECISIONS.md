@@ -59,5 +59,29 @@
 - Motivo: o Actions não fica vermelho em nenhum passo.
 - Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
+
+- ## 2026-10-24: Nova interface, parte (d) concluída: página do filme e da série
+
+- Decisão: a página do filme (MovieActivity, layout activity_movie.xml) mostra a capa à esquerda e, à direita, título, linha de informações, botão Tocar e sinopse. O foco abre no botão Tocar. A sinopse fica numa área com rolagem, que recebe foco com a seta para baixo.
+- Motivo: o controle só tem setas e OK. Assim a pessoa toca o filme com um único OK e, se quiser ler um texto longo, desce até a sinopse e rola com as setas.
+- Decisão: a página do filme NÃO tem o menu à esquerda. É uma tela de passagem, como a de resultados da busca.
+- Motivo: o menu serve para trocar de aba, e a página do filme sempre nasce de uma aba ou da página inicial. O Voltar leva de volta para lá.
+- Decisão: a página da série reaproveita o layout activity_series.xml, que já era usado pela SeriesActivity (servidor) e pela M3uSeriesActivity (lista M3U). Ganhou uma faixa no alto com capa pequena, título, informações e sinopse.
+- Motivo: as duas telas de série precisam ter a mesma aparência. Um layout só evita diferenças entre os dois logins.
+- Decisão: na página da série, a sinopse mostra no máximo 4 linhas e NÃO recebe foco.
+- Motivo: se a sinopse recebesse foco, as setas ficariam presas nela e a pessoa teria dificuldade para chegar às temporadas e aos episódios. O custo é que sinopses longas aparecem cortadas (anotado em "Problemas em aberto" do STATUS.md).
+- Decisão: a capa do item (a mesma do cartão) viaja pelo Intent (MovieActivity.EXTRA_ICON) e aparece na hora. No servidor, quando a capa do servidor chega (XtreamApi.details), ela substitui a do item. Na lista M3U fica só a capa do item e o texto "Sem sinopse nesta lista.".
+- Motivo: a página nunca fica vazia esperando a internet, e na lista M3U não há nada mais para pedir.
+- Decisão: na página da série do servidor, o pedido de capa e sinopse roda numa thread separada da dos episódios.
+- Motivo: se o pedido da sinopse demorar ou falhar, os episódios continuam aparecendo e tocando normalmente.
+- Decisão: quatro lugares passaram a abrir a página do filme em vez de tocar direto: HomeActivity, BrowseActivity, M3uBrowseActivity e SearchActivity. Canal ao vivo continua tocando direto. Esses mesmos quatro lugares mandam a capa também ao abrir uma série.
+- Motivo: escolher um filme sempre leva à mesma página, em qualquer tela, nos dois logins.
+- Decisão: ao apertar Voltar no player de um filme, a pessoa volta para a página do filme (e não para a lista).
+- Motivo: é o comportamento natural de empilhar telas e é onde ficará o botão "Continuar de onde parei" na parte (e). A conferir no teste se o dono gosta.
+- Decisão: as duas páginas só abrem a partir de itens que já passaram pelo filtro do controle parental e não pedem a senha de novo.
+- Decisão: ordem de trabalho: função details, layout do filme, tela do filme, registro no AndroidManifest.xml, os quatro lugares que abrem filme, layout da série, SeriesActivity, M3uSeriesActivity e, por fim, a capa da série nos quatro lugares. O Actions ficou verde em todos os passos.
+- Dependências: nenhuma nova.
+- Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
+- Falta para depois (parte e): botão "Continuar de onde parei" nas duas páginas e cores de episódio visto.
 - Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
