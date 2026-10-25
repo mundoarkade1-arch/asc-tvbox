@@ -143,5 +143,16 @@
 - Decisão: no player de canal ao vivo, seta para cima volta, seta para baixo avança e OK mostra a barra. Suposição a confirmar: só os canais da lista de onde ele veio.
 - Decisão (documentos): o STATUS.md ficou curto; o mapa de arquivos e os limites foram para ARQUIVOS.md; as regras de trabalho e o prompt FIXO do próximo agente foram para o AGENTS.md; ARCHITECTURE.md foi preenchido (build, versão e dependências). Motivo: o STATUS era regerado inteiro, estava pesado e os agentes não conseguiam fazer a passagem.
 - Dependências: nenhuma nova.
+
+- ## 25/10/2026 - Rodada 1, R1 (menu com texto) e respostas do dono
+
+- Menu da esquerda: os botões deixaram de ser ImageButton e viraram TextView com ícone à esquerda (drawableLeft) e o nome ao lado. Motivo: o dono quer ler o nome de cada botão. NavBar.java não mudou, pois só usa os ids e o clique.
+- Coluna do menu: de 88dp para 200dp. O menu está em layout_nav.xml e há uma cópia em activity_home.xml. As duas devem ficar iguais.
+- Foi acrescentado o botão com o nome "Atualizar" (antes só tinha o ícone).
+- Tela inicial: a linha "Agora: ..." sob o cartão do canal FICA. O dono quer tirar só a caixinha de prévia (programa, barra de progresso e "A seguir").
+- Player de canal ao vivo, cima e baixo: a lista de canais é TODAS as categorias em ordem, como uma lista só, começando no canal atual. Ao acabar uma categoria, passa para a próxima. Motivo: pedido do dono. Isso substitui a suposição antiga de passar só pela categoria aberta.
+- Novos pedidos (Rodada 2): R5 (as 3 faixas da tela inicial inteiras na tela, sem rolagem) e R6 (no cartão "Ver mais", direita de novo não faz nada; para mudar de faixa, só cima e baixo).
+- A tecla das três listras ainda não foi testada no TX9. O dono testa depois das melhorias.
+- Sem dependências novas.
 - Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
