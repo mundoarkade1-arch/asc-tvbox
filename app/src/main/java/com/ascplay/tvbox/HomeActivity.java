@@ -27,7 +27,7 @@ import java.util.Locale;
  * Nos canais ao vivo, cada cartão mostra o programa que passa agora (EPG por canal).
  * Ao parar o foco num canal ao vivo, uma caixinha fixa embaixo mostra a prévia:
  * programa de agora, barra de progresso, horários e "A seguir".
- * Ao escolher uma série, abre a tela da série (temporadas e episódios).
+ * Ao escolher uma série, abre a tela da série (temporadas e episódios), levando a capa do item.
  * Ao escolher um filme, abre a página do filme (MovieActivity), com capa e sinopse.
  *
  * Lista M3U: lê a lista aos poucos, só até achar 10 itens de cada tipo (M3uApi).
@@ -529,6 +529,7 @@ public class HomeActivity extends Activity {
             Intent s = new Intent(this, isM3u() ? M3uSeriesActivity.class : SeriesActivity.class);
             s.putExtra(EXTRA_ID, item.id);
             s.putExtra(EXTRA_NAME, item.name);
+            s.putExtra(MovieActivity.EXTRA_ICON, item.icon);
             startActivity(s);
             return;
         }
