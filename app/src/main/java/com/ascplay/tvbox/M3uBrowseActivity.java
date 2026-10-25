@@ -37,7 +37,8 @@ import java.util.List;
  * 4 números. A liberação vale só para aquela categoria, enquanto a pessoa está nela. Em "Todas as
  * categorias" e nas outras, itens adultos não aparecem.
  *
- * Canal e filme tocam direto pelo endereço da lista (MainActivity.EXTRA_URL).
+ * Canal toca direto pelo endereço da lista (MainActivity.EXTRA_URL).
+ * Filme: abre a página do filme (MovieActivity), que leva o endereço e a capa do item.
  * Série: abre a tela da série da lista M3U (M3uSeriesActivity), com temporadas e episódios.
  */
 public class M3uBrowseActivity extends Activity {
@@ -435,12 +436,17 @@ public class M3uBrowseActivity extends Activity {
             startActivity(s);
             return;
         }
-        Intent i = new Intent(this, MainActivity.class);
+        // Filme: abre a página do filme (capa do item). Canal ao vivo: toca direto.
+        Intent i = new Intent(this,
+                item.kind == XtreamApi.Kind.MOVIE ? MovieActivity.class : MainActivity.class);
         i.putExtra(HomeActivity.EXTRA_KIND, item.kind.name());
         i.putExtra(HomeActivity.EXTRA_ID, item.id);
         i.putExtra(HomeActivity.EXTRA_EXT, item.ext);
         i.putExtra(HomeActivity.EXTRA_NAME, item.name);
         i.putExtra(MainActivity.EXTRA_URL, item.url);
+        if (item.kind == XtreamApi.Kind.MOVIE) {
+            i.putExtra(MovieActivity.EXTRA_ICON, item.icon);
+        }
         startActivity(i);
     }
 
