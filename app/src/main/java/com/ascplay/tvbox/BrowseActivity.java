@@ -34,8 +34,11 @@ import java.util.Set;
  * Ao escolher uma série, abre a tela da série (temporadas e episódios), levando a capa do item.
  * Ao escolher um filme, abre a página do filme (MovieActivity), com capa e sinopse.
  *
- * Menu à esquerda (só ícones): ligado pelo NavBar. Troca de aba, volta à tela inicial e
- * recarrega a categoria aberta (ícone Atualizar).
+ * Ordem do foco (da esquerda para a direita): menu, categorias, itens. Esquerda na primeira
+ * coluna dos itens leva o foco às categorias (Rodada 1, R3).
+ *
+ * Menu à esquerda (ícone e nome): ligado pelo NavBar. Troca de aba, volta à tela inicial e
+ * recarrega a categoria aberta (Atualizar).
  *
  * Barra de pesquisa (botão no alto): pesquisa SÓ o tipo desta tela (canais, filmes ou séries).
  * Abre o teclado de letras e, ao buscar, a tela de resultados (SearchActivity).
@@ -119,7 +122,7 @@ public class BrowseActivity extends Activity {
         gvItems.setHorizontalSpacing(dp(10));
         gvItems.setVerticalSpacing(dp(10));
 
-        // Menu à esquerda (só ícones)
+        // Menu à esquerda (ícone e nome)
         NavBar.bind(this, navCurrent(), () -> refreshCurrent());
 
         // Barra de pesquisa: só este tipo (canais, filmes ou séries)
@@ -174,17 +177,30 @@ public class BrowseActivity extends Activity {
         EpgCache.clear();
     }
 
-    // ---------- Programação do canal (tecla das três listras) ----------
+    // ---------- Teclas: ordem do foco e programação do canal ----------
 
     /**
-     * Com o foco na grade de itens e um canal ao vivo selecionado:
-     * - a tecla das três listras (menu) abre a janela da programação do canal;
-     * - OK segurado faz o mesmo (segunda via).
+     * Com o foco na grade de itens:
+     * - esquerda na primeira coluna leva o foco às categorias (ordem: menu, categorias, itens);
+     * - com um canal ao vivo selecionado, a tecla das três listras (menu) abre a janela da
+     *   programação do canal, e OK segurado faz o mesmo (segunda via).
      * Em qualquer outro lugar, as teclas funcionam como antes.
      */
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         int code = event.getKeyCode();
+
+        if (code == KeyEvent.KEYCODE_DPAD_LEFT && gvItems != null && gvItems.hasFocus()) {
+            int position = gvItems.getSelectedItemPosition();
+            int columns = Math.max(1, gvItems.getNumColumns());
+            if (position >= 0 && position % columns == 0) {
+                if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                    goToCategories();
+                }
+                return true;
+            }
+        }
+
         boolean okKey = code == KeyEvent.KEYCODE_DPAD_CENTER
                 || code == KeyEvent.KEYCODE_ENTER
                 || code == KeyEvent.KEYCODE_NUMPAD_ENTER;
@@ -203,6 +219,16 @@ public class BrowseActivity extends Activity {
             return true; // a tecla das três listras não faz mais nada aqui
         }
         return super.dispatchKeyEvent(event);
+    }
+
+    /** Leva o foco à lista de categorias, já na categoria que está aberta. */
+    private void goToCategories() {
+        int position = catIds.indexOf(currentCat);
+        if (position < 0) {
+            position = 0;
+        }
+        lvCategories.requestFocus();
+        lvCategories.setSelection(position);
     }
 
     /** O canal ao vivo selecionado na grade, ou null se o foco está em outro lugar. */
@@ -237,7 +263,7 @@ public class BrowseActivity extends Activity {
         }
     }
 
-    /** Ícone Atualizar: recarrega a categoria que está aberta. */
+    /** Atualizar: recarrega a categoria que está aberta. */
     private void refreshCurrent() {
         if (isFinishing() || isDestroyed()) {
             return;
