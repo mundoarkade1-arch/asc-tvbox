@@ -36,5 +36,10 @@ Causa: o app ASC usa JavaScript moderno que o WebView Chrome 52 não entende.
 ## Regras obrigatórias para o app novo
 - App Android nativo em Java com ExoPlayer, sem WebView (ver docs/DECISIONS.md).
 - Compatível com Android 7.1 (API 25) ou inferior.
+
+- ## Atualização de 25/10/2026 (controle remoto e testes)
+- O controle do TX9 TEM uma tecla de três listras (confirmado pelo dono). Em Android ela costuma chegar como tecla de menu (KEYCODE_MENU). Ainda a confirmar no aparelho. Segunda via: segurar o OK.
+- Isso corrige o texto acima que diz que o controle não tem tecla de menu.
+- O app já foi testado no TX9 em 25/10/2026 (primeiro teste da nova aparência). Armazenamento livre: ainda não anotado (ver Ajustes > Sobre o dispositivo).
 - Poucas dependências e baixo uso de memória: o aparelho tem só 1 GB de RAM.
 - Testar sempre no TX9 real, não só no computador.
