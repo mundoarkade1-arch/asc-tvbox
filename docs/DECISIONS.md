@@ -162,5 +162,14 @@
 - A variável previewItem foi trocada por focusedLive (canal ao vivo do servidor que está com o foco). Motivo: previewItem também decidia se a tecla de menu e o OK segurado abriam a programação (EpgDialog). Assim essa função continua funcionando. focusedLive fica vazia quando o foco vai para outro lugar (menu, botões de atualização, filmes, séries, "Ver mais").
 - group_preview e seus textos e barra de progresso saíram do activity_home.xml. Ordem seguida: código primeiro, layout depois.
 - Sem dependências novas.
+
+- ## 25/10/2026 - Rodada 1, R3 (ordem do foco nas abas)
+
+- Causa do pulo: a grade de itens não tinha regra para a seta esquerda. O Android escolhia sozinho o vizinho e acabava indo ao menu, passando por cima das categorias.
+- Correção: em BrowseActivity.java e M3uBrowseActivity.java, o dispatchKeyEvent trata a seta esquerda com o foco na grade. Se o item selecionado está na primeira coluna (posição dividida pelo número de colunas dá resto 0), o foco vai para a lista de categorias (goToCategories), já na categoria aberta. Nas outras colunas, a seta esquerda funciona como antes. Da lista de categorias, a seta esquerda continua indo ao menu.
+- Motivo de usar o código e não nextFocusLeft no layout: a grade e a lista são ListView e GridView, e as linhas não recebem foco (a lista controla a seleção). Uma regra no layout não sabe em que coluna o foco está.
+- Séries (activity_series.xml) e Ajustes (activity_settings.xml): a ordem já estava certa (temporadas e episódios lado a lado; opções e detalhe sem foco). Sem mudança de foco.
+- Correção achada junto: o include do menu em activity_browse.xml e activity_settings.xml ainda estava com 88dp. Passou para 200dp, igual ao menu novo da R1. Sem isso, os nomes ficariam cortados.
+- Sem dependências novas.
 - Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
