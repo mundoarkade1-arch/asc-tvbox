@@ -183,5 +183,18 @@
 - Limite: se o canal tocado não estiver nos primeiros 400 da categoria, as setas ficam desligadas (sem erro).
 - Falta: HomeActivity, BrowseActivity, M3uBrowseActivity e SearchActivity mandarem EXTRA_QUEUE e EXTRA_QUEUE_CAT.
 - Sem dependências novas.
+
+- ## 25/10/2026 - Rodada 1, R4 concluída: as quatro telas mandam a fila de canais
+
+- Decisão: HomeActivity, BrowseActivity, M3uBrowseActivity e SearchActivity passam a mandar MainActivity.EXTRA_QUEUE = true ao abrir um canal ao vivo. Filmes, séries e episódios não mudam.
+- Decisão: a categoria de origem (EXTRA_QUEUE_CAT) só é mandada pelas abas. BrowseActivity manda currentCat (número) e M3uBrowseActivity manda currentGroup (nome do grupo). Em "Todas as categorias", nada é mandado, e isso quer dizer "todas".
+- Motivo: no Java, passar null direto em putExtra pode dar erro de compilação por ser ambíguo. Não mandar nada tem o mesmo efeito e é mais seguro.
+- Decisão: HomeActivity e SearchActivity não mandam categoria (fila "todas").
+- Motivo: a tela inicial junta canais de várias categorias, e a busca junta resultados soltos. Não existe uma categoria única de origem.
+- Limite aceito: na fila "todas", se o canal tocado não estiver entre os primeiros 400, as setas cima e baixo ficam desligadas, sem erro. Pode acontecer na busca com canal muito no fim da lista. O dono decide depois do teste se isso precisa mudar.
+- Fim da lista: continua a escolha do agente (dar a volta). O dono ainda vai testar.
+- Ordem de trabalho: ChannelQueue e MainActivity primeiro (nada usava), depois as quatro telas, uma por vez. O Actions ficou verde em todos os passos.
+- Sem dependências novas.
+- Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para o fim da rodada.
 - Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
