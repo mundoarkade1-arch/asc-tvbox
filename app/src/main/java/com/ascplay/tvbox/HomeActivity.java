@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -27,6 +28,8 @@ import java.util.Locale;
  * Nos canais ao vivo, cada cartão mostra o programa que passa agora (EPG por canal).
  * Ao parar o foco num canal ao vivo, uma caixinha fixa embaixo mostra a prévia:
  * programa de agora, barra de progresso, horários e "A seguir".
+ * Sobre um canal ao vivo (servidor), a tecla das três listras ou segurar o OK abre a janela
+ * com a programação do canal (o que passa agora e os próximos programas).
  * Ao escolher uma série, abre a tela da série (temporadas e episódios), levando a capa do item.
  * Ao escolher um filme, abre a página do filme (MovieActivity), com capa e sinopse.
  *
@@ -99,6 +102,7 @@ public class HomeActivity extends Activity {
     private TextView tvPvNext;
     private ProgressBar pbPreview;
     private final Handler handler = new Handler(Looper.getMainLooper());
+    // Canal ao vivo (servidor) que está com o foco agora; vazio quando o foco está em outro lugar
     private XtreamApi.Item previewItem;
     private final Runnable previewRunnable = new Runnable() {
         @Override
@@ -217,6 +221,29 @@ public class HomeActivity extends Activity {
         super.onLowMemory();
         ImageLoader.clear();
         EpgCache.clear();
+    }
+
+    /**
+     * Tecla das três listras (menu) sobre um canal ao vivo do servidor: abre a janela com a
+     * programação do canal. Em qualquer outro lugar, a tecla não faz nada de novo.
+     */
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if (event.getKeyCode() == KeyEvent.KEYCODE_MENU && isXtream() && previewItem != null) {
+            if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
+                openSchedule(previewItem);
+            }
+            return true;
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    /** Abre a janela da programação de um canal (só login por servidor). */
+    private void openSchedule(XtreamApi.Item item) {
+        if (!isXtream() || item == null || item.kind != XtreamApi.Kind.LIVE) {
+            return;
+        }
+        EpgDialog.show(this, creds.server, creds.user, creds.pass, item.id, item.name);
     }
 
     // ---------- Menu à esquerda ----------
@@ -382,6 +409,11 @@ public class HomeActivity extends Activity {
                     if (hasFocus) {
                         schedulePreview(item);
                     }
+                });
+                // OK segurado: segunda via para abrir a programação do canal
+                card.setOnLongClickListener(v -> {
+                    openSchedule(item);
+                    return true;
                 });
             } else {
                 if (item.kind == XtreamApi.Kind.LIVE) {
