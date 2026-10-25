@@ -83,5 +83,38 @@
 - Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
 - Falta para depois (parte e): botão "Continuar de onde parei" nas duas páginas e cores de episódio visto.
+
+- 
+## 2026-10-24: EPG por canal, sob demanda, sem baixar o guia inteiro
+
+- Decisão: o guia de programação (EPG) é pedido ao servidor canal por canal (ação get_short_epg da API Xtream), só para os canais que aparecem na tela. Os resultados ficam num cache pequeno na memória (EpgCache): no máximo 80 canais, cada um por 1 minuto, e no máximo 2 pedidos ao servidor ao mesmo tempo.
+- Motivo: o app original baixa o guia completo (XMLTV) e guarda tudo na memória. No TX9, com 1 GB de RAM, esse arquivo grande pode travar o aparelho.
+- Alternativa descartada: baixar e ler o XMLTV inteiro.
+- Canal sem guia mostra "Programação indisponível", sem erro.
+
+## 2026-10-24: Lista M3U sem guia de programação
+
+- Decisão: o login por lista M3U NÃO tem guia de programação (nem a linha "Agora", nem a prévia, nem a janela da programação).
+- Motivo: decisão do dono. A lista M3U em geral não traz o guia de um jeito simples de ler, e puxar um XMLTV inteiro pesaria no TX9.
+
+## 2026-10-24: Nova aparência primeiro, testes no TX9 depois
+
+- Decisão: mudar toda a aparência e a navegação antes de testar no TX9: menu vertical só com ícones à esquerda (Tela inicial, Canais, Filmes, Séries, Ajustes e Atualizar), aba Ajustes (controle parental, trocar de lista, sobre o dispositivo, sobre o aplicativo, verificar atualização), busca dentro de cada aba, página do filme e da série e player novo.
+- Motivo: as telas e funções iam mudar, então testar antes seria perder tempo.
+- A tela de resultados da busca (SearchActivity) fica SEM o menu: a busca sempre nasce de uma aba e o Voltar leva de volta a ela.
+- Todo o app continua navegável só com setas, OK e Voltar (e modo mouse), com foco bem visível.
+
+## 2026-10-24: Página do filme e da série igual nos dois logins
+
+- Decisão: a página com capa e sinopse é a mesma no login por servidor e no login por lista M3U. No servidor, a capa e a sinopse vêm de get_vod_info e get_series_info, um item por vez. Na lista M3U, que em geral não traz sinopse, a página mostra a capa do item e "Sem sinopse nesta lista.".
+- Motivo: manter o app simples e igual nos dois logins, sem pedir nada novo à lista M3U.
+
+## 2026-10-25: Player, "Continuar de onde parei" e programação do canal
+
+- Decisão: em filme e episódio, o player anota o minuto exato (PlaybackProgress, até 300 itens, chave embaralhada com SHA-1 porque o endereço da lista pode ter senha). As setas esquerda e direita pulam 10 segundos, a barra de controles some em 3 segundos e fica semi-transparente.
+- Decisão: a tecla das três listras do controle do TX9 (KEYCODE_MENU) abre uma janela com a programação do canal: o que passa agora e os próximos, até 6 programas, pedidos ao servidor SÓ quando a tecla é apertada. Segunda via, caso a tecla chegue com outro código: segurar o OK sobre o canal.
+- A barra do canal ao vivo no player tem "Agora" à esquerda e "A seguir" à direita.
+- Controle parental: a senha de 4 números é guardada embaralhada com PBKDF2 e SHA-1, porque o Android 7.1 não tem SHA-256 nesse método.
+- Nenhuma dependência nova foi adicionada em nenhuma dessas etapas.
 - Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
