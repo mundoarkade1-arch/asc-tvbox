@@ -27,6 +27,9 @@ import java.util.List;
  * 2"). Só uma página fica na memória. As categorias são achadas lendo a lista uma vez, depois que
  * a primeira página aparece, e só os nomes são guardados.
  *
+ * Menu à esquerda (só ícones): ligado pelo NavBar, igual à BrowseActivity. O ícone Atualizar
+ * recarrega a categoria aberta.
+ *
  * Barra de pesquisa (botão no alto): pesquisa SÓ o tipo desta tela (canais, filmes ou séries).
  * Abre o teclado de letras e, ao buscar, a tela de resultados (SearchActivity).
  *
@@ -106,6 +109,9 @@ public class M3uBrowseActivity extends Activity {
         gvItems.setHorizontalSpacing(dp(10));
         gvItems.setVerticalSpacing(dp(10));
 
+        // Menu à esquerda (só ícones)
+        NavBar.bind(this, navCurrent(), () -> refreshCurrent());
+
         // Barra de pesquisa: só este tipo (canais, filmes ou séries)
         btnSearchBar.setText(searchLabel());
         btnSearchBar.setVisibility(View.VISIBLE);
@@ -153,6 +159,35 @@ public class M3uBrowseActivity extends Activity {
     public void onLowMemory() {
         super.onLowMemory();
         ImageLoader.clear();
+    }
+
+    // ---------- Menu à esquerda ----------
+
+    /** Diz ao menu em qual aba esta tela está. */
+    private int navCurrent() {
+        switch (kind) {
+            case MOVIE:
+                return NavBar.MOVIE;
+            case SERIES:
+                return NavBar.SERIES;
+            default:
+                return NavBar.LIVE;
+        }
+    }
+
+    /** Ícone Atualizar: recarrega a categoria aberta (a lista M3U não tem guia para limpar). */
+    private void refreshCurrent() {
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
+        int position = 0;
+        if (currentGroup != null) {
+            int found = catNames.indexOf(currentGroup);
+            if (found > 0) {
+                position = found;
+            }
+        }
+        selectCategory(position);
     }
 
     // ---------- Pesquisa (só o tipo desta tela) ----------
