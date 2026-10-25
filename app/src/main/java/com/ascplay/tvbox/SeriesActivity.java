@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -18,9 +19,11 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Tela da série: à esquerda as temporadas, à direita os episódios da temporada escolhida.
+ * Tela da série: no alto a capa, o título, a linha de informações e a sinopse; embaixo, à
+ * esquerda as temporadas e à direita os episódios da temporada escolhida.
  * Recebe o número da série e o nome (HomeActivity.EXTRA_ID e EXTRA_NAME).
- * Pede ao servidor só os episódios desta série (no máximo 500).
+ * Pede ao servidor só os episódios desta série (no máximo 500) e, em outro pedido, a capa e a
+ * sinopse (XtreamApi.details, uma vez). Se a capa e a sinopse falharem, a tela abre sem elas.
  *
  * Ao escolher um episódio, abre o player (MainActivity) levando a lista de TODOS os episódios
  * da série, em ordem (temporadas normais primeiro, "Especiais" no fim), para o player tocar
@@ -43,6 +46,7 @@ public class SeriesActivity extends Activity {
 
     private static final int COLOR_NEUTRAL = 0xFFA39A9D;
     private static final int COLOR_ERROR = 0xFFFF6B78;
+    private static final int COLOR_PLOT = 0xFFE6DFE1;
 
     private CredentialStore.Credentials creds;
     private String seriesName = "";
@@ -50,6 +54,9 @@ public class SeriesActivity extends Activity {
 
     private TextView tvTitle;
     private TextView tvStatus;
+    private TextView tvMeta;
+    private TextView tvPlot;
+    private ImageView ivCover;
     private ListView lvSeasons;
     private ListView lvEpisodes;
 
@@ -69,6 +76,7 @@ public class SeriesActivity extends Activity {
         creds = CredentialStore.load(this);
         String id = getIntent().getStringExtra(HomeActivity.EXTRA_ID);
         String name = getIntent().getStringExtra(HomeActivity.EXTRA_NAME);
+        String icon = getIntent().getStringExtra(MovieActivity.EXTRA_ICON);
         if (creds == null || !CredentialStore.MODE_XTREAM.equals(creds.mode)
                 || id == null || !id.matches("\\d{1,12}")) {
             finish();
@@ -81,10 +89,18 @@ public class SeriesActivity extends Activity {
         setContentView(R.layout.activity_series);
         tvTitle = findViewById(R.id.tv_title);
         tvStatus = findViewById(R.id.tv_status);
+        tvMeta = findViewById(R.id.tv_meta);
+        tvPlot = findViewById(R.id.tv_plot);
+        ivCover = findViewById(R.id.iv_cover);
         lvSeasons = findViewById(R.id.lv_seasons);
         lvEpisodes = findViewById(R.id.lv_episodes);
 
         tvTitle.setText(seriesName);
+        tvPlot.setTextColor(COLOR_NEUTRAL);
+        tvPlot.setText("Carregando...");
+        if (icon != null && !icon.isEmpty()) {
+            ImageLoader.load(ivCover, icon);
+        }
         lvSeasons.setDividerHeight(dp(6));
         lvEpisodes.setDividerHeight(dp(6));
 
@@ -115,6 +131,55 @@ public class SeriesActivity extends Activity {
         lvEpisodes.setOnItemClickListener((parent, view, position, rowId) -> playEpisode(position));
 
         loadEpisodes(id);
+        loadDetails(id);
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        ImageLoader.clear();
+    }
+
+    // ---------- Capa e sinopse ----------
+
+    /** Pede capa e sinopse ao servidor (uma série só). Se falhar, a tela fica sem elas. */
+    private void loadDetails(final String seriesId) {
+        final String server = creds.server;
+        final String user = creds.user;
+        final String pass = creds.pass;
+        new Thread(() -> {
+            XtreamApi.Details details = null;
+            try {
+                details = XtreamApi.details(server, user, pass, XtreamApi.Kind.SERIES, seriesId);
+            } catch (Exception e) {
+                // sem rede ou resposta estranha: a tela fica sem sinopse
+            }
+            final XtreamApi.Details result = details;
+            runOnUiThread(() -> showDetails(result));
+        }).start();
+    }
+
+    private void showDetails(XtreamApi.Details d) {
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
+        if (d == null) {
+            tvPlot.setText("Sem sinopse para esta série.");
+            return;
+        }
+        if (!d.cover.isEmpty()) {
+            ImageLoader.load(ivCover, d.cover);
+        }
+        if (!d.meta.isEmpty()) {
+            tvMeta.setText(d.meta);
+            tvMeta.setVisibility(View.VISIBLE);
+        }
+        if (d.plot.isEmpty()) {
+            tvPlot.setText("Sem sinopse para esta série.");
+        } else {
+            tvPlot.setTextColor(COLOR_PLOT);
+            tvPlot.setText(d.plot);
+        }
     }
 
     // ---------- Carregar os episódios ----------
