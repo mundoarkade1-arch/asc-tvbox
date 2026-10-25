@@ -25,6 +25,8 @@ import java.util.List;
  *
  * Ao escolher um resultado: canal toca direto; filme abre a página do filme (MovieActivity);
  * série abre a tela da série (levando a capa do item).
+ * Canal ao vivo: o player pode trocar de canal com cima e baixo (R4). Esta tela manda
+ * EXTRA_QUEUE = true e nenhuma categoria (nada = todas as categorias).
  * O texto da busca nunca é registrado em log.
  */
 public class SearchActivity extends Activity {
@@ -163,6 +165,10 @@ public class SearchActivity extends Activity {
         i.putExtra(HomeActivity.EXTRA_NAME, item.name);
         if (item.kind == XtreamApi.Kind.MOVIE) {
             i.putExtra(MovieActivity.EXTRA_ICON, item.icon);
+        }
+        if (item.kind == XtreamApi.Kind.LIVE) {
+            // R4: o player troca de canal com cima e baixo. Categoria não enviada = todas.
+            i.putExtra(MainActivity.EXTRA_QUEUE, true);
         }
         if (m3u) {
             i.putExtra(MainActivity.EXTRA_URL, item.url);
