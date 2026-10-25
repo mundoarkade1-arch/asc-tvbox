@@ -12,6 +12,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.OptIn;
+import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
@@ -45,6 +46,10 @@ import java.util.Locale;
  *
  * Quando um episódio começa a tocar, anota a posição dele na fila (SeriesProgress), para a
  * tela da série abrir no episódio certo da próxima vez. A chave da série vem em EXTRA_SERIES_KEY.
+ *
+ * Filme e episódio: anota o MINUTO exato (PlaybackProgress) a cada 10 segundos, ao sair da tela
+ * e ao terminar (marca como visto). Canal ao vivo não anota nada. O recado EXTRA_START_MS faz o
+ * primeiro vídeo começar naquele minuto ("Continuar de onde parei").
  */
 @OptIn(markerClass = UnstableApi.class)
 public class MainActivity extends Activity {
@@ -55,10 +60,15 @@ public class MainActivity extends Activity {
     public static final String EXTRA_LIST_URLS = "list_urls";
     /** Chave que identifica a série (usada só para lembrar onde a pessoa parou). */
     public static final String EXTRA_SERIES_KEY = "series_key";
+    /** Minuto (em milissegundos) onde o primeiro vídeo deve começar. Sem isso, começa do zero. */
+    public static final String EXTRA_START_MS = "start_ms";
 
     private static final String USER_AGENT = "ASC-TVBox/1.0 (Android)";
     private static final int TIMEOUT_MS = 15000;
     private static final long NOWBAR_HIDE_MS = 6000L;
+    private static final long SAVE_EVERY_MS = 10000L;
+    private static final long MIN_START_MS = 5000L;
+    private static final long MAX_START_MS = 100L * 3600L * 1000L;
     private static final int MAX_LIST = 500;
     private static final int MAX_URL = 4096;
     private static final int MAX_KEY = 8192;
@@ -83,6 +93,9 @@ public class MainActivity extends Activity {
     private String seriesKey = null;
     private int savedIndex = -1;
 
+    // Minuto onde o próximo vídeo deve começar (0 = do começo). Usado uma vez.
+    private long pendingStartMs = 0L;
+
     // Barra Agora / A seguir
     private View groupNowbar;
     private TextView tvNbChannel;
@@ -96,6 +109,14 @@ public class MainActivity extends Activity {
         @Override
         public void run() {
             groupNowbar.setVisibility(View.GONE);
+        }
+    };
+    // De tempos em tempos anota o minuto do filme ou episódio
+    private final Runnable saveTick = new Runnable() {
+        @Override
+        public void run() {
+            saveMark();
+            handler.postDelayed(this, SAVE_EVERY_MS);
         }
     };
     private boolean nowbarShownOnce = false;
@@ -157,6 +178,14 @@ public class MainActivity extends Activity {
 
         item = new XtreamApi.Item(kind, id, name == null ? "" : name, "", "", "", ext, url);
         streamUrl = XtreamApi.streamUrl(creds.server, creds.user, creds.pass, item);
+
+        // "Continuar de onde parei": só filme e episódio começam no meio
+        if (kind == XtreamApi.Kind.MOVIE || kind == XtreamApi.Kind.EPISODE) {
+            long start = getIntent().getLongExtra(EXTRA_START_MS, 0L);
+            if (start >= MIN_START_MS && start <= MAX_START_MS) {
+                pendingStartMs = start;
+            }
+        }
 
         if (kind == XtreamApi.Kind.EPISODE) {
             if (xtream) {
@@ -235,7 +264,11 @@ public class MainActivity extends Activity {
     protected void onStop() {
         super.onStop();
         handler.removeCallbacks(hideNowbar);
+        handler.removeCallbacks(saveTick);
         nowbarToken++;
+        // Anota o minuto e, se a pessoa voltar a esta tela, continua dali
+        saveMark();
+        rememberPositionForRestart();
         releasePlayer();
     }
 
@@ -243,6 +276,7 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         handler.removeCallbacks(hideNowbar);
+        handler.removeCallbacks(saveTick);
         nowbarToken++;
     }
 
@@ -289,6 +323,8 @@ public class MainActivity extends Activity {
                         showNowbar();
                     }
                 } else if (state == Player.STATE_ENDED) {
+                    // Terminou um filme ou episódio: marca como visto
+                    saveFinished();
                     // Terminou um episódio: toca o próximo da fila
                     if (item != null && item.kind == XtreamApi.Kind.EPISODE) {
                         playNextEpisode();
@@ -313,6 +349,10 @@ public class MainActivity extends Activity {
         });
 
         playCurrent();
+
+        // Filme e episódio: anota o minuto de tempos em tempos
+        handler.removeCallbacks(saveTick);
+        handler.postDelayed(saveTick, SAVE_EVERY_MS);
     }
 
     private void playCurrent() {
@@ -320,7 +360,14 @@ public class MainActivity extends Activity {
             return;
         }
         showStatus("Carregando...");
-        player.setMediaItem(MediaItem.fromUri(Uri.parse(streamUrl)));
+        MediaItem media = MediaItem.fromUri(Uri.parse(streamUrl));
+        if (pendingStartMs > 0) {
+            // Continuar de onde parou: começa neste minuto (vale uma vez só)
+            player.setMediaItem(media, pendingStartMs);
+            pendingStartMs = 0L;
+        } else {
+            player.setMediaItem(media);
+        }
         player.prepare();
         player.setPlayWhenReady(true);
     }
@@ -333,6 +380,75 @@ public class MainActivity extends Activity {
         }
         savedIndex = listIndex;
         SeriesProgress.save(this, seriesKey, listIndex);
+    }
+
+    // ---------- Minuto exato (filme e episódio) ----------
+
+    /** Chave do item que toca agora (resumo embaralhado é feito pelo PlaybackProgress). */
+    private String progressKey() {
+        if (item == null || creds == null || item.kind == XtreamApi.Kind.LIVE) {
+            return null;
+        }
+        // Lista M3U: o endereço do vídeo identifica o item
+        if (!item.url.isEmpty()) {
+            return PlaybackProgress.urlKey(item.url);
+        }
+        if (item.kind == XtreamApi.Kind.MOVIE) {
+            return PlaybackProgress.movieKey(creds.server, creds.user, item.id);
+        }
+        if (item.kind == XtreamApi.Kind.EPISODE) {
+            return PlaybackProgress.episodeKey(creds.server, creds.user, item.id);
+        }
+        return null;
+    }
+
+    /** Anota o minuto atual do filme ou episódio. Não faz nada em canal ao vivo. */
+    private void saveMark() {
+        if (player == null) {
+            return;
+        }
+        String key = progressKey();
+        if (key == null) {
+            return;
+        }
+        if (player.getPlaybackState() == Player.STATE_ENDED) {
+            return; // o fim é anotado em saveFinished()
+        }
+        long duration = player.getDuration();
+        if (duration == C.TIME_UNSET || duration <= 0) {
+            return;
+        }
+        PlaybackProgress.save(this, key, player.getCurrentPosition(), duration);
+    }
+
+    /** Terminou o filme ou episódio: anota como visto (posição = duração). */
+    private void saveFinished() {
+        if (player == null) {
+            return;
+        }
+        String key = progressKey();
+        if (key == null) {
+            return;
+        }
+        long duration = player.getDuration();
+        if (duration == C.TIME_UNSET || duration <= 0) {
+            return;
+        }
+        PlaybackProgress.save(this, key, duration, duration);
+    }
+
+    /** Se a pessoa sair e voltar a esta tela (por exemplo, Home), continua do mesmo minuto. */
+    private void rememberPositionForRestart() {
+        if (player == null || progressKey() == null) {
+            return;
+        }
+        if (player.getPlaybackState() == Player.STATE_ENDED) {
+            return;
+        }
+        long pos = player.getCurrentPosition();
+        if (pos >= MIN_START_MS) {
+            pendingStartMs = pos;
+        }
     }
 
     /**
