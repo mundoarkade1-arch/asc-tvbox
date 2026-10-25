@@ -117,6 +117,23 @@ public final class XtreamApi {
         }
     }
 
+    /**
+     * Capa e sinopse de UM filme ou de UMA série (pedido ao servidor, um item por vez).
+     * Qualquer campo pode vir vazio. "cover" só guarda endereço http ou https.
+     * "meta" é uma linha curta com gênero, ano, duração e nota (o que o servidor informar).
+     */
+    public static final class Details {
+        public final String cover;
+        public final String plot;
+        public final String meta;
+
+        Details(String cover, String plot, String meta) {
+            this.cover = cover == null ? "" : cover;
+            this.plot = plot == null ? "" : plot;
+            this.meta = meta == null ? "" : meta;
+        }
+    }
+
     private static final class Slot {
         final String title;
         final long start;
@@ -136,6 +153,8 @@ public final class XtreamApi {
     private static final int MAX_NAME = 200;
     private static final int MAX_EPG_SLOTS = 8;
     private static final int MAX_EPISODES = 500;
+    private static final int MAX_PLOT = 1200;
+    private static final int MAX_META_PART = 60;
     private static final String USER_AGENT = "ASC-TVBox/1.0 (Android)";
 
     private XtreamApi() {
@@ -436,6 +455,50 @@ public final class XtreamApi {
     }
 
     /**
+     * Capa e sinopse de UM filme (get_vod_info) ou de UMA série (get_series_info).
+     * Só lê o bloco "info" da resposta e para logo depois (a lista de episódios de uma série
+     * nem chega a ser lida). Devolve um Details vazio se o servidor não informar nada.
+     * "kind" precisa ser MOVIE ou SERIES; qualquer outro tipo devolve um Details vazio.
+     */
+    public static Details details(String server, String user, String pass, Kind kind, String id)
+            throws IOException {
+        Details empty = new Details("", "", "");
+        if (!isNumber(id) || (kind != Kind.MOVIE && kind != Kind.SERIES)) {
+            return empty;
+        }
+        String url;
+        if (kind == Kind.MOVIE) {
+            url = apiUrl(server, user, pass, "get_vod_info") + "&vod_id=" + id;
+        } else {
+            url = apiUrl(server, user, pass, "get_series_info") + "&series_id=" + id;
+        }
+        HttpURLConnection conn = open(url);
+        try {
+            checkOk(conn);
+            JsonReader r = reader(conn);
+            try {
+                if (r.peek() != JsonToken.BEGIN_OBJECT) {
+                    return empty;
+                }
+                r.beginObject();
+                while (r.hasNext()) {
+                    String key = r.nextName();
+                    if ("info".equals(key) && r.peek() == JsonToken.BEGIN_OBJECT) {
+                        return readInfoObject(r); // achou: para de ler a resposta
+                    }
+                    r.skipValue();
+                }
+                r.endObject();
+                return empty;
+            } finally {
+                closeQuietly(r);
+            }
+        } finally {
+            conn.disconnect();
+        }
+    }
+
+    /**
      * Endereço para tocar um canal, filme ou episódio. Séries inteiras precisam dos episódios.
      * Itens de lista M3U já trazem o endereço pronto (item.url): ele é devolvido como está.
      */
@@ -552,6 +615,100 @@ public final class XtreamApi {
             return null;
         }
         return new Slot(cut(t), s * 1000L, e * 1000L);
+    }
+
+    // ---------- Leitura de capa e sinopse ----------
+
+    /**
+     * Lê o bloco "info" de um filme ou de uma série. Cada servidor usa nomes um pouco
+     * diferentes, então aceita as variações mais comuns. Campos que faltam ficam vazios.
+     */
+    private static Details readInfoObject(JsonReader r) throws IOException {
+        String cover = "";
+        String plot = "";
+        String genre = "";
+        String date = "";
+        String duration = "";
+        String rating = "";
+        r.beginObject();
+        while (r.hasNext()) {
+            String key = r.nextName();
+            switch (key) {
+                case "movie_image":
+                case "cover_big":
+                case "cover": {
+                    String v = readText(r);
+                    String lower = v.toLowerCase();
+                    if (cover.isEmpty()
+                            && (lower.startsWith("http://") || lower.startsWith("https://"))) {
+                        cover = v;
+                    }
+                    break;
+                }
+                case "plot":
+                case "description": {
+                    String v = readText(r);
+                    if (plot.isEmpty()) {
+                        plot = v;
+                    }
+                    break;
+                }
+                case "genre":
+                    genre = readText(r);
+                    break;
+                case "releasedate":
+                case "releaseDate":
+                case "release_date":
+                    if (date.isEmpty()) {
+                        date = readText(r);
+                    } else {
+                        r.skipValue();
+                    }
+                    break;
+                case "duration":
+                    duration = readText(r);
+                    break;
+                case "rating":
+                    rating = readText(r);
+                    break;
+                default:
+                    r.skipValue();
+                    break;
+            }
+        }
+        r.endObject();
+
+        if (plot.length() > MAX_PLOT) {
+            plot = plot.substring(0, MAX_PLOT);
+        }
+
+        List<String> parts = new ArrayList<>();
+        if (!genre.isEmpty()) {
+            parts.add(cutTo(genre, MAX_META_PART));
+        }
+        if (!date.isEmpty()) {
+            String year = date.length() >= 4 && date.substring(0, 4).matches("\\d{4}")
+                    ? date.substring(0, 4) : cutTo(date, MAX_META_PART);
+            parts.add(year);
+        }
+        if (!duration.isEmpty() && !duration.matches("0+(:0+)*")) {
+            parts.add(cutTo(duration, MAX_META_PART));
+        }
+        if (!rating.isEmpty() && !rating.matches("0+([.,]0+)?")) {
+            parts.add("Nota " + cutTo(rating, 10));
+        }
+        StringBuilder meta = new StringBuilder();
+        for (int i = 0; i < parts.size(); i++) {
+            if (i > 0) {
+                meta.append(" \u2022 ");
+            }
+            meta.append(parts.get(i));
+        }
+        return new Details(cover, plot.trim(), meta.toString());
+    }
+
+    private static String cutTo(String s, int max) {
+        return s.length() > max ? s.substring(0, max) : s;
     }
 
     // ---------- Leitura de episódios ----------
