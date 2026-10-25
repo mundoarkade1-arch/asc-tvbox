@@ -33,6 +33,8 @@ import java.util.Set;
  * programação do canal (o que passa agora e os próximos programas).
  * Ao escolher uma série, abre a tela da série (temporadas e episódios), levando a capa do item.
  * Ao escolher um filme, abre a página do filme (MovieActivity), com capa e sinopse.
+ * Ao escolher um canal ao vivo, o player pode trocar de canal com cima e baixo (R4): esta tela
+ * manda EXTRA_QUEUE = true e a categoria aberta (EXTRA_QUEUE_CAT; nada = todas as categorias).
  *
  * Ordem do foco (da esquerda para a direita): menu, categorias, itens. Esquerda na primeira
  * coluna dos itens leva o foco às categorias (Rodada 1, R3).
@@ -569,6 +571,14 @@ public class BrowseActivity extends Activity {
         i.putExtra(HomeActivity.EXTRA_NAME, item.name);
         if (item.kind == XtreamApi.Kind.MOVIE) {
             i.putExtra(MovieActivity.EXTRA_ICON, item.icon);
+        }
+        if (item.kind == XtreamApi.Kind.LIVE) {
+            // R4: o player troca de canal com cima e baixo, a partir da categoria aberta.
+            // Em "Todas as categorias" (currentCat nulo) não se manda categoria.
+            i.putExtra(MainActivity.EXTRA_QUEUE, true);
+            if (currentCat != null) {
+                i.putExtra(MainActivity.EXTRA_QUEUE_CAT, currentCat);
+            }
         }
         startActivity(i);
     }
