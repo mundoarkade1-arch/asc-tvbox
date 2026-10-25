@@ -39,8 +39,8 @@ import java.util.Locale;
  * O botão "Controle parental" ativa, troca ou desativa a senha de 4 números.
  * Com o controle ligado, itens com nome adulto não aparecem nas faixas.
  *
- * O botão "Buscar" abre um menu (Canais, Filmes, Séries), depois o teclado de letras
- * e, ao buscar, a tela de resultados (SearchActivity).
+ * A busca por nome NÃO fica mais aqui: cada aba (Canais, Filmes, Séries) tem o seu
+ * botão "Pesquisar ..." (BrowseActivity e M3uBrowseActivity).
  *
  * Menu à esquerda (só ícones): Tela inicial, Canais, Filmes, Séries, Ajustes e Atualizar.
  * Por enquanto: Canais, Filmes e Séries abrem o "Ver mais"; Ajustes só mostra um aviso
@@ -65,7 +65,6 @@ public class HomeActivity extends Activity {
 
     private Button btnLogout;
     private Button btnParental;
-    private Button btnSearch;
     private LinearLayout railLive;
     private LinearLayout railMovie;
     private LinearLayout railSeries;
@@ -138,7 +137,6 @@ public class HomeActivity extends Activity {
 
         btnLogout = findViewById(R.id.btn_logout);
         btnParental = findViewById(R.id.btn_parental);
-        btnSearch = findViewById(R.id.btn_search);
         railLive = findViewById(R.id.rail_live);
         railMovie = findViewById(R.id.rail_movie);
         railSeries = findViewById(R.id.rail_series);
@@ -168,7 +166,6 @@ public class HomeActivity extends Activity {
 
         btnLogout.setOnFocusChangeListener(hideOnFocus);
         btnParental.setOnFocusChangeListener(hideOnFocus);
-        btnSearch.setOnFocusChangeListener(hideOnFocus);
         btnUpdateNow.setOnFocusChangeListener(hideOnFocus);
         btnUpdateLater.setOnFocusChangeListener(hideOnFocus);
 
@@ -186,7 +183,6 @@ public class HomeActivity extends Activity {
             finish();
         });
         btnParental.setOnClickListener(v -> openParentalMenu());
-        btnSearch.setOnClickListener(v -> openSearchMenu());
         btnUpdateNow.setOnClickListener(v -> startUpdate());
         btnUpdateLater.setOnClickListener(v -> dismissUpdate());
 
@@ -440,52 +436,6 @@ public class HomeActivity extends Activity {
                 now.setText("Programação indisponível");
             } else {
                 now.setText("Agora: " + epg.title);
-            }
-        });
-    }
-
-    // ---------- Busca por nome ----------
-
-    /** Menu para escolher o tipo da busca: Canais, Filmes ou Séries. */
-    private void openSearchMenu() {
-        if (!isXtream() && !isM3u()) {
-            return;
-        }
-        AlertDialog.Builder b = new AlertDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
-        b.setTitle("Buscar em qual seção?");
-        b.setItems(new CharSequence[]{"Canais", "Filmes", "Séries", "Voltar"},
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (which == 0) {
-                            openSearchKeyboard(XtreamApi.Kind.LIVE, "Buscar canais");
-                        } else if (which == 1) {
-                            openSearchKeyboard(XtreamApi.Kind.MOVIE, "Buscar filmes");
-                        } else if (which == 2) {
-                            openSearchKeyboard(XtreamApi.Kind.SERIES, "Buscar séries");
-                        }
-                    }
-                });
-        b.show();
-    }
-
-    /** Abre o teclado de letras. Ao buscar, abre a tela de resultados. */
-    private void openSearchKeyboard(final XtreamApi.Kind kind, String title) {
-        SearchKeyboard.show(this, title, new SearchKeyboard.Listener() {
-            @Override
-            public void onSearch(String text) {
-                if (isFinishing() || isDestroyed()) {
-                    return;
-                }
-                Intent i = new Intent(HomeActivity.this, SearchActivity.class);
-                i.putExtra(EXTRA_KIND, kind.name());
-                i.putExtra(SearchActivity.EXTRA_QUERY, text);
-                startActivity(i);
-            }
-
-            @Override
-            public void onCancel() {
-                // saiu sem buscar: nada muda
             }
         });
     }
