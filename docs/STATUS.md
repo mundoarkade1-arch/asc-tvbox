@@ -1,60 +1,52 @@
-Olá! Vou te passar a continuação de um projeto já bem adiantado. Sou MUITO LEIGO em programação: preciso de ajuda bem simples e passo a passo.
+# Status do projeto
 
-## 1. Como você vai se informar
-Depois deste texto eu colo 3 arquivos, um por mensagem: AGENTS.md, STATUS.md e ARQUIVOS.md. Leia com atenção e siga o AGENTS.md. Só comece depois dos três. Se precisar de DECISIONS.md, ARCHITECTURE.md ou TARGET_DEVICES.md, peça que eu cole. (Links, caso abram; o GitHub demora uns minutos para mostrar a versão nova: https://github.com/mundoarkade1-arch/asc-tvbox/blob/main/AGENTS.md e os da pasta docs.) Você NÃO consegue abrir arquivos de código: antes de mexer em qualquer um, peça que eu cole o atual e devolva o arquivo COMPLETO. Nunca reescreva de memória.
+Última atualização: 25/10/2026 (R4 em andamento)
+Regras de trabalho: AGENTS.md. Mapa e limites: docs/ARQUIVOS.md. Montagem e versão: docs/ARCHITECTURE.md. Decisões: docs/DECISIONS.md.
 
-## 2. O projeto
-Meu app de IPTV antigo (Capacitor/WebView) não roda no meu TV box (navegador de 2016). Criamos um app NOVO, nativo em Java com ExoPlayer, leve, em https://github.com/mundoarkade1-arch/asc-tvbox. App nativo está decidido; não reabra.
-- Aparelho: TX9, Amlogic S905W, Android 7.1, 1 GB de RAM, 1080p.
-- Controle: setas, OK, voltar, home, "função mouse" e tecla de três listras (deve chegar como tecla de menu; a confirmar). Sem teclado, números ou teclas coloridas.
-- O app faz: login por servidor (DNS, usuário, senha) ou lista M3U; tela inicial com 10 canais, 10 filmes, 10 séries; abas Canais, Filmes, Séries com categorias e busca; página de filme e série com capa e sinopse; continuar de onde parei; episódios vistos em verde; próxima temporada sozinha; programação (EPG, só servidor); controle parental; Ajustes; atualização automática.
-- Eu faço tudo pelo site do GitHub, sem terminal. O APK sai do GitHub Actions e chega ao TX9 pela atualização do app. Cada arquivo salvo (até .md) gera versão nova; é normal.
+## Fase atual
+A nova aparência (partes a a f) está pronta e VERDE. O dono fez o PRIMEIRO TESTE no TX9 em 25/10/2026 e aprovou a barra Agora / A seguir. Pediu 4 ajustes (Rodada 1) e 2 (Rodada 2). R1, R2 e R3 prontas e verdes. R4 está pela metade. R5 e R6 não começadas.
 
-## 3. Histórico
-- Fases 1 e 2: testadas/verdes (login, atualização, página inicial, "Ver mais", parental, séries, busca).
-- Fase 3, nova aparência (a) a (f): verde. Primeiro teste no TX9 em 25/10/2026: a barra Agora / A seguir ficou certa. O resto ainda NÃO foi testado no TX9.
-- Decisões: lista M3U sem guia; filme e série iguais nos dois logins; resultados da busca sem menu.
+## Já feito (uma linha cada; detalhes em ARQUIVOS.md e DECISIONS.md)
+- Base: login por servidor e lista M3U, atualização automática, controle parental, página inicial com 3 faixas, "Ver mais", séries (próxima temporada, onde parou), busca, EPG por canal (só servidor).
+- (a) menu e tela inicial. (b) abas com pesquisa. (c) Ajustes. (d) página de filme e série. (e) player (pulo de 10 s, barra some em 3 s, continuar de onde parei, vistos em verde). (f) janela da programação.
+- R1 (verde): menu com ícone + NOME, 200dp.
+- R2 (verde): tela inicial sem a caixinha de prévia; "Agora: ..." no cartão FICA; variável focusedLive.
+- R3 (verde): nas abas, esquerda na primeira coluna dos itens vai às categorias; include do menu com 200dp em activity_browse.xml e activity_settings.xml.
+- Nada disso foi testado no TX9 ainda.
 
-## 4. Onde estamos agora
-- R1 (menu com nome, 200dp), R2 (tela inicial sem caixinha de prévia, mantendo "Agora: ..."), R3 (ordem do foco nas abas): PRONTAS e VERDES.
-- R4 (trocar de canal com cima/baixo no player ao vivo) está PELA METADE:
-  - FEITO: ChannelQueue.java (novo) e MainActivity.java (cima = anterior, baixo = próximo, só se a tela mandar EXTRA_QUEUE = true; EXTRA_QUEUE_CAT = categoria de origem, nulo = todas). Preciso confirmar se o Actions ficou verde no MainActivity.
-  - FALTA, um arquivo por vez: HomeActivity.java (canal ao vivo: EXTRA_QUEUE true, categoria nula), BrowseActivity.java (categoria = currentCat), M3uBrowseActivity.java (categoria = currentGroup), SearchActivity.java (pedir o arquivo; provável categoria nula). Código antes, mas aqui nada de layout.
-- Depois: R5 e R6.
+## Respostas do dono (25/10/2026)
+- Manter "Agora: ..." sob o cartão na tela inicial.
+- Player: cima e baixo seguem a ORDEM das categorias, como lista única, a partir do canal atual; ao acabar a categoria passa para a próxima.
+- Fim da lista: ele não lembrou; ESCOLHA DO AGENTE: dar a volta (último -> primeiro, primeiro -> último). Ele testa e pede mudança se quiser.
+- Tecla das três listras: ainda não testada.
 
-## 5. Pedidos do dono ainda não feitos (com as minhas palavras)
-- R4: seta para baixo vai ao próximo canal; passando as categorias em ordem, como se fossem todos os canais, a partir de onde estou; ao acabar a categoria, pula sozinho para a próxima. OK mostra a barra com o que passa agora e depois. Fim da lista: eu não lembrei; o agente escolheu dar a volta (último -> primeiro). Vou testar.
-- R5: na tela inicial, as três faixas (canais, filmes, séries) devem caber INTEIRAS na tela, SEM rolagem (cartões podem ficar menores). Cuidado: item_card.xml também é usado nas abas.
-- R6: numa faixa, ao chegar em "Ver mais", apertar direita de novo NÃO faz nada (não pula para a faixa de baixo). Para mudar de faixa, só cima e baixo.
-- Em aberto: testar a tecla das três listras (depois das melhorias). Ideia que precisa do meu OK: o Actions ignorar mudanças só em .md. Posso lembrar de mais pedidos (Rodada 3).
+## R4 (trocar de canal com as setas): ONDE PARAMOS
+FEITO e salvo (confirmar se o Actions ficou verde):
+- ChannelQueue.java (arquivo NOVO): fila de canais por categoria, páginas de 40, máx. 400 por categoria, dá a volta no fim, pula categoria adulta com parental ligado.
+- MainActivity.java: cima = canal anterior, baixo = próximo (só canal ao vivo, só se a tela mandar EXTRA_QUEUE = true). Depois da troca: barra Agora / A seguir (servidor) ou o nome do canal (lista M3U).
+FALTA (UM arquivo por vez, peça o atual antes de cada um):
+1. HomeActivity.java: em openItem, para canal ao vivo (kind LIVE), acrescentar putExtra(MainActivity.EXTRA_QUEUE, true) e putExtra(MainActivity.EXTRA_QUEUE_CAT, null). Na tela inicial a categoria é nula = "Todas as categorias" (uma fila só, máx. 400).
+2. BrowseActivity.java: em openItem, canal ao vivo: EXTRA_QUEUE true e EXTRA_QUEUE_CAT = currentCat (número da categoria; nulo se "Todas").
+3. M3uBrowseActivity.java: igual, EXTRA_QUEUE_CAT = currentGroup (nome do grupo; nulo se "Todas").
+4. SearchActivity.java: pedir o arquivo. Provável: EXTRA_QUEUE true e EXTRA_QUEUE_CAT nulo.
+Depois: dono testa no TX9 (cima e baixo trocam de canal; passa de categoria; dá a volta; OK mostra a barra).
+Cuidados: ChannelQueue procura o canal tocado lendo a categoria desde o começo (até 400); se ele não estiver nesses 400, as setas ficam desligadas (sem erro). Na lista M3U cada troca relê a lista (pode levar alguns segundos).
 
-## 6. Como me ajudar
-- Português simples, frases curtas. Palavra técnica só com explicação.
-- Antes de cada passo, diga em uma frase o que ele faz; depois, o que devo ver (bolinha verde no Actions = deu certo).
-- UM passo e UM arquivo por vez, ações numeradas, com LINK DIRETO: ver/editar https://github.com/mundoarkade1-arch/asc-tvbox/edit/main/CAMINHO ; criar .../new/main/PASTA?filename=NOME ; Java em app/src/main/java/com/ascplay/tvbox/ ; layouts em app/src/main/res/layout/.
-- Prefiro copiar e colar o arquivo INTEIRO. Para mostrar: abro o link, Ctrl+A, Ctrl+C, colo aqui, sem Commit. Para salvar: Ctrl+A, Delete, colo, Commit changes e, na janelinha, Commit changes de novo. Lembre-me de conferir o nome do arquivo no endereço.
-- Combinamos: eu digo "ok" quando salvei e ficou verde; se der erro, mando print ou texto.
-- UMA pergunta por vez, com respostas numeradas. No teste no TX9, diga as teclas e o que deve aparecer.
-- Eu falo por voz (ditado): se algo não fizer sentido, pergunte.
-- Nunca peça senha, chave ou meu link M3U. Nada de zip ou terminal.
+## Rodada 2: ainda não começados
+R5. Tela inicial: as 3 faixas (canais, filmes, séries) INTEIRAS na tela, SEM rolagem; cartões podem ficar menores. Arquivos prováveis: activity_home.xml, HomeActivity.java, item_card.xml (cuidado: item_card.xml é usado também nas abas).
+R6. Na faixa, no cartão "Ver mais", direita de novo NÃO faz nada (foco não pula de faixa). Mudar de faixa só com cima e baixo. Arquivo provável: HomeActivity.java.
 
-## 7. Lições e regras técnicas
-- Colagem grande às vezes é cortada: peça só as últimas linhas e mande SÓ o pedaço que falta.
-- Já colei no arquivo errado: diga o nome do arquivo antes de cada bloco.
-- Código que deixa de usar algo primeiro, layout depois. Classe nova primeiro, registro no Manifest depois, botões por último.
-- Android 7.1 sem PBKDF2 com SHA-256. Não use nome de classe interna igual ao do Java (ex.: Entry).
-- Lista M3U: leia aos poucos; o "id" é só o número de ordem; o canal vem com endereço (url).
-- Tela inicial tem CÓPIA do menu (activity_home.xml); o resto usa layout_nav.xml. Mudou um, mude o outro.
-- Sem dependências novas sem justificar no DECISIONS.md. App leve (1 GB).
+## Ideias que precisam do OK do dono
+- Actions ignorar mudanças só em .md (hoje cada texto salvo gera versão nova e o TX9 oferece atualizar).
 
-## 8. No fim de CADA passo (sem eu pedir)
-Depois do meu "ok": (1) STATUS.md inteiro e curto (até uns 80 linhas); (2) trecho novo do DECISIONS.md (Ctrl+End, Enter duas vezes, colar); (3) ARQUIVOS.md só se mudou arquivo, regra ou limite; (4) um PROMPT novo neste estilo. Um arquivo por vez. Se a conversa ficar longa, avise antes. Se eu disser "faça a passagem", faça na hora.
+## Conferir no TX9 depois das rodadas
+- Menu com nome, sem corte, em todas as telas; Atualizar funciona.
+- Tela inicial: sem caixinha; "Agora: ..." no cartão; tecla das três listras ou OK segurado abre a programação (anotar qual); sem rolagem; "Ver mais" trava a direita.
+- Abas (servidor e M3U): foco menu, categorias, itens.
+- Canal ao vivo: cima e baixo trocam, passam de categoria, dão a volta; OK mostra a barra.
+- Filme, série, player, busca e Ajustes: roteiro completo será reescrito no fim. Tudo também na lista M3U.
 
-## 9. Primeiras tarefas
-1. Espere os 3 arquivos. Confirme em poucas linhas o que entendeu e diga o que falta da R4.
-2. Pergunte se o Actions ficou verde no MainActivity.java (uma pergunta).
-3. Termine a R4: HomeActivity, BrowseActivity, M3uBrowseActivity, SearchActivity, um por vez (peça o atual de cada um).
-4. Depois R5 e R6, uma por vez.
-5. No fim da Rodada, roteiro curto de teste no TX9 (menu, foco, tela inicial sem rolagem, "Ver mais", troca de canal com cima/baixo, tecla das três listras).
-
-Quando eu disser "ok", siga para o próximo passo.
+## Próximos passos
+1. Confirmar verde do MainActivity; terminar R4 (4 arquivos acima).
+2. R5 e R6.
+3. Roteiro de teste no TX9.
