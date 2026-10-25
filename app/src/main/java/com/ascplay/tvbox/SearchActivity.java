@@ -24,7 +24,7 @@ import java.util.List;
  * Controle parental ligado: itens adultos não aparecem.
  *
  * Ao escolher um resultado: canal toca direto; filme abre a página do filme (MovieActivity);
- * série abre a tela da série.
+ * série abre a tela da série (levando a capa do item).
  * O texto da busca nunca é registrado em log.
  */
 public class SearchActivity extends Activity {
@@ -150,6 +150,7 @@ public class SearchActivity extends Activity {
             Intent s = new Intent(this, m3u ? M3uSeriesActivity.class : SeriesActivity.class);
             s.putExtra(HomeActivity.EXTRA_ID, item.id);
             s.putExtra(HomeActivity.EXTRA_NAME, item.name);
+            s.putExtra(MovieActivity.EXTRA_ICON, item.icon);
             startActivity(s);
             return;
         }
