@@ -46,10 +46,26 @@
             android:visibility="gone" />
 
         <Button
-            android:id="@+id/btn_play"
+            android:id="@+id/btn_continue"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
+            android:background="@drawable/bg_button"
+            android:focusable="true"
+            android:minWidth="200dp"
+            android:paddingStart="28dp"
+            android:paddingEnd="28dp"
+            android:text="Continuar de onde parei"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btn_play"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
             android:background="@drawable/bg_button"
             android:focusable="true"
             android:minWidth="200dp"
