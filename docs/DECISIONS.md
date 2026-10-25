@@ -24,5 +24,25 @@
 - Decisão: a tela de resultados da busca (SearchActivity) fica SEM o menu à esquerda. Escolha do dono.
 - Motivo: a busca sempre começa dentro de uma aba, e o Voltar leva de volta a ela. A tela de resultados é de passagem. Também evita mexer no layout compartilhado (activity_browse.xml).
 - Decisão: a ordem de trabalho foi: primeiro o código Java (HomeActivity.java sem a busca), depois o layout (activity_home.xml sem o botão), para o Actions não ficar vermelho.
+
+- ## 2026-10-24: Nova interface, parte (c): aba Ajustes
+
+- Decisão: criar uma tela nova para os Ajustes (SettingsActivity), com menu à esquerda, lista de 5 opções no meio e uma área de texto à direita. As opções são: Controle parental, Trocar de lista, Sobre o dispositivo, Sobre o aplicativo e Verificar atualização.
+- Motivo: o dono pediu uma aba Ajustes para tirar os botões do alto da página inicial. Uma tela própria não mexe nas telas que já funcionam. A lista usa o mesmo estilo das listas de categorias (ListView com item_category.xml), então o foco com setas e OK já é conhecido.
+- Decisão: o controle parental e a troca de lista passam a viver só nos Ajustes. Os botões "Controle parental" e "Trocar login" saíram do alto da página inicial.
+- Motivo: evitar o mesmo comando em dois lugares. O código do menu do controle parental foi movido da HomeActivity para a SettingsActivity, sem mudar as regras (senha de 4 números, trava depois de 5 erros).
+- Decisão: ao voltar de Ajustes, a página inicial confere se o controle parental mudou (onResume) e, se mudou, recarrega as faixas sozinha.
+- Motivo: antes, a página inicial recarregava as faixas na hora em que a pessoa mexia no controle parental. Agora a mudança acontece em outra tela, então a página inicial precisa perceber ao voltar. Só recarrega quando mudou, para não gastar internet à toa.
+- Decisão: "Trocar de lista" abre o login e fecha todas as telas de antes (flags NEW_TASK e CLEAR_TASK).
+- Motivo: sem fechar as telas de antes, o botão Voltar do login levaria de volta a telas da lista antiga.
+- Decisão: "Sobre o dispositivo" mostra modelo, versão do Android, memória (total e livre), armazenamento (livre e total) e tamanho da tela.
+- Motivo: ajuda a conferir o aparelho e responde uma dúvida antiga do projeto (espaço livre do TX9). Só lê informações do sistema, sem permissão nova.
+- Decisão: "Verificar atualização" usa as mesmas funções do Updater que a página inicial já usa. Se achar versão nova, a linha vira "Instalar atualização".
+- Motivo: reaproveitar o que já funciona, sem código novo de atualização. O aviso automático da página inicial continua como era.
+- Decisão: dentro de Ajustes, o ícone Atualizar do menu não faz nada (não há lista para recarregar). Fica anotado em "Problemas em aberto" do STATUS.md para ver no teste.
+- Decisão: o ícone Ajustes do NavBar abre a SettingsActivity e fecha a tela de antes, como na troca de abas.
+- Decisão: a ordem de trabalho foi: layout novo, depois a classe nova, depois o registro no AndroidManifest.xml, depois o NavBar, depois a HomeActivity (código) e por último o layout da página inicial (sem os dois botões). Assim o Actions ficou verde em todos os passos.
+- Dependências: nenhuma nova.
+- Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
 - Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
