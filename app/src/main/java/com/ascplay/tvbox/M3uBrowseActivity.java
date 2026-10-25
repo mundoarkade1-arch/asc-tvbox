@@ -41,7 +41,9 @@ import java.util.List;
  * 4 números. A liberação vale só para aquela categoria, enquanto a pessoa está nela. Em "Todas as
  * categorias" e nas outras, itens adultos não aparecem.
  *
- * Canal toca direto pelo endereço da lista (MainActivity.EXTRA_URL).
+ * Canal toca direto pelo endereço da lista (MainActivity.EXTRA_URL). O player pode trocar de
+ * canal com cima e baixo (R4): esta tela manda EXTRA_QUEUE = true e o grupo aberto
+ * (EXTRA_QUEUE_CAT; nada = todas as categorias).
  * Filme: abre a página do filme (MovieActivity), que leva o endereço e a capa do item.
  * Série: abre a tela da série da lista M3U (M3uSeriesActivity), com temporadas e episódios.
  */
@@ -485,6 +487,14 @@ public class M3uBrowseActivity extends Activity {
         i.putExtra(MainActivity.EXTRA_URL, item.url);
         if (item.kind == XtreamApi.Kind.MOVIE) {
             i.putExtra(MovieActivity.EXTRA_ICON, item.icon);
+        }
+        if (item.kind == XtreamApi.Kind.LIVE) {
+            // R4: o player troca de canal com cima e baixo, a partir do grupo aberto.
+            // Em "Todas as categorias" (currentGroup nulo) não se manda grupo.
+            i.putExtra(MainActivity.EXTRA_QUEUE, true);
+            if (currentGroup != null) {
+                i.putExtra(MainActivity.EXTRA_QUEUE_CAT, currentGroup);
+            }
         }
         startActivity(i);
     }
