@@ -19,6 +19,7 @@ import java.util.List;
  * Página inicial: 10 primeiros canais, filmes e séries.
  * Servidor com login (Xtream): busca só o começo de cada lista (nunca a lista inteira).
  * No fim de cada faixa há o cartão "Ver mais ›", que abre a navegação por categorias.
+ * Nesse cartão, a seta para a direita não faz nada (R6): para mudar de faixa, só cima e baixo.
  * Nos canais ao vivo, cada cartão mostra o programa que passa agora (EPG por canal).
  * Não há caixinha de prévia nesta tela (pedido do dono, Rodada 1, R2).
  * Os cartões desta tela usam o layout menor item_card_small (R5), para as três faixas
@@ -407,6 +408,10 @@ public class HomeActivity extends Activity {
             moreInitial.setText("›");
             more.setOnFocusChangeListener(clearLiveOnFocus);
             more.setOnClickListener(v -> openBrowse(kind));
+            // R6: seta para a direita no "Ver mais" não faz nada (o foco fica no próprio cartão).
+            // Para mudar de faixa, só cima e baixo.
+            more.setId(View.generateViewId());
+            more.setNextFocusRightId(more.getId());
             rail.addView(more);
         }
 
