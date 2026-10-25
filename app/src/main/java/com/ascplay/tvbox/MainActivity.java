@@ -37,6 +37,8 @@ import java.util.Locale;
  * Nos canais ao vivo do servidor Xtream, uma barra embaixo mostra o programa de agora, a barra
  * de progresso, os horários e o "A seguir". Ela aparece quando o canal começa a tocar,
  * some depois de alguns segundos e volta ao apertar OK. (Lista M3U não tem guia.)
+ * A tecla das três listras (ou segurar o OK) abre a janela com a programação do canal
+ * (o que passa agora e os próximos programas), pedida ao servidor só nessa hora.
  *
  * Nos episódios de série, a tela da série manda a fila de episódios da série toda, em ordem
  * (temporadas normais primeiro, "Especiais" no fim):
@@ -314,10 +316,20 @@ public class MainActivity extends Activity {
      * - Filme e episódio: seta esquerda volta 10 segundos e seta direita avança 10 segundos,
      *   direto (o foco não fica preso nos botões).
      * - Canal ao vivo: ao apertar OK, mostra a barra Agora / A seguir.
+     * - Canal ao vivo do servidor: a tecla das três listras (menu), ou segurar o OK,
+     *   abre a janela com a programação do canal.
      */
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         int code = event.getKeyCode();
+
+        // Tecla das três listras: programação do canal (só canal ao vivo do servidor)
+        if (code == KeyEvent.KEYCODE_MENU && canShowSchedule()) {
+            if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
+                openSchedule();
+            }
+            return true;
+        }
 
         if ((code == KeyEvent.KEYCODE_DPAD_LEFT || code == KeyEvent.KEYCODE_DPAD_RIGHT)
                 && canSeekWithArrows()) {
@@ -327,14 +339,36 @@ public class MainActivity extends Activity {
             return true;
         }
 
-        if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
-            if (code == KeyEvent.KEYCODE_DPAD_CENTER
-                    || code == KeyEvent.KEYCODE_ENTER
-                    || code == KeyEvent.KEYCODE_NUMPAD_ENTER) {
+        if (event.getAction() == KeyEvent.ACTION_DOWN
+                && (code == KeyEvent.KEYCODE_DPAD_CENTER
+                || code == KeyEvent.KEYCODE_ENTER
+                || code == KeyEvent.KEYCODE_NUMPAD_ENTER)) {
+            if (event.getRepeatCount() == 0) {
                 showNowbar();
+            } else if (event.getRepeatCount() == 1) {
+                // OK segurado: segunda via para abrir a programação
+                openSchedule();
             }
         }
         return super.dispatchKeyEvent(event);
+    }
+
+    /** A programação só existe para canal ao vivo do servidor (a lista M3U não tem guia). */
+    private boolean canShowSchedule() {
+        return item != null && creds != null && item.kind == XtreamApi.Kind.LIVE
+                && CredentialStore.MODE_XTREAM.equals(creds.mode);
+    }
+
+    /** Abre a janela da programação do canal que está tocando. */
+    private void openSchedule() {
+        if (!canShowSchedule()) {
+            return;
+        }
+        // Esconde a barra Agora / A seguir para não ficar uma por cima da outra
+        handler.removeCallbacks(hideNowbar);
+        nowbarToken++;
+        groupNowbar.setVisibility(View.GONE);
+        EpgDialog.show(this, creds.server, creds.user, creds.pass, item.id, item.name);
     }
 
     /** As setas só pulam o vídeo em filme e episódio que já estão carregando ou tocando. */
@@ -575,8 +609,7 @@ public class MainActivity extends Activity {
     // ---------- Barra Agora / A seguir ----------
 
     private void showNowbar() {
-        if (item == null || creds == null || item.kind != XtreamApi.Kind.LIVE
-                || !CredentialStore.MODE_XTREAM.equals(creds.mode)) {
+        if (!canShowSchedule()) {
             return;
         }
         handler.removeCallbacks(hideNowbar);
