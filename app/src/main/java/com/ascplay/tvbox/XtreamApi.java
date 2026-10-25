@@ -98,6 +98,22 @@ public final class XtreamApi {
     }
 
     /**
+     * Um programa da lista de programação de um canal (usada na tecla das três listras).
+     * Horários em milissegundos (como System.currentTimeMillis()).
+     */
+    public static final class Program {
+        public final String title;
+        public final long start;
+        public final long end;
+
+        Program(String title, long start, long end) {
+            this.title = title;
+            this.start = start;
+            this.end = end;
+        }
+    }
+
+    /**
      * Um episódio de série. "season" é a temporada e "number" o número do episódio
      * (0 quando o servidor não informa). "title" pode vir vazio.
      */
@@ -152,6 +168,8 @@ public final class XtreamApi {
     private static final int MAX_CATEGORIES = 3000;
     private static final int MAX_NAME = 200;
     private static final int MAX_EPG_SLOTS = 8;
+    private static final int MAX_SCHEDULE_READ = 12;
+    private static final int SCHEDULE_SHOWN = 6;
     private static final int MAX_EPISODES = 500;
     private static final int MAX_PLOT = 1200;
     private static final int MAX_META_PART = 60;
@@ -405,6 +423,65 @@ public final class XtreamApi {
                     }
                 }
                 return null;
+            } finally {
+                closeQuietly(r);
+            }
+        } finally {
+            conn.disconnect();
+        }
+    }
+
+    /**
+     * Lista de programação de UM canal: o que passa agora e os próximos (no máximo 6 programas,
+     * já sem os que terminaram). Devolve lista vazia se o servidor não tem guia para o canal.
+     * Só deve ser chamada quando a pessoa pede a programação (tecla das três listras).
+     */
+    public static List<Program> schedule(String server, String user, String pass, String streamId)
+            throws IOException {
+        List<Program> out = new ArrayList<>();
+        if (!isNumber(streamId)) {
+            return out;
+        }
+        String url = apiUrl(server, user, pass, "get_short_epg")
+                + "&stream_id=" + streamId + "&limit=10";
+        HttpURLConnection conn = open(url);
+        try {
+            checkOk(conn);
+            JsonReader r = reader(conn);
+            try {
+                if (r.peek() != JsonToken.BEGIN_OBJECT) {
+                    // Sem guia: alguns servidores devolvem uma lista vazia
+                    return out;
+                }
+                long now = System.currentTimeMillis();
+                r.beginObject();
+                while (r.hasNext()) {
+                    String key = r.nextName();
+                    if ("epg_listings".equals(key) && r.peek() == JsonToken.BEGIN_ARRAY) {
+                        r.beginArray();
+                        int read = 0;
+                        while (r.hasNext() && read < MAX_SCHEDULE_READ
+                                && out.size() < SCHEDULE_SHOWN) {
+                            if (r.peek() != JsonToken.BEGIN_OBJECT) {
+                                r.skipValue();
+                                continue;
+                            }
+                            read++;
+                            Slot s = readSlot(r);
+                            if (s != null && s.end > now) {
+                                out.add(new Program(s.title, s.start, s.end));
+                            }
+                        }
+                        while (r.hasNext()) {
+                            r.skipValue();
+                        }
+                        r.endArray();
+                    } else {
+                        r.skipValue();
+                    }
+                }
+                r.endObject();
+                return out;
             } finally {
                 closeQuietly(r);
             }
