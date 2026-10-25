@@ -21,6 +21,8 @@ import java.util.List;
  * No fim de cada faixa há o cartão "Ver mais ›", que abre a navegação por categorias.
  * Nos canais ao vivo, cada cartão mostra o programa que passa agora (EPG por canal).
  * Não há caixinha de prévia nesta tela (pedido do dono, Rodada 1, R2).
+ * Os cartões desta tela usam o layout menor item_card_small (R5), para as três faixas
+ * caberem na tela sem rolagem. As abas continuam com o item_card normal.
  * Sobre um canal ao vivo (servidor), a tecla das três listras ou segurar o OK abre a janela
  * com a programação do canal (o que passa agora e os próximos programas).
  * Ao escolher uma série, abre a tela da série (temporadas e episódios), levando a capa do item.
@@ -355,7 +357,7 @@ public class HomeActivity extends Activity {
         LayoutInflater inflater = LayoutInflater.from(this);
         View first = null;
         for (final XtreamApi.Item item : items) {
-            View card = inflater.inflate(R.layout.item_card, rail, false);
+            View card = inflater.inflate(R.layout.item_card_small, rail, false);
             TextView initial = card.findViewById(R.id.tv_initial);
             TextView name = card.findViewById(R.id.tv_name);
             ImageView logo = card.findViewById(R.id.iv_logo);
@@ -398,7 +400,7 @@ public class HomeActivity extends Activity {
 
         // Cartão "Ver mais ›" no fim da faixa (login por servidor e por lista M3U)
         if (xtream || isM3u()) {
-            View more = inflater.inflate(R.layout.item_card, rail, false);
+            View more = inflater.inflate(R.layout.item_card_small, rail, false);
             TextView moreInitial = more.findViewById(R.id.tv_initial);
             TextView moreName = more.findViewById(R.id.tv_name);
             moreName.setText("Ver mais ›");
