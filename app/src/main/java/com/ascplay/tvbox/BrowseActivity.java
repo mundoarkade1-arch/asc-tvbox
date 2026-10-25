@@ -30,6 +30,9 @@ import java.util.Set;
  * Nos canais ao vivo, cada cartão mostra o programa que passa agora (EPG por canal).
  * Ao escolher uma série, abre a tela da série (temporadas e episódios).
  *
+ * Menu à esquerda (só ícones): ligado pelo NavBar. Troca de aba, volta à tela inicial e
+ * recarrega a categoria aberta (ícone Atualizar).
+ *
  * Barra de pesquisa (botão no alto): pesquisa SÓ o tipo desta tela (canais, filmes ou séries).
  * Abre o teclado de letras e, ao buscar, a tela de resultados (SearchActivity).
  *
@@ -112,6 +115,9 @@ public class BrowseActivity extends Activity {
         gvItems.setHorizontalSpacing(dp(10));
         gvItems.setVerticalSpacing(dp(10));
 
+        // Menu à esquerda (só ícones)
+        NavBar.bind(this, navCurrent(), () -> refreshCurrent());
+
         // Barra de pesquisa: só este tipo (canais, filmes ou séries)
         btnSearchBar.setText(searchLabel());
         btnSearchBar.setVisibility(View.VISIBLE);
@@ -162,6 +168,33 @@ public class BrowseActivity extends Activity {
         super.onLowMemory();
         ImageLoader.clear();
         EpgCache.clear();
+    }
+
+    // ---------- Menu à esquerda ----------
+
+    /** Qual aba do menu esta tela representa. */
+    private int navCurrent() {
+        switch (kind) {
+            case MOVIE:
+                return NavBar.MOVIE;
+            case SERIES:
+                return NavBar.SERIES;
+            default:
+                return NavBar.LIVE;
+        }
+    }
+
+    /** Ícone Atualizar: recarrega a categoria que está aberta. */
+    private void refreshCurrent() {
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
+        EpgCache.clear();
+        int position = catIds.indexOf(currentCat);
+        if (position < 0) {
+            position = 0;
+        }
+        selectCategory(position);
     }
 
     // ---------- Pesquisa (só o tipo desta tela) ----------
