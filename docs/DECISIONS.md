@@ -154,5 +154,13 @@
 - Novos pedidos (Rodada 2): R5 (as 3 faixas da tela inicial inteiras na tela, sem rolagem) e R6 (no cartão "Ver mais", direita de novo não faz nada; para mudar de faixa, só cima e baixo).
 - A tecla das três listras ainda não foi testada no TX9. O dono testa depois das melhorias.
 - Sem dependências novas.
+
+- ## 25/10/2026 - Rodada 1, R2 (tela inicial sem a caixinha de prévia)
+
+- Tela inicial: a caixinha de prévia (programa de agora, barra de progresso, horários e "A seguir") foi removida. Motivo: pedido do dono. A linha "Agora: ..." no cartão do canal continua.
+- HomeActivity.java deixou de usar schedulePreview, fetchPreview, showPreview, hidePreview, o Handler e o atraso de prévia. Também saíram os imports que só serviam para isso.
+- A variável previewItem foi trocada por focusedLive (canal ao vivo do servidor que está com o foco). Motivo: previewItem também decidia se a tecla de menu e o OK segurado abriam a programação (EpgDialog). Assim essa função continua funcionando. focusedLive fica vazia quando o foco vai para outro lugar (menu, botões de atualização, filmes, séries, "Ver mais").
+- group_preview e seus textos e barra de progresso saíram do activity_home.xml. Ordem seguida: código primeiro, layout depois.
+- Sem dependências novas.
 - Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
