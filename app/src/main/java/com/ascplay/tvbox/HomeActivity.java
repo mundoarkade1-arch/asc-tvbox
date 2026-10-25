@@ -3,31 +3,24 @@ package com.ascplay.tvbox;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Página inicial: 10 primeiros canais, filmes e séries.
  * Servidor com login (Xtream): busca só o começo de cada lista (nunca a lista inteira).
  * No fim de cada faixa há o cartão "Ver mais ›", que abre a navegação por categorias.
  * Nos canais ao vivo, cada cartão mostra o programa que passa agora (EPG por canal).
- * Ao parar o foco num canal ao vivo, uma caixinha fixa embaixo mostra a prévia:
- * programa de agora, barra de progresso, horários e "A seguir".
+ * Não há caixinha de prévia nesta tela (pedido do dono, Rodada 1, R2).
  * Sobre um canal ao vivo (servidor), a tecla das três listras ou segurar o OK abre a janela
  * com a programação do canal (o que passa agora e os próximos programas).
  * Ao escolher uma série, abre a tela da série (temporadas e episódios), levando a capa do item.
@@ -45,7 +38,7 @@ import java.util.Locale;
  * A busca por nome NÃO fica aqui: cada aba (Canais, Filmes, Séries) tem o seu
  * botão "Pesquisar ..." (BrowseActivity e M3uBrowseActivity).
  *
- * Menu à esquerda (só ícones): Tela inicial, Canais, Filmes, Séries, Ajustes e Atualizar.
+ * Menu à esquerda (ícone e nome): Tela inicial, Canais, Filmes, Séries, Ajustes e Atualizar.
  * Canais, Filmes e Séries abrem a aba; Ajustes abre a SettingsActivity.
  */
 public class HomeActivity extends Activity {
@@ -57,7 +50,6 @@ public class HomeActivity extends Activity {
     public static final String EXTRA_SHOW_LOGIN = "show_login";
 
     private static final int LIMIT = 10;
-    private static final long PREVIEW_DELAY_MS = 500L;
     private static final int COLOR_NEUTRAL = 0xFFA39A9D;
     private static final int COLOR_ERROR = 0xFFFF6B78;
     private static final int COLOR_OK = 0xFF4ADE80;
@@ -72,7 +64,7 @@ public class HomeActivity extends Activity {
     private TextView stMovie;
     private TextView stSeries;
 
-    // Menu à esquerda (só ícones)
+    // Menu à esquerda (ícone e nome)
     private View navHome;
     private View navLive;
     private View navMovie;
@@ -93,30 +85,15 @@ public class HomeActivity extends Activity {
     private Updater.Info pendingUpdate;
     private boolean downloading = false;
 
-    // Caixinha de prévia do canal
-    private View groupPreview;
-    private TextView tvPvChannel;
-    private TextView tvPvTitle;
-    private TextView tvPvStart;
-    private TextView tvPvEnd;
-    private TextView tvPvNext;
-    private ProgressBar pbPreview;
-    private final Handler handler = new Handler(Looper.getMainLooper());
-    // Canal ao vivo (servidor) que está com o foco agora; vazio quando o foco está em outro lugar
-    private XtreamApi.Item previewItem;
-    private final Runnable previewRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (previewItem != null) {
-                fetchPreview(previewItem);
-            }
-        }
-    };
-    private final View.OnFocusChangeListener hideOnFocus = new View.OnFocusChangeListener() {
+    // Canal ao vivo (servidor) que está com o foco agora; vazio quando o foco está em outro lugar.
+    // Serve só para a tecla de menu abrir a programação do canal.
+    private XtreamApi.Item focusedLive;
+
+    private final View.OnFocusChangeListener clearLiveOnFocus = new View.OnFocusChangeListener() {
         @Override
         public void onFocusChange(View v, boolean hasFocus) {
             if (hasFocus) {
-                hidePreview();
+                focusedLive = null;
             }
         }
     };
@@ -157,23 +134,15 @@ public class HomeActivity extends Activity {
         btnUpdateNow = findViewById(R.id.btn_update_now);
         btnUpdateLater = findViewById(R.id.btn_update_later);
 
-        groupPreview = findViewById(R.id.group_preview);
-        tvPvChannel = findViewById(R.id.tv_pv_channel);
-        tvPvTitle = findViewById(R.id.tv_pv_title);
-        tvPvStart = findViewById(R.id.tv_pv_start);
-        tvPvEnd = findViewById(R.id.tv_pv_end);
-        tvPvNext = findViewById(R.id.tv_pv_next);
-        pbPreview = findViewById(R.id.pb_preview);
+        btnUpdateNow.setOnFocusChangeListener(clearLiveOnFocus);
+        btnUpdateLater.setOnFocusChangeListener(clearLiveOnFocus);
 
-        btnUpdateNow.setOnFocusChangeListener(hideOnFocus);
-        btnUpdateLater.setOnFocusChangeListener(hideOnFocus);
-
-        navHome.setOnFocusChangeListener(hideOnFocus);
-        navLive.setOnFocusChangeListener(hideOnFocus);
-        navMovie.setOnFocusChangeListener(hideOnFocus);
-        navSeries.setOnFocusChangeListener(hideOnFocus);
-        navSettings.setOnFocusChangeListener(hideOnFocus);
-        navRefresh.setOnFocusChangeListener(hideOnFocus);
+        navHome.setOnFocusChangeListener(clearLiveOnFocus);
+        navLive.setOnFocusChangeListener(clearLiveOnFocus);
+        navMovie.setOnFocusChangeListener(clearLiveOnFocus);
+        navSeries.setOnFocusChangeListener(clearLiveOnFocus);
+        navSettings.setOnFocusChangeListener(clearLiveOnFocus);
+        navRefresh.setOnFocusChangeListener(clearLiveOnFocus);
 
         btnUpdateNow.setOnClickListener(v -> startUpdate());
         btnUpdateLater.setOnClickListener(v -> dismissUpdate());
@@ -204,16 +173,9 @@ public class HomeActivity extends Activity {
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        handler.removeCallbacks(previewRunnable);
-    }
-
-    @Override
     protected void onDestroy() {
         super.onDestroy();
-        handler.removeCallbacks(previewRunnable);
-        previewItem = null;
+        focusedLive = null;
     }
 
     @Override
@@ -229,9 +191,9 @@ public class HomeActivity extends Activity {
      */
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
-        if (event.getKeyCode() == KeyEvent.KEYCODE_MENU && isXtream() && previewItem != null) {
+        if (event.getKeyCode() == KeyEvent.KEYCODE_MENU && isXtream() && focusedLive != null) {
             if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
-                openSchedule(previewItem);
+                openSchedule(focusedLive);
             }
             return true;
         }
@@ -349,7 +311,7 @@ public class HomeActivity extends Activity {
         }
         railGen++;
         focusDone = true; // não tira o foco de onde a pessoa está
-        hidePreview();
+        focusedLive = null;
         LinearLayout[] rails = {railLive, railMovie, railSeries};
         TextView[] states = {stLive, stMovie, stSeries};
         for (int i = 0; i < rails.length; i++) {
@@ -407,7 +369,7 @@ public class HomeActivity extends Activity {
                 loadNow(item, now);
                 card.setOnFocusChangeListener((v, hasFocus) -> {
                     if (hasFocus) {
-                        schedulePreview(item);
+                        focusedLive = item;
                     }
                 });
                 // OK segurado: segunda via para abrir a programação do canal
@@ -422,7 +384,7 @@ public class HomeActivity extends Activity {
                     now.setText("");
                     now.setVisibility(View.GONE);
                 }
-                card.setOnFocusChangeListener(hideOnFocus);
+                card.setOnFocusChangeListener(clearLiveOnFocus);
             }
 
             card.setOnClickListener(v -> openItem(item));
@@ -439,7 +401,7 @@ public class HomeActivity extends Activity {
             TextView moreName = more.findViewById(R.id.tv_name);
             moreName.setText("Ver mais ›");
             moreInitial.setText("›");
-            more.setOnFocusChangeListener(hideOnFocus);
+            more.setOnFocusChangeListener(clearLiveOnFocus);
             more.setOnClickListener(v -> openBrowse(kind));
             rail.addView(more);
         }
@@ -462,77 +424,6 @@ public class HomeActivity extends Activity {
                 now.setText("Agora: " + epg.title);
             }
         });
-    }
-
-    // ---------- Caixinha de prévia ----------
-
-    /** O foco parou num canal: mostra o nome e espera um instante antes de pedir o guia. */
-    private void schedulePreview(XtreamApi.Item item) {
-        handler.removeCallbacks(previewRunnable);
-        previewItem = item;
-        tvPvChannel.setText(item.name);
-        tvPvTitle.setText("Carregando...");
-        tvPvStart.setText("");
-        tvPvEnd.setText("");
-        tvPvNext.setText("");
-        pbPreview.setProgress(0);
-        groupPreview.setVisibility(View.VISIBLE);
-        handler.postDelayed(previewRunnable, PREVIEW_DELAY_MS);
-    }
-
-    private void hidePreview() {
-        handler.removeCallbacks(previewRunnable);
-        previewItem = null;
-        groupPreview.setVisibility(View.INVISIBLE);
-    }
-
-    private void fetchPreview(final XtreamApi.Item item) {
-        EpgCache.get(creds.server, creds.user, creds.pass, item.id, epg -> {
-            if (isFinishing() || isDestroyed() || previewItem != item) {
-                return; // o foco já mudou para outro lugar
-            }
-            showPreview(epg);
-        });
-    }
-
-    private void showPreview(XtreamApi.Epg epg) {
-        if (epg == null) {
-            tvPvTitle.setText("Programação indisponível");
-            tvPvStart.setText("");
-            tvPvEnd.setText("");
-            tvPvNext.setText("");
-            pbPreview.setProgress(0);
-            return;
-        }
-        tvPvTitle.setText(epg.title);
-        tvPvStart.setText(clock(epg.start));
-        tvPvEnd.setText(clock(epg.end));
-
-        long total = epg.end - epg.start;
-        long passed = System.currentTimeMillis() - epg.start;
-        int percent = 0;
-        if (total > 0) {
-            percent = (int) ((passed * 100L) / total);
-        }
-        if (percent < 0) {
-            percent = 0;
-        }
-        if (percent > 100) {
-            percent = 100;
-        }
-        pbPreview.setProgress(percent);
-
-        if (epg.nextTitle == null || epg.nextTitle.isEmpty()) {
-            tvPvNext.setText("");
-        } else if (epg.nextStart > 0) {
-            tvPvNext.setText("A seguir: " + clock(epg.nextStart) + "  " + epg.nextTitle);
-        } else {
-            tvPvNext.setText("A seguir: " + epg.nextTitle);
-        }
-    }
-
-    private static String clock(long millis) {
-        return new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date(millis));
     }
 
     private static String firstLetter(String name) {
