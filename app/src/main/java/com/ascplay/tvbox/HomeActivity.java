@@ -1,8 +1,6 @@
 package com.ascplay.tvbox;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -36,15 +34,15 @@ import java.util.Locale;
  * Ao escolher uma série, abre a tela da série da lista M3U (M3uSeriesActivity).
  * Por enquanto, sem guia de programação (chega em etapa própria).
  *
- * O botão "Controle parental" ativa, troca ou desativa a senha de 4 números.
- * Com o controle ligado, itens com nome adulto não aparecem nas faixas.
+ * Com o controle parental ligado, itens com nome adulto não aparecem nas faixas. O controle
+ * parental e a troca de lista ficam na aba Ajustes (SettingsActivity). Ao voltar de lá, esta
+ * tela confere se o controle parental mudou e, se mudou, recarrega as faixas.
  *
- * A busca por nome NÃO fica mais aqui: cada aba (Canais, Filmes, Séries) tem o seu
+ * A busca por nome NÃO fica aqui: cada aba (Canais, Filmes, Séries) tem o seu
  * botão "Pesquisar ..." (BrowseActivity e M3uBrowseActivity).
  *
  * Menu à esquerda (só ícones): Tela inicial, Canais, Filmes, Séries, Ajustes e Atualizar.
- * Por enquanto: Canais, Filmes e Séries abrem o "Ver mais"; Ajustes só mostra um aviso
- * (as abas de verdade chegam nas próximas partes).
+ * Canais, Filmes e Séries abrem a aba; Ajustes abre a SettingsActivity.
  */
 public class HomeActivity extends Activity {
 
@@ -63,8 +61,6 @@ public class HomeActivity extends Activity {
 
     private CredentialStore.Credentials creds;
 
-    private Button btnLogout;
-    private Button btnParental;
     private LinearLayout railLive;
     private LinearLayout railMovie;
     private LinearLayout railSeries;
@@ -83,15 +79,15 @@ public class HomeActivity extends Activity {
     // Para ignorar respostas antigas quando as faixas são recarregadas
     private int railGen = 0;
 
+    // Estado do controle parental na última vez que as faixas foram montadas
+    private boolean parentalSeen = false;
+
     private View groupUpdate;
     private TextView tvUpdate;
     private Button btnUpdateNow;
     private Button btnUpdateLater;
     private Updater.Info pendingUpdate;
     private boolean downloading = false;
-
-    // Controle parental: teclado aberto no momento (para fechar ao sair da tela)
-    private PinDialog pinDialog;
 
     // Caixinha de prévia do canal
     private View groupPreview;
@@ -133,10 +129,10 @@ public class HomeActivity extends Activity {
             return;
         }
 
+        parentalSeen = ParentalStore.isEnabled(this);
+
         setContentView(R.layout.activity_home);
 
-        btnLogout = findViewById(R.id.btn_logout);
-        btnParental = findViewById(R.id.btn_parental);
         railLive = findViewById(R.id.rail_live);
         railMovie = findViewById(R.id.rail_movie);
         railSeries = findViewById(R.id.rail_series);
@@ -164,8 +160,6 @@ public class HomeActivity extends Activity {
         tvPvNext = findViewById(R.id.tv_pv_next);
         pbPreview = findViewById(R.id.pb_preview);
 
-        btnLogout.setOnFocusChangeListener(hideOnFocus);
-        btnParental.setOnFocusChangeListener(hideOnFocus);
         btnUpdateNow.setOnFocusChangeListener(hideOnFocus);
         btnUpdateLater.setOnFocusChangeListener(hideOnFocus);
 
@@ -176,13 +170,6 @@ public class HomeActivity extends Activity {
         navSettings.setOnFocusChangeListener(hideOnFocus);
         navRefresh.setOnFocusChangeListener(hideOnFocus);
 
-        btnLogout.setOnClickListener(v -> {
-            Intent i = new Intent(this, LoginActivity.class);
-            i.putExtra(EXTRA_SHOW_LOGIN, true);
-            startActivity(i);
-            finish();
-        });
-        btnParental.setOnClickListener(v -> openParentalMenu());
         btnUpdateNow.setOnClickListener(v -> startUpdate());
         btnUpdateLater.setOnClickListener(v -> dismissUpdate());
 
@@ -190,9 +177,7 @@ public class HomeActivity extends Activity {
         navLive.setOnClickListener(v -> openSection(XtreamApi.Kind.LIVE));
         navMovie.setOnClickListener(v -> openSection(XtreamApi.Kind.MOVIE));
         navSeries.setOnClickListener(v -> openSection(XtreamApi.Kind.SERIES));
-        navSettings.setOnClickListener(v -> Toast.makeText(this,
-                "A aba Ajustes chega em breve. Por enquanto, use os botões do alto.",
-                Toast.LENGTH_SHORT).show());
+        navSettings.setOnClickListener(v -> startActivity(new Intent(this, SettingsActivity.class)));
         navRefresh.setOnClickListener(v -> {
             Toast.makeText(this, "Atualizando a lista...", Toast.LENGTH_SHORT).show();
             reloadRails();
@@ -201,6 +186,16 @@ public class HomeActivity extends Activity {
         loadAllRails();
 
         checkForUpdate();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Voltou de outra tela (por exemplo, Ajustes): se o controle parental mudou, recarrega
+        if (creds != null && ParentalStore.isEnabled(this) != parentalSeen) {
+            parentalSeen = ParentalStore.isEnabled(this);
+            reloadRails();
+        }
     }
 
     @Override
@@ -214,10 +209,6 @@ public class HomeActivity extends Activity {
         super.onDestroy();
         handler.removeCallbacks(previewRunnable);
         previewItem = null;
-        if (pinDialog != null) {
-            pinDialog.dismiss();
-            pinDialog = null;
-        }
     }
 
     @Override
@@ -240,7 +231,7 @@ public class HomeActivity extends Activity {
         }
     }
 
-    /** Canais, Filmes e Séries: por enquanto abrem o "Ver mais" daquele tipo. */
+    /** Canais, Filmes e Séries: abrem a aba daquele tipo. */
     private void openSection(XtreamApi.Kind kind) {
         if (!isXtream() && !isM3u()) {
             return;
@@ -268,10 +259,10 @@ public class HomeActivity extends Activity {
             loadM3uRails();
         } else {
             stLive.setTextColor(COLOR_ERROR);
-            stLive.setText("Login não reconhecido. Use \"Trocar login\".");
+            stLive.setText("Login não reconhecido. Abra Ajustes e use \"Trocar de lista\".");
             stMovie.setVisibility(View.GONE);
             stSeries.setVisibility(View.GONE);
-            btnLogout.requestFocus();
+            navSettings.requestFocus();
         }
     }
 
@@ -323,7 +314,7 @@ public class HomeActivity extends Activity {
         }).start();
     }
 
-    /** Apaga as faixas e busca tudo de novo (usado quando o controle parental muda). */
+    /** Apaga as faixas e busca tudo de novo (Atualizar, ou quando o controle parental muda). */
     private void reloadRails() {
         if (!isXtream() && !isM3u()) {
             return;
@@ -440,128 +431,6 @@ public class HomeActivity extends Activity {
         });
     }
 
-    // ---------- Controle parental ----------
-
-    private void openParentalMenu() {
-        final boolean on = ParentalStore.isEnabled(this);
-        AlertDialog.Builder b = new AlertDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
-        if (on) {
-            b.setTitle("Controle parental: ativo");
-            b.setItems(new CharSequence[]{"Trocar senha", "Desativar controle parental", "Voltar"},
-                    new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            if (which == 0) {
-                                askCurrentPin("Digite a senha atual", new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        createPin();
-                                    }
-                                });
-                            } else if (which == 1) {
-                                askCurrentPin("Digite a senha para desativar", new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        ParentalStore.disable(HomeActivity.this);
-                                        Toast.makeText(HomeActivity.this,
-                                                "Controle parental desativado.",
-                                                Toast.LENGTH_SHORT).show();
-                                        reloadRails();
-                                    }
-                                });
-                            }
-                        }
-                    });
-        } else {
-            b.setTitle("Controle parental: desativado");
-            b.setItems(new CharSequence[]{"Ativar controle parental", "Voltar"},
-                    new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            if (which == 0) {
-                                createPin();
-                            }
-                        }
-                    });
-        }
-        b.show();
-    }
-
-    /** Pede a senha nova (4 números). Depois pede para repetir. */
-    private void createPin() {
-        pinDialog = PinDialog.show(this, "Crie a senha (4 números)", "", new PinDialog.Listener() {
-            @Override
-            public void onPin(PinDialog d, String pin) {
-                d.dismiss();
-                confirmPin(pin);
-            }
-
-            @Override
-            public void onCancel() {
-                // saiu sem criar: nada muda
-            }
-        });
-    }
-
-    private void confirmPin(final String first) {
-        pinDialog = PinDialog.show(this, "Repita a senha", "", new PinDialog.Listener() {
-            @Override
-            public void onPin(PinDialog d, String pin) {
-                d.dismiss();
-                if (!first.equals(pin)) {
-                    Toast.makeText(HomeActivity.this,
-                            "As senhas não são iguais. Tente de novo.",
-                            Toast.LENGTH_SHORT).show();
-                    createPin();
-                    return;
-                }
-                if (ParentalStore.enable(HomeActivity.this, pin)) {
-                    Toast.makeText(HomeActivity.this,
-                            "Controle parental ativado.", Toast.LENGTH_SHORT).show();
-                    reloadRails();
-                } else {
-                    Toast.makeText(HomeActivity.this,
-                            "Não foi possível guardar a senha.", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onCancel() {
-                // saiu sem confirmar: nada muda
-            }
-        });
-    }
-
-    /** Pede a senha atual. Se estiver certa, fecha o teclado e roda "onOk". */
-    private void askCurrentPin(String title, final Runnable onOk) {
-        pinDialog = PinDialog.show(this, title, "", new PinDialog.Listener() {
-            @Override
-            public void onPin(PinDialog d, String pin) {
-                long wait = ParentalStore.lockedSeconds(HomeActivity.this);
-                if (wait > 0) {
-                    d.setMessage("Muitas tentativas. Aguarde " + wait + " segundos.", true);
-                    return;
-                }
-                if (ParentalStore.check(HomeActivity.this, pin)) {
-                    d.dismiss();
-                    onOk.run();
-                    return;
-                }
-                wait = ParentalStore.lockedSeconds(HomeActivity.this);
-                if (wait > 0) {
-                    d.setMessage("Muitas tentativas. Aguarde " + wait + " segundos.", true);
-                } else {
-                    d.setMessage("Senha incorreta.", true);
-                }
-            }
-
-            @Override
-            public void onCancel() {
-                // saiu sem digitar: nada muda
-            }
-        });
-    }
-
     // ---------- Caixinha de prévia ----------
 
     /** O foco parou num canal: mostra o nome e espera um instante antes de pedir o guia. */
@@ -641,7 +510,7 @@ public class HomeActivity extends Activity {
         return new String(Character.toChars(s.codePointAt(0))).toUpperCase();
     }
 
-    /** Abre o "Ver mais": a tela do servidor ou a da lista M3U, conforme o login. */
+    /** Abre a aba: a tela do servidor ou a da lista M3U, conforme o login. */
     private void openBrowse(XtreamApi.Kind kind) {
         Intent i;
         if (isM3u()) {
@@ -750,6 +619,6 @@ public class HomeActivity extends Activity {
             return;
         }
         groupUpdate.setVisibility(View.GONE);
-        btnLogout.requestFocus();
+        navHome.requestFocus();
     }
 }
