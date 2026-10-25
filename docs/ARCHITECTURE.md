@@ -9,7 +9,7 @@
 - Arquivo .github/workflows/apk.yml ("Gerar APK"). Roda a cada mudança na branch main (qualquer arquivo, inclusive .md) e também à mão (workflow_dispatch).
 - Gradle 8.9 e Java 17 no Actions. VERSION_CODE = número da execução (github.run_number) e VERSION_NAME = 1.0.N. O app/build.gradle lê essas duas variáveis.
 - O APK é assinado com a chave guardada nos Secrets do GitHub (KEYSTORE_B64, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD). NUNCA pedir esses valores ao dono. Sem a chave nos Secrets, o APK é só de teste e NÃO é publicado.
-- Com a chave, o Actions cria uma Release "vN" com ASC-TVBOX.apk (ASC-TVBox.apk) e version.json (code, name, url, sha256).
+- Com a chave, o Actions cria uma Release "vN" com o arquivo ASC-TVBox.apk e o version.json (code, name, url, sha256).
 
 ## Atualização automática
 - Updater.java confere a versão publicada em Releases e, se for maior que a instalada, oferece instalar (aviso na página inicial e opção em Ajustes). Confira em Updater.java antes de mudar qualquer coisa nessa parte.
