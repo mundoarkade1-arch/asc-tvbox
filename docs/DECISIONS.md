@@ -116,5 +116,32 @@
 - A barra do canal ao vivo no player tem "Agora" à esquerda e "A seguir" à direita.
 - Controle parental: a senha de 4 números é guardada embaralhada com PBKDF2 e SHA-1, porque o Android 7.1 não tem SHA-256 nesse método.
 - Nenhuma dependência nova foi adicionada em nenhuma dessas etapas.
+
+- ## 2026-10-24 e 25: registro das decisões do desenvolvimento (junção do que não foi salvo antes)
+
+- Atualização e login: o app se atualiza sozinho pelas Releases do GitHub; o login é conferido antes de salvar (LoginChecker). Motivo: o dono não instala nada no computador.
+- EPG por canal (get_short_epg), só dos canais na tela, num cache pequeno (80 canais, 1 minuto, 2 pedidos ao mesmo tempo). Motivo: o guia completo (XMLTV) pesa demais para 1 GB de RAM. Alternativa descartada: baixar e ler o XMLTV inteiro. Canal sem guia mostra "Programação indisponível".
+- Lista M3U SEM guia de programação (nem "Agora", nem prévia, nem janela). Escolha do dono; ele usa mais o login por servidor.
+- Controle parental: senha de 4 números, PBKDF2 com SHA-1 (o Android 7.1 não tem SHA-256 nesse método), trava depois de 5 erros, adulto reconhecido pelo nome (e pela categoria na lista M3U).
+- Séries: o player recebe a fila de TODOS os episódios (temporadas em ordem, "Especiais" no fim) e toca o próximo sozinho. A posição na fila fica em SeriesProgress (50 séries, chave SHA-1 porque o endereço pode ter senha).
+- Ordem de trabalho: mudar TODA a aparência primeiro e testar no TX9 depois. Motivo: as telas iam mudar.
+- Busca: cada aba (Canais, Filmes, Séries) tem um botão "Pesquisar ..." que abre o teclado de letras e busca SÓ aquele tipo. Reaproveita SearchKeyboard, SearchActivity, XtreamApi.search e M3uApi.search. A tela de resultados fica sem menu (escolha do dono).
+- Aba = a mesma tela do "Ver mais" (BrowseActivity e M3uBrowseActivity). Motivo: já tratam categorias, páginas, controle parental e guia; menos código e risco.
+- Menu à esquerda guardado num arquivo (layout_nav.xml) ligado pelo NavBar.java. A página inicial tem uma cópia própria (duplicado de propósito, para não mexer em tela que funciona). Trocar de aba fecha a aba de antes, para não empilhar telas na memória.
+- Ajustes: tela própria (SettingsActivity) com controle parental, trocar de lista (abre o login e fecha as telas de antes), sobre o dispositivo, sobre o aplicativo e verificar atualização. Ao voltar de Ajustes, a página inicial recarrega as faixas só se o controle parental mudou.
+- Página do filme e da série IGUAL nos dois logins. Servidor: capa e sinopse por get_vod_info e get_series_info, um item por vez, lendo só o bloco "info". Lista M3U: capa do item e "Sem sinopse nesta lista.". A página abre mesmo sem capa ou sem sinopse. Página do filme sem menu à esquerda. Sinopse da série: 4 linhas, sem foco (para não prender as setas). Voltar do player leva à página do filme.
+- "Continuar de onde parei": o player anota o minuto exato de filmes e episódios (PlaybackProgress, 300 itens, SHA-1). Visto = 95% ou mais. Episódio visto fica verde no texto; visto pela metade fica verde só até a metade. Tocar começa do zero; Continuar começa no minuto.
+- Player: setas esquerda e direita pulam 10 s em filme e episódio, a barra some em 3 s, controles semi-transparentes (setAlpha 0.65). Barra do canal ao vivo: Agora à esquerda e A seguir à direita.
+- Programação do canal: tecla das três listras (KEYCODE_MENU) ou OK segurado abre uma janela com o que passa agora e os próximos (até 6), pedidos ao servidor SÓ nesse momento.
+
+## 2026-10-25: Primeiro teste no TX9 e Rodada 1 de ajustes
+
+- Fato: o dono testou a nova aparência (partes a a f) e pediu 4 ajustes. Nada começado: (R1) menu com texto, (R2) tela inicial sem a caixinha de prévia, (R3) ordem do foco menu, categorias, itens, (R4) trocar de canal com as setas no player.
+- Decisão: o menu da esquerda mostra ícone e texto. Motivo: só ícone não deixava claro o que cada botão faz.
+- Decisão: a tela inicial NÃO mostra a caixinha de prévia. A janela da programação continua e não pode depender dela.
+- Decisão: nas abas, o foco anda menu, categorias, itens; a seta esquerda a partir dos itens para nas categorias.
+- Decisão: no player de canal ao vivo, seta para cima volta, seta para baixo avança e OK mostra a barra. Suposição a confirmar: só os canais da lista de onde ele veio.
+- Decisão (documentos): o STATUS.md ficou curto; o mapa de arquivos e os limites foram para ARQUIVOS.md; as regras de trabalho e o prompt FIXO do próximo agente foram para o AGENTS.md; ARCHITECTURE.md foi preenchido (build, versão e dependências). Motivo: o STATUS era regerado inteiro, estava pesado e os agentes não conseguiam fazer a passagem.
+- Dependências: nenhuma nova.
 - Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
