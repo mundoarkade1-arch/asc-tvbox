@@ -8,8 +8,8 @@ FASE ATUAL (decidida com o dono em 24/10/2026): MUDAR TODA A APARÊNCIA E A NAVE
 Andamento da nova aparência (uma parte de cada vez):
 - (a) Menu à esquerda + Tela inicial: FEITA (verde no Actions, ainda NÃO testada no TX9).
 - (b) Abas Canais, Filmes e Séries com busca própria: FEITA (verde, NÃO testada no TX9). Veja "Parte (b)" abaixo.
-- (c) Aba Ajustes: FEITA (verde, NÃO testada no TX9). Veja "Parte (c)" abaixo. Os botões "Controle parental" e "Trocar login" já saíram do alto da página inicial.
-- (d) Página do filme e da série com capa e sinopse: a fazer. PRÓXIMO PASSO (falar com o dono sobre o que mostrar na lista M3U, que em geral não tem sinopse).
+- (c) Aba Ajustes: FEITA (verde, NÃO testada no TX9). Veja "Parte (c)" abaixo.
+- (d) Página do filme e da série com capa e sinopse: EM ANDAMENTO. Veja "Parte (d)" abaixo. Passo 1 feito (XtreamApi.details). PRÓXIMO PASSO: criar o layout novo activity_movie.xml.
 - (e) Player (botões transparentes, barra que some rápido, foco livre) e "continuar de onde parei" com minuto exato: a fazer
 - (f) Barra Agora / A seguir e a programação com a tecla das três listras: a fazer
 
@@ -44,6 +44,9 @@ O guia de programação (EPG) da lista M3U ficou de fora por decisão do dono (v
 - Parte (b) da nova aparência: botão "Pesquisar ..." nas telas de aba (servidor e lista M3U), menu à esquerda dentro das duas abas e botão "Buscar" removido da página inicial.
 - Parte (c) da nova aparência: aba Ajustes (SettingsActivity) com controle parental, trocar de lista, sobre o dispositivo, sobre o aplicativo e verificar atualização. Botões "Controle parental" e "Trocar login" removidos da página inicial.
 
+## Feito (salvo pelo dono em 24/10/2026; o Actions NÃO foi confirmado como verde na conversa; CONFERIR)
+- Parte (d), passo 1: XtreamApi.java ganhou a classe Details (capa, sinopse, linha de informações) e a função details(server, user, pass, kind, id). Nada usa a função ainda.
+
 ## Parte (a): menu à esquerda na página inicial (feita, verde, NÃO testada no TX9)
 - Menu vertical à esquerda, com 6 ícones: Tela inicial, Canais, Filmes, Séries, Ajustes e (embaixo) Atualizar.
 - Tela inicial: leva o foco para o primeiro canal (ou filme, ou série) já carregado.
@@ -68,6 +71,24 @@ O guia de programação (EPG) da lista M3U ficou de fora por decisão do dono (v
 - O aviso de atualização na página inicial (Instalar agora / Depois) continua como era.
 - A resposta de "Sobre o dispositivo" vai dizer quanto espaço livre o TX9 tem. Quando testar, anotar em TARGET_DEVICES.md ("Armazenamento livre").
 
+## Parte (d): página do filme e da série (EM ANDAMENTO)
+DECIDIDO com o dono em 24/10/2026: a página é a MESMA nos dois logins (opção A). Na lista M3U, onde iria a sinopse aparece "Sem sinopse nesta lista"; a capa é a imagem do item (item.icon). Veja DECISIONS.md.
+Feito em DOIS TEMPOS:
+- Tempo 1 (parte d): páginas com capa, sinopse e botão Tocar (filme) e com capa, sinopse, temporadas e episódios (série). SEM "Continuar de onde parei" e SEM cores de episódio visto.
+- Tempo 2 (parte e): quando existir o arquivo de minutos, voltar nas duas páginas e ligar o "Continuar de onde parei" (foco nele se já assistiu parte) e as cores de episódio visto / visto pela metade.
+Ordem dos passos (para o Actions não ficar vermelho; um arquivo de cada vez, esperando o "verde"):
+1. FEITO (verde a conferir): XtreamApi.java, função details(...) e classe Details.
+2. Criar activity_movie.xml (layout novo): capa, título, linha de informações (meta), sinopse (com rolagem pelas setas se for longa) e botão Tocar. O botão "Continuar de onde parei" entra no tempo 2.
+3. Criar MovieActivity.java (tela nova). Recebe por Intent: tipo, id, extensão, nome, capa (nova EXTRA_ICON) e, na lista M3U, o endereço (MainActivity.EXTRA_URL). No servidor pede XtreamApi.details numa thread, uma vez, e preenche capa (ImageLoader), meta e sinopse. Na lista M3U não pede nada: mostra a capa do item e "Sem sinopse nesta lista". O botão Tocar abre o MainActivity como o filme abria antes. Respeitar controle parental como as outras telas (só abre a partir de itens já filtrados).
+4. Registrar MovieActivity no AndroidManifest.xml (só depois de a classe existir).
+5. Mudar os lugares que tocavam o filme direto para abrir a MovieActivity: HomeActivity.openItem, BrowseActivity, M3uBrowseActivity e SearchActivity (canal ao vivo continua tocando direto). Pedir cada arquivo atual ao dono antes.
+6. Página da série: mostrar capa e sinopse no alto da tela da série (SeriesActivity do servidor e M3uSeriesActivity da lista M3U; as duas usam activity_series.xml e precisam receber as MESMAS mudanças de aparência). Na lista M3U: capa do item e "Sem sinopse nesta lista". Pedir activity_series.xml, SeriesActivity.java e M3uSeriesActivity.java atuais ao dono antes. Cuidado com o foco: a lista de temporadas e a de episódios não podem ficar presas atrás da sinopse.
+Notas técnicas de XtreamApi.details:
+- Filme: get_vod_info com vod_id. Série: get_series_info com series_id. Lê só o bloco "info" e PARA (não lê a lista de episódios, se "info" vier antes dela).
+- Aceita os nomes de campo mais comuns: capa (movie_image, cover_big, cover; só http/https), sinopse (plot, description; máximo 1200 letras), genre, releasedate (ou releaseDate, release_date; mostra só o ano), duration e rating (mostra "Nota X"; ignora zeros). A linha de informações junta o que existir separado por " • ".
+- Devolve um Details vazio (sem erro) se o servidor não informar nada, se o id não for número ou se o tipo não for filme nem série. Erros de rede viram IOException: a tela deve tratar e mostrar a página sem sinopse.
+- Faz acesso à rede: NUNCA chamar na thread principal.
+
 ## Nova interface - pedidos do dono em 24/10/2026
 Ainda vão chegar mais pedidos. Ordem e detalhes combinados com o dono, um passo de cada vez.
 
@@ -84,15 +105,15 @@ Ainda vão chegar mais pedidos. Ordem e detalhes combinados com o dono, um passo
 - RESOLVIDO com o dono: o controle do TX9 TEM um botão com três listras. No Android ela costuma chegar como tecla de menu (KEYCODE_MENU). Segunda via, caso a tecla chegue diferente: segurar o OK sobre o canal também abre a programação. Conferir no TX9 se a tecla funciona.
 
 ### Página do filme
-- Ao escolher um filme, abre uma página com a capa e a sinopse.
-- Botão de tocar e botão "Continuar de onde parei". Se já assistiu parte, o "Continuar" é a opção já pronta para apertar (foco nele).
+- Ao escolher um filme, abre uma página com a capa e a sinopse. (EM ANDAMENTO na parte d)
+- Botão de tocar e botão "Continuar de onde parei". Se já assistiu parte, o "Continuar" é a opção já pronta para apertar (foco nele). (o "Continuar" fica para o tempo 2, na parte e)
 - Isso pede lembrar o MINUTO exato (hoje o app só lembra o episódio, não o minuto).
 
 ### Página da série
 - Ao escolher uma série, abre uma página com a capa e a sinopse.
 - Botão para escolher a temporada e, embaixo, a lista de episódios.
-- Episódios já assistidos ficam marcados com outra cor. O episódio visto pela metade fica com a cor só até a metade.
-- Botão "Continuar de onde parei", que vai direto ao episódio certo, sem escolher.
+- Episódios já assistidos ficam marcados com outra cor. O episódio visto pela metade fica com a cor só até a metade. (tempo 2, parte e)
+- Botão "Continuar de onde parei", que vai direto ao episódio certo, sem escolher. (tempo 2, parte e)
 
 ### Player
 - Botões do player semi-transparentes (dá para ver, mas são transparentes).
@@ -107,14 +128,14 @@ Ainda vão chegar mais pedidos. Ordem e detalhes combinados com o dono, um passo
 - Botão para verificar se há atualização.
 
 ### Pontos a conferir antes de fazer (limites técnicos)
-- Capa e sinopse: o servidor Xtream tem pedidos próprios para isso (get_vod_info para filme e get_series_info para série, um item por vez). A lista M3U em geral NÃO traz sinopse; só a imagem do item. Falar com o dono antes de decidir o que mostrar na lista M3U.
+- Capa e sinopse: o servidor Xtream tem pedidos próprios para isso (get_vod_info para filme e get_series_info para série, um item por vez). A lista M3U em geral NÃO traz sinopse; só a imagem do item. RESOLVIDO com o dono: opção A (mesma página, "Sem sinopse nesta lista").
 - "Continuar de onde parei" com minuto exato: exige guardar o minuto de cada filme e episódio (arquivo pequeno, com limite de itens, e chave em resumo SHA-1 como no SeriesProgress).
 - Episódio "visto" e "visto pela metade": exige guardar, por episódio, o minuto e a duração.
 - Memória: o aparelho tem só 1 GB de RAM. Pedir só o que está na tela e nunca guardar listas inteiras.
 - Foco bem visível, tudo navegável só com setas, OK e Voltar, e também com o modo mouse.
 
 ## Roteiro de teste no TX9 (ainda NÃO feito)
-DECIDIDO pelo dono em 24/10/2026: os testes ficam para DEPOIS da nova aparência. No fim da nova aparência, este roteiro será reescrito para as telas novas. Os passos numerados abaixo são do app ANTES da nova aparência e vão mudar (por exemplo, a busca agora é por aba).
+DECIDIDO pelo dono em 24/10/2026: os testes ficam para DEPOIS da nova aparência. No fim da nova aparência, este roteiro será reescrito para as telas novas. Os passos numerados abaixo são do app ANTES da nova aparência e vão mudar (por exemplo, a busca agora é por aba). Os itens da parte (d) (página do filme e da série) serão acrescentados quando as telas existirem.
 Itens novos da parte (a) para incluir no roteiro: (i) o menu à esquerda aparece com os 6 ícones; (ii) o foco nos ícones é bem visível; (iii) ir com a seta para a esquerda a partir de um canal chega ao menu, e para a direita volta ao conteúdo; (iv) o ícone da Tela inicial leva ao primeiro canal; (v) Canais, Filmes e Séries abrem a aba; (vi) Ajustes abre a tela Ajustes; (vii) Atualizar recarrega as faixas.
 Itens novos da parte (b) para incluir no roteiro: (viii) dentro de uma aba, o botão "Pesquisar ..." aparece no alto e se chega nele com a seta para cima; (ix) OK no botão abre o teclado de letras e o resultado mostra SÓ o tipo da aba; (x) dentro da aba, a seta para a esquerda a partir da lista de categorias chega ao menu; (xi) trocar de aba pelo menu funciona e Voltar não empilha abas repetidas; (xii) o ícone Atualizar dentro da aba recarrega a categoria aberta; (xiii) o ícone Tela inicial volta à página inicial; (xiv) o mesmo na lista M3U (menu já ligado na M3uBrowseActivity); (xv) a página inicial não tem mais o botão "Buscar"; (xvi) a tela de resultados da busca não tem menu (esperado).
 Itens novos da parte (c) para incluir no roteiro: (xvii) a página inicial não tem mais os botões "Controle parental" e "Trocar login"; (xviii) o ícone Ajustes abre a tela Ajustes, tanto na página inicial quanto nas abas; (xix) a lista de 5 opções se escolhe com setas e OK, e a seta para a esquerda chega ao menu; (xx) Controle parental: ativar, trocar a senha e desativar funcionam, e ao voltar para a página inicial as faixas recarregam sozinhas (itens adultos somem ou voltam); (xxi) "Trocar de lista" abre o login; (xxii) "Sobre o dispositivo" mostra modelo, Android, memória, armazenamento e tela (anotar o espaço livre em TARGET_DEVICES.md); (xxiii) "Sobre o aplicativo" mostra a versão; (xxiv) "Verificar atualização" mostra "Nenhuma atualização encontrada agora." ou muda a linha para "Instalar atualização"; (xxv) dentro de Ajustes, o ícone Atualizar não faz nada (esperado) e o ícone Tela inicial volta à página inicial.
@@ -154,16 +175,16 @@ Itens novos da parte (c) para incluir no roteiro: (xvii) a página inicial não 
 ## Arquivos do controle parental
 - ParentalStore.java: liga e desliga o controle; guarda a senha embaralhada (PBKDF2 com SHA-1, porque o Android 7.1 não tem SHA-256 nesse método) num arquivo próprio, separado do login; confere a senha; trava depois de 5 erros; reconhece categorias e nomes adultos (isAdultCategory, isAdultName)
 - PinDialog.java: teclado de números na tela (1 a 9, 0, Apagar e Sair); avisa o app quando o 4º número é digitado
-- O menu do controle parental (ativar, trocar senha, desativar) agora fica na SettingsActivity (antes ficava na HomeActivity).
+- O menu do controle parental (ativar, trocar senha, desativar) fica na SettingsActivity (antes ficava na HomeActivity).
 
 ## Arquivos dos episódios de séries
-- XtreamApi.java: tipo Kind.EPISODE, classe Episode (id, title, season, number, ext) e função episodes(server, user, pass, seriesId), no máximo 500, lendo aos poucos. streamUrl(...) monta o endereço de um episódio.
+- XtreamApi.java: tipo Kind.EPISODE, classe Episode (id, title, season, number, ext) e função episodes(server, user, pass, seriesId), no máximo 500, lendo aos poucos. streamUrl(...) monta o endereço de um episódio. Também tem a classe Details e a função details(...) (capa e sinopse, parte d).
 - activity_series.xml: layout da tela da série (usado também pela M3uSeriesActivity)
 - SeriesActivity.java (servidor): carrega os episódios, ordena por temporada e número, mostra temporadas e episódios. Tem buildQueue() (fila com "Especiais" no fim). Ao escolher um episódio abre o MainActivity levando a fila de TODA a série (EXTRA_LIST_IDS, EXTRA_LIST_EXTS, EXTRA_LIST_INDEX) e a chave da série (MainActivity.EXTRA_SERIES_KEY = "xt|servidor|usuário|idDaSérie"). Ao abrir, lê o SeriesProgress e abre na temporada e no episódio onde parou.
 - M3uSeriesActivity.java (lista M3U): igual, mas os episódios vêm do M3uApi.episodes; manda a fila de endereços (MainActivity.EXTRA_LIST_URLS) e a chave "m3u|endereçoDaLista|títuloDaSérie". Se a soma dos endereços passar de 100 mil letras, manda só o episódio escolhido. No lugar do número de identificação manda a posição na fila (+1).
 - SeriesProgress.java: guarda a posição do episódio na fila de cada série (SharedPreferences "series_progress"). A chave é um SHA-1 da chave da série (nunca texto, porque o endereço da lista pode ter senha). Máximo de 50 séries; as mais antigas são esquecidas. Funções save(ctx, chave, posição) e load(ctx, chave) (devolve -1 se não há nada).
 - MainActivity.java (player): toca canal, filme e episódio. Tem EXTRA_URL, EXTRA_LIST_URLS e EXTRA_SERIES_KEY. Quando o episódio começa a tocar (STATE_READY) anota a posição no SeriesProgress. Ao terminar um episódio toca o próximo da fila (passa para a temporada seguinte); no último mostra "Fim da série." (servidor e lista M3U). Barra Agora / A seguir só em canal ao vivo do servidor.
-- AndroidManifest.xml: tem LoginActivity, HomeActivity, BrowseActivity, M3uBrowseActivity, SettingsActivity, SeriesActivity, M3uSeriesActivity, SearchActivity e MainActivity registradas.
+- AndroidManifest.xml: tem LoginActivity, HomeActivity, BrowseActivity, M3uBrowseActivity, SettingsActivity, SeriesActivity, M3uSeriesActivity, SearchActivity e MainActivity registradas. (MovieActivity entra no passo 4 da parte d.)
 
 ## Arquivos da lista M3U
 - M3uApi.java: lê a lista linha por linha direto da internet, sem guardá-la inteira. Para depois de 200 MB ou 1 minuto. Separa canal, filme e série pelas mesmas regras do app original. Séries agrupadas pelo título (sem "S01E03"). Toda a leitura passa por uma função interna (walk). Tem 5 funções públicas:
@@ -173,7 +194,7 @@ Itens novos da parte (c) para incluir no roteiro: (xvii) a página inicial não 
   - episodes(m3uUrl, tituloDaSerie): episódios de UMA série (máximo 500)
   - search(m3uUrl, tipo, texto, pularAdulto, limite): itens do tipo cujo nome tem todas as palavras do texto (sem ligar para maiúsculas e acentos); para ao juntar o limite; séries por título, uma por série
 - M3uBrowseActivity.java: aba/"Ver mais" da lista M3U (categorias à esquerda, itens à direita, páginas de 40, máximo 400). Ao tocar numa série, abre a M3uSeriesActivity (EXTRA_ID e EXTRA_NAME), como a HomeActivity. Tem o botão Pesquisar do tipo da tela e o menu à esquerda (NavBar).
-- XtreamApi.Item tem o campo "url" (endereço direto do vídeo). Vazio nos itens do servidor.
+- XtreamApi.Item tem o campo "url" (endereço direto do vídeo). Vazio nos itens do servidor. Também tem o campo "icon" (imagem do item; vira a capa da lista M3U na parte d).
 - Nos itens da lista M3U, o "id" é só o número de ordem do item na leitura.
 - LoginActivity.java e CredentialStore.java: guardam o login por lista M3U (campo m3uUrl, criptografado)
 
@@ -183,10 +204,11 @@ Itens novos da parte (c) para incluir no roteiro: (xvii) a página inicial não 
 - SearchActivity.java: tela de resultados. Recebe HomeActivity.EXTRA_KIND (LIVE, MOVIE ou SERIES) e SearchActivity.EXTRA_QUERY. Reaproveita activity_browse.xml e esconde a lista de categorias por código. Até 100 resultados. Canal e filmes tocam; série abre a SeriesActivity ou a M3uSeriesActivity. Aberta só pelo botão Pesquisar das abas. SEM menu à esquerda (decisão do dono).
 
 ## Próximos passos (nesta ordem)
-1. Parte (d): página do filme e da série com capa e sinopse (falar com o dono sobre a lista M3U, que em geral não tem sinopse).
-2. Parte (e): player e "continuar de onde parei" com minuto exato.
-3. Parte (f): barra Agora / A seguir e a programação com a tecla das três listras (e OK longo como segunda via).
-4. No fim da nova aparência: reescrever o roteiro de teste para as telas novas e testar tudo no TX9.
+1. Conferir no Actions que o passo 1 da parte (d) (XtreamApi.java com details) ficou verde.
+2. Parte (d), passos 2 a 6 (veja a seção "Parte (d)"): activity_movie.xml, MovieActivity.java, registrar no AndroidManifest.xml, ligar os lugares que tocam filme, e a página da série com capa e sinopse.
+3. Parte (e): player (botões transparentes, barra que some rápido, foco livre) e "continuar de onde parei" com minuto exato (arquivo de minutos). Depois, voltar nas páginas do filme e da série para ligar o "Continuar de onde parei" e as cores de episódio visto.
+4. Parte (f): barra Agora / A seguir e a programação com a tecla das três listras (e OK longo como segunda via).
+5. No fim da nova aparência: reescrever o roteiro de teste para as telas novas e testar tudo no TX9.
 
 ## Problemas em aberto
 - Armazenamento livre do TX9 e acesso à Play Store: ainda não sabemos. A tela Ajustes > "Sobre o dispositivo" vai mostrar o espaço livre; anotar em TARGET_DEVICES.md depois do teste.
@@ -198,6 +220,8 @@ Itens novos da parte (c) para incluir no roteiro: (xvii) a página inicial não 
 - Parte (c): dentro de Ajustes, o ícone Atualizar do menu não faz nada (não há lista para recarregar). A conferir no teste se o dono estranha; se estranhar, esconder o ícone ou mostrar um aviso.
 - Parte (c): "Trocar de lista" abre o login sem apagar o login salvo; o login novo substitui o antigo. A conferir no teste que Voltar no login não deixa o app numa tela quebrada.
 - Parte (c): o menu do controle parental (ativar, trocar senha, desativar) não pede a senha para ABRIR Ajustes, só para trocar ou desativar (igual era na página inicial).
+- Parte (d): os servidores Xtream usam nomes de campo um pouco diferentes em get_vod_info e get_series_info. details() aceita os mais comuns; se o servidor do dono usar outros, a página fica sem capa ou sem sinopse (esperado; conferir no teste e ajustar).
+- Parte (d): em get_series_info, se o servidor mandar "episodes" ANTES de "info", details() lê a resposta até achar o "info" (continua limitada a 80 MB e a 15 segundos por leitura).
 - Lista M3U: não tem guia de programação, por decisão do dono (ver DECISIONS.md)
 - Lista M3U: a página inicial mostra os 10 primeiros itens na ordem da lista; se a lista for gigante e tiver poucos itens de um tipo no começo, a leitura pode demorar até 1 minuto
 - Lista M3U, "Ver mais": cada página nova lê a lista de novo desde o começo, então páginas do fim de uma lista grande demoram mais. Se bater no limite de 200 MB ou 1 minuto, a página pode vir menor e a categoria é tratada como terminada
