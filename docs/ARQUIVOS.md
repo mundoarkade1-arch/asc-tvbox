@@ -12,7 +12,8 @@ Outros: res/values/strings.xml, res/xml/file_paths.xml, AndroidManifest.xml, app
 - SettingsActivity (activity_settings.xml): controle parental, trocar de lista, sobre o dispositivo, sobre o aplicativo, verificar atualização.
 - MovieActivity (activity_movie.xml): capa, informações, sinopse, Tocar e Continuar de onde parei.
 - SeriesActivity (servidor) e M3uSeriesActivity (lista M3U), activity_series.xml: capa, sinopse (4 linhas, sem foco), Continuar, temporadas à esquerda, episódios à direita. Sem menu à esquerda.
-- MainActivity (activity_main.xml): player ExoPlayer de canal, filme e episódio. Extras: EXTRA_URL, EXTRA_LIST_URLS, EXTRA_LIST_IDS, EXTRA_LIST_EXTS, EXTRA_LIST_INDEX, EXTRA_SERIES_KEY, EXTRA_START_MS. Barra Agora (esquerda) e A seguir (direita) só em canal ao vivo do servidor.
+- MainActivity (activity_main.xml): player ExoPlayer de canal, filme e episódio. Extras: EXTRA_URL, EXTRA_LIST_URLS, EXTRA_LIST_IDS, EXTRA_LIST_EXTS, EXTRA_LIST_INDEX, EXTRA_SERIES_KEY, EXTRA_START_MS, EXTRA_QUEUE (true = canal ao vivo troca de canal com cima e baixo), EXTRA_QUEUE_CAT (categoria de origem; nulo = todas). Barra Agora (esquerda) e A seguir (direita) só em canal ao vivo do servidor.
+- ChannelQueue.java (R4): fila de canais ao vivo usada pelo MainActivity. Categorias em ordem, uma por vez na memória (páginas de 40, máx. 400), dá a volta no fim. Servidor: categoria = número; M3U: categoria = nome do grupo; nula = todas. Pula categorias adultas com parental ligado. Roda fora da thread principal; responde pelo Listener (onChannel, onFail).
 - item_card.xml (cartão, tem tv_now), item_category.xml (linha de lista).
 
 ## Menu à esquerda
@@ -21,7 +22,7 @@ Outros: res/values/strings.xml, res/xml/file_paths.xml, AndroidManifest.xml, app
 - Ícones: ic_nav_home, ic_nav_live, ic_nav_movie, ic_nav_series, ic_nav_settings, ic_nav_refresh (brancos, 32dp). Fundos: bg_button, bg_card, bg_field.
 
 ## Dados e rede
-- XtreamApi: Item (tem url e icon), Kind (LIVE, MOVIE, SERIES, EPISODE), Episode, Epg, Program, Details. Funções: items, episodes, epg, schedule, details, search, streamUrl. NUNCA chamar na thread principal.
+- XtreamApi: Item (tem url e icon), Kind (LIVE, MOVIE, SERIES, EPISODE), Episode, Epg, Program, Details. Funções: items, episodes, epg, schedule, details, search, streamUrl, categories. NUNCA chamar na thread principal.
 - M3uApi: lê a lista linha por linha, sem guardá-la inteira (para em 200 MB ou 1 minuto). Funções: sample, categories, page, episodes, search. Séries agrupadas pelo título.
 - EpgCache: até 80 canais, 1 minuto cada, 2 pedidos ao mesmo tempo. EpgDialog: janela da programação (até 6), pede ao servidor só ao abrir, não usa o cache. Fecha com Voltar, botão Fechar ou a tecla de menu de novo.
 - ImageLoader: capas (tem clear()). Updater: atualização automática.
@@ -42,7 +43,8 @@ Outros: res/values/strings.xml, res/xml/file_paths.xml, AndroidManifest.xml, app
 - Servidor: itens adultos saem DEPOIS de buscar os 10 primeiros (faixa pode ter menos de 10); resposta da busca limitada a 80 MB; details() lê só o bloco "info" e, se o servidor usar outros nomes de campo, a página fica sem capa ou sem sinopse.
 - Onde parou guarda a posição na fila: se o servidor mudar a ordem dos episódios, pode apontar para outro. Na lista M3U, se os endereços mudarem, o "visto" deixa de valer.
 - Controle parental: abrir Ajustes não pede a senha (só trocar ou desativar). "Trocar de lista" não apaga o login antigo; o novo o substitui.
-- Player: setas esquerda e direita pulam 10 s só em filme e episódio (mínimo 120 ms entre pulos). Controles semi-transparentes com setAlpha(0.65) no exo_controller (se não aparecer o efeito, trocar por layout próprio). Cores de episódio visto são no texto, não no fundo. Em canal ao vivo, as setas ainda NÃO trocam de canal (Rodada 1, R4).
+- Player: setas esquerda e direita pulam 10 s só em filme e episódio (mínimo 120 ms entre pulos). Controles semi-transparentes com setAlpha(0.65) no exo_controller. Cores de episódio visto são no texto, não no fundo.
+- Troca de canal (R4): cima/baixo só funcionam se a tela que abriu o canal mandar EXTRA_QUEUE. Hoje o MainActivity e o ChannelQueue estão prontos; as telas ainda NÃO mandam (ver STATUS). Se o canal tocado não estiver nos primeiros 400 da categoria, as setas ficam desligadas. Na lista M3U cada troca relê a lista (pode levar alguns segundos).
 - Programação do canal: abre com a tecla de menu (três listras) ou segurando o OK (o tempo varia por controle).
-- Menu com texto (R1), tela inicial sem caixinha (R2) e ordem do foco nas abas (R3): ainda não testados no TX9. Se algum nome do menu não couber nos 200dp, reduzir o tamanho da letra ou alargar a coluna.
-- Ordem do foco: a seta esquerda na primeira coluna da grade vai às categorias. Se o número de colunas mudar com o tamanho da tela, a regra continua valendo (usa getNumColumns).
+- Menu com texto (R1), tela inicial sem caixinha (R2) e ordem do foco nas abas (R3): ainda não testados no TX9. Se algum nome do menu não couber nos 200dp, reduzir a letra ou alargar a coluna.
+- Ordem do foco: a seta esquerda na primeira coluna da grade vai às categorias (usa getNumColumns).
