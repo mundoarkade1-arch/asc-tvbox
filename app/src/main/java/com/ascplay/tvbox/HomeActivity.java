@@ -28,6 +28,7 @@ import java.util.Locale;
  * Ao parar o foco num canal ao vivo, uma caixinha fixa embaixo mostra a prévia:
  * programa de agora, barra de progresso, horários e "A seguir".
  * Ao escolher uma série, abre a tela da série (temporadas e episódios).
+ * Ao escolher um filme, abre a página do filme (MovieActivity), com capa e sinopse.
  *
  * Lista M3U: lê a lista aos poucos, só até achar 10 itens de cada tipo (M3uApi).
  * O cartão "Ver mais ›" abre a navegação por categorias da lista M3U (M3uBrowseActivity).
@@ -531,11 +532,16 @@ public class HomeActivity extends Activity {
             startActivity(s);
             return;
         }
-        Intent i = new Intent(this, MainActivity.class);
+        // Filme: abre a página do filme (capa e sinopse). Canal ao vivo: toca direto.
+        Intent i = new Intent(this,
+                item.kind == XtreamApi.Kind.MOVIE ? MovieActivity.class : MainActivity.class);
         i.putExtra(EXTRA_KIND, item.kind.name());
         i.putExtra(EXTRA_ID, item.id);
         i.putExtra(EXTRA_EXT, item.ext);
         i.putExtra(EXTRA_NAME, item.name);
+        if (item.kind == XtreamApi.Kind.MOVIE) {
+            i.putExtra(MovieActivity.EXTRA_ICON, item.icon);
+        }
         if (isM3u()) {
             i.putExtra(MainActivity.EXTRA_URL, item.url);
         }
