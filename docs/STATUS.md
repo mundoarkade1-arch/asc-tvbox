@@ -1,40 +1,44 @@
 # Status do projeto
 
-Última atualização: 26/10/2026 (M10, M12 e M11 em código VERDE; M11 AINDA LENTO no teste do dono; M10, M12 e M9 sem teste)
+Última atualização: 26/10/2026 (ACTIONS VERMELHO: MainActivity.java foi salvo cortado)
 Regras de trabalho: AGENTS.md. Mapa e limites: docs/ARQUIVOS.md. Montagem e versão: docs/ARCHITECTURE.md. Decisões: docs/DECISIONS.md.
 
+## PRIMEIRO PASSO DO PRÓXIMO AGENTE (urgente)
+O último salvamento do MainActivity.java (M13b, opacidade 0.25) saiu CORTADO. O Actions deu erro "unclosed comment" na linha 426 e "reached end of file while parsing" na 428. O arquivo no GitHub termina no meio de um comentário /** ... */.
+Como consertar: (1) peça ao dono as ÚLTIMAS 15 linhas do MainActivity.java (abrir o link de edição, Ctrl+End, copiar, colar, sem Commit); (2) descubra qual método ficou cortado e mande SÓ o pedaço que falta, para colar no fim do arquivo; (3) se não der, peça o arquivo atual inteiro e devolva-o em DUAS ou TRES partes (colagem grande é cortada). Depois, confira se o Actions ficou verde.
+Conteúdo correto do arquivo: o MainActivity com M13 (texto "Temporada N - Episódio N", EXTRA_LIST_LABELS) e CONTROLLER_ALPHA = 0.25f (era 0.65f). Tudo o mais igual.
+
 ## Fase atual
-Tudo até a Rodada 5 está pronto e TESTADO pelo dono no TX9. Rodada 6 (menu estreito e degradê) VERDE, dono ainda não opinou (M9). Nesta sessão, três correções foram salvas e ficaram VERDES no Actions: M10, M12 e M11 (em 3 partes). Nada em andamento no código. O dono testou SÓ o M11: melhorou um pouco, mas voltou a ficar lento ("demorou bastante"). Precisa de OUTRA solução (próximo agente).
+Tudo até a Rodada 6 está pronto e TESTADO pelo dono no TX9 (ele disse "tudo deu certo": M9, M10, M12 ok). Nesta sessão:
+- M11 (pesquisa lenta) RESOLVIDO no servidor: SearchIndex.java (índice em arquivo, 2 h de validade). Segunda pesquisa fica rápida ("ficou bom"). A PRIMEIRA pesquisa de cada tipo demora até um pouco mais que antes (baixa a lista e grava o arquivo).
+- Teclado de pesquisa refeito (QWERTY brasileiro, Ç, barra de espaço grande, segurar OK numa vogal ou no N abre os acentos). Testado, "ficou bom".
+- M13 (verde, SEM teste): player mostra "Temporada N - Episódio N" no alto à esquerda por 5 s. SeriesActivity e M3uSeriesActivity mandam EXTRA_LIST_LABELS.
+- M13b (VERMELHO, cortado): botões do player quase invisíveis (opacidade 0.25).
 
 ## Já feito (uma linha cada; detalhes em ARQUIVOS.md e DECISIONS.md)
-- Base: login por servidor e lista M3U, atualização automática, controle parental, página inicial, "Ver mais", séries, busca, EPG por canal (só servidor).
-- (a) a (f) nova aparência. R1 a R6, Rodadas 3 a 5, M6, R4-1, R4-2: testadas no TX9.
-- Rodada 6 (verde): menu estreito e degradê. Falta o dono olhar (M9).
-- M10 (verde, SEM teste): ContinueStore.save guarda UM episódio por série (o último, por seriesKey) e limpa repetições antigas.
-- M12 (verde, SEM teste): teto das abas subiu de 400 para 5000 (BrowseActivity e M3uBrowseActivity). Já carregava de 40 em 40 ao chegar perto do fim da grade.
-- M11 (verde, mas AINDA LENTO): (1) XtreamApi.normalizeText mais leve (sem Normalizer em texto ASCII); (2) M3uApi.search confere o nome antes de classificar; (3) searchStream nos dois (avisa cada resultado); (4) SearchActivity junta tudo e mostra de uma vez no fim (mostrar um a um fazia as capas piscarem).
+- Base, nova aparência, R1 a R6, Rodadas 3 a 6, M6, R4-1, R4-2, página do filme e da série: testadas.
+- M9, M10, M12: testadas pelo dono, ok.
+- M11 servidor: XtreamApi.streamAll + SearchIndex + SearchActivity (usa o índice; se falhar e nada foi achado, cai na busca antiga).
+- Teclado QWERTY com acentos: SearchKeyboard.java.
+- M13: MainActivity (rótulo), SeriesActivity e M3uSeriesActivity (mandam os textos).
 
-## METAS (pedidos do dono ainda não feitos). Apague a meta daqui quando ficar pronta e verde.
-- M11. PESQUISA AINDA LENTA (PRIORIDADE). Fato: o dono buscou "homem ar" em Filmes (servidor) e demorou bastante; ele diz que é lento em TODAS as abas e nos DOIS logins. Já se sabe que o custo de texto no aparelho NÃO era o principal: o tempo está em LER A LISTA INTEIRA pela internet (servidor: resposta get_vod_streams/get_live_streams/get_series de dezenas de MB; M3U: a lista toda, linha por linha) a cada busca. Ideias a avaliar, SEM decidir (conversar com o dono): (a) servidor: buscar categoria por categoria (category_id na URL, respostas menores) e juntar; (b) guardar a lista num ARQUIVO no armazenamento do app (não na RAM), com validade curta (ex.: 30 min), e buscar nele; para M3U, baixar uma vez para um arquivo e ler do disco; cuidado com espaço e com os 1 GB de RAM; (c) índice pequeno em disco só com nome, tipo e id; (d) mostrar "Buscando..." com contagem. MEDIR antes: pedir ao dono o tempo aproximado até o resultado em cada login e, se possível, o tamanho da lista (Ajustes > Sobre). Peça XtreamApi.java, M3uApi.java e SearchActivity.java (um por vez). SearchActivity hoje usa searchStream e mostra tudo no fim; a base já existe.
-- TESTES PENDENTES do dono no TX9 (M10, M12, M9):
-  - M10: abrir um episódio (~30 s), voltar; abrir OUTRO da mesma série (~30 s), voltar. A série deve aparecer UMA vez na faixa "Continue assistindo", com o último episódio.
-  - M12: numa categoria com "mil e poucos" itens, segurar seta para baixo na grade passando dos 400; os itens devem continuar chegando até o fim. Na lista M3U, as páginas do fim podem demorar mais (cada página relê a lista).
-  - M9: menu com 6 botões, foco desce até Atualizar, "Tela inicial" cabe, texto legível no vermelho.
-- ADIADO: fundo com imagem e ícone novo (imagens grandes; reduzir no squoosh.app antes, nomes bg_app.jpg e ic_app_logo.png; o agente não envia imagens). ADIADO: otimização geral sem perder funções (medir antes; M11 é parte disso).
-- Rodada 6: o dono pode lembrar de mais pedidos.
+## METAS (pedidos do dono ainda não feitos)
+- M13b: botões do player quase invisíveis. Pedido do dono: "fica um botão de pause, de passar e voltar 5s e 15s na tela em branco, quero que ele quase não apareça". Plano: CONTROLLER_ALPHA 0.25 (no MainActivity, só destravar o arquivo cortado). Se ainda aparecer demais, baixar para 0.10 ou criar um layout de controle sem fundo (activity_main.xml não tem os botões; vêm da biblioteca media3).
+- Testes pendentes no TX9: M13 (abrir um episódio: texto no alto à esquerda por 5 s; OK mostra de novo) e M13b (botões quase invisíveis).
+- M11 melhorias possíveis (só se o dono pedir): a primeira pesquisa ainda demora. Ideias: montar o índice em segundo plano ao abrir o app; mostrar contagem em "Buscando...". Lista M3U ainda usa a busca antiga (o dono não usa M3U).
+- ADIADOS: fundo com imagem e ícone novo (imagens grandes; reduzir no squoosh.app antes); otimização geral sem perder funções.
 
 ## Perguntas e ideias abertas
-- Fim da lista na troca de canal: hoje dá a volta (escolha do agente).
+- Tela de login com degradê? Fim da lista na troca de canal dá a volta (escolha do agente).
 - Ideia que precisa do OK do dono: o Actions ignorar mudanças só em .md.
-- Ícone provisório; se o TX9 mostrar o app sem imagem, criar o banner.
-- Tela de login ainda com o fundo antigo: perguntar se quer o degradê.
+- "Trocar de lista" ainda NÃO chama SearchIndex.clear(ctx) (o índice é por servidor e usuário, então não quebra, só sobra arquivo no cache). Opcional: chamar no SettingsActivity.changeLogin.
 - Limpeza opcional: tirar lv_seasons e lv_episodes do activity_series.xml.
 
-## Pontos a conferir no teste (riscos conhecidos)
-- Menu: uns 440dp de altura; em tela baixa o último botão pode cortar.
-- Degradê: texto cinza pode ficar menos legível sobre o vermelho do alto.
-- Aba com 5000 itens: grade muito longa; se o TX9 ficar pesado, baixar MAX_ITEMS.
+## Pontos a conferir
+- SearchIndex: limite de 200000 itens e 60 MB por arquivo; se passar, a busca cai na antiga.
+- Índice fica em getCacheDir()/search_index (o Android pode apagar; ele se refaz sozinho).
 
 ## Próximos passos
-1. Conversar com o dono sobre o M11 (medir, escolher entre as ideias). Um arquivo por vez.
-2. Pedir os testes de M10, M12 e M9 quando o dono quiser.
+1. Consertar o MainActivity.java (ver acima) e esperar o Actions verde.
+2. Pedir ao dono os testes de M13 e M13b no TX9.
+3. Perguntar o que mais o incomoda.
