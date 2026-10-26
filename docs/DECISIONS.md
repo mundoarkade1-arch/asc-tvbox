@@ -256,5 +256,19 @@
 - Limite: o ícone é simples e provisório. O dono pode pedir outro desenho depois.
 - Dependências: nenhuma nova.
 - Ainda NÃO visto no TX9.
+
+- ## 26/10/2026 - Rodada 3, M6 (parte 1): guardar e anotar o "Continue assistindo"
+
+- Decisão: a lista do "Continue assistindo" fica numa classe nova, ContinueStore.java, com no máximo 25 itens (o mais novo primeiro; ao entrar um 26º, o mais antigo sai; se o mesmo vídeo entra de novo, sobe para o começo). Cada item guarda: tipo (filme ou episódio), nome, capa, endereço do vídeo, id, extensão, chave da série, minuto, duração e hora.
+- Motivo: o PlaybackProgress guarda só chave embaralhada (SHA-1), sem nome nem capa, e não dá para montar cartões com ele. Ele NÃO foi mudado.
+- Decisão (autorizada pelo dono): a lista inteira é guardada CRIPTOGRAFADA (AES-GCM, chave do Android Keystore, a mesma do CredentialStore, com o mesmo plano B sem criptografia se o Keystore falhar). Motivo: o endereço do vídeo pode ter usuário e senha (servidor e lista M3U). A chave de cada item é o SHA-1 do endereço.
+- Decisão: o player (MainActivity) anota na ContinueStore junto com o minuto exato (a cada 10 s e ao sair). Entra se parou entre 5 s e 95%; sai se passou de 95% ou terminou. Canal ao vivo não entra.
+- Decisão: a capa chega ao player por um recado novo, MainActivity.EXTRA_ICON (opcional; sem capa, o recado não é mandado, sem null solto). MovieActivity manda a capa do filme (a do servidor, se chegar). SeriesActivity e M3uSeriesActivity mandam a capa da série.
+- Decisão: o nome do episódio na lista é "Nome da série - ep. N", em que N é a posição do episódio na fila da série. As duas telas de série mandam esse nome como EXTRA_NAME, e o player usa o mesmo formato ao passar sozinho para o próximo. O player não mostra o nome do episódio em nenhum lugar, então nada muda na tela de reprodução.
+- Motivo do formato: simples e igual nos dois logins. Limite aceito: não mostra temporada e número (T2 E3).
+- Decisão: ordem de trabalho: ContinueStore (nada usava), MainActivity, MovieActivity, SeriesActivity, M3uSeriesActivity. Falta HomeActivity (código) e depois activity_home.xml. O Actions ficou verde em todos os passos.
+- Limites anotados: o clique na faixa (a fazer) abrirá o player direto, sem a fila de episódios, então o próximo episódio não toca sozinho a partir da faixa. "Trocar de lista" ainda não limpa a ContinueStore (a fazer). Se o servidor mudar de endereço, os itens antigos deixam de tocar.
+- Dependências: nenhuma nova.
+- Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
