@@ -287,5 +287,20 @@
 - Falta: "Ver mais" da faixa (decidir com o dono) e limpar a ContinueStore em "Trocar de lista" (SettingsActivity).
 - Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9.
+
+- ## 26/10/2026 - Rodada 3, M6 (partes 3 e 4): "Ver mais" do Continue assistindo e limpeza em Trocar de lista
+
+- Decisão (do dono, opção 1): o "Ver mais" da faixa abre uma TELA NOVA e SIMPLES (ContinueActivity), com uma lista dos itens guardados (até 25): capa pequena (60x90dp), nome e "Parou em M:SS". Não reaproveita a grade das abas (activity_browse.xml).
+- Motivo: não mexe em nenhuma tela que já funciona (menos risco) e é leve para o TX9 (1 GB de RAM). Usa ListView com um adaptador que reaproveita as linhas.
+- Decisão: o cartão "Ver mais ›" da faixa só aparece se há MAIS de 10 itens visíveis (depois de tirar itens sem endereço e, com parental ligado, itens adultos). Com 10 ou menos, a faixa já mostra tudo.
+- Motivo: um "Ver mais" que abre a mesma coisa que a faixa seria inútil e confuso.
+- Decisão: a ContinueActivity tem o mesmo clique da faixa: filme abre a MovieActivity; episódio abre a SeriesActivity (servidor, número da série tirado da última parte da seriesKey, só 1 a 12 dígitos) ou a M3uSeriesActivity (lista M3U, nome tirado antes de " - ep. N"). Se não der para tirar os dados, aparece o aviso "Não deu para abrir este item..." e nada abre.
+- Motivo: igualdade com a faixa e o próximo episódio tocar sozinho (a fila vem da página da série). A seriesKey e o endereço do vídeo nunca são mostrados nem registrados em log.
+- Decisão: a ContinueActivity lê a ContinueStore fora da thread principal e refaz a lista no onResume (depois do player). Sem menu à esquerda (tela de passagem); Voltar leva à tela inicial. Controle parental ligado: itens com nome adulto não aparecem.
+- Decisão (parte 4): "Trocar de lista" (SettingsActivity.changeLogin) chama ContinueStore.clear antes de abrir o login.
+- Motivo: os itens guardados são da lista antiga e não abririam no login novo. Custo aceito: voltar para a lista antiga perde o "Continue assistindo" (os minutos e os episódios vistos NÃO se perdem, pois ficam no PlaybackProgress e no SeriesProgress).
+- Ordem de trabalho: item_continue.xml, activity_continue.xml, ContinueActivity.java, registro no AndroidManifest.xml, HomeActivity.java (cartão "Ver mais"), SettingsActivity.java. O Actions ficou verde em todos os passos.
+- Dependências: nenhuma nova.
+- Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
