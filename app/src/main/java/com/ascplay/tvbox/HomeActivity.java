@@ -33,7 +33,9 @@ import java.util.Locale;
  * esta tela manda EXTRA_QUEUE = true e nenhuma categoria (nula = todas as categorias).
  *
  * Faixa "Continue assistindo" (M6): lê a ContinueStore fora da thread principal e mostra até
- * 10 itens, do mais novo ao mais antigo. Cartão de filme abre a página do filme; cartão de
+ * 10 itens, do mais novo ao mais antigo. Se há mais de 10 itens visíveis, o fim da faixa tem o
+ * cartão "Ver mais ›", que abre a ContinueActivity (lista simples com todos, até 25).
+ * Cartão de filme abre a página do filme; cartão de
  * episódio abre a página da série (servidor: número da série tirado da chave guardada; lista
  * M3U: nome da série tirado do nome "Série - ep. N"). Lá a pessoa clica em "Continuar".
  * Controle parental ligado: itens com nome adulto não aparecem. A faixa é refeita no onResume.
@@ -286,21 +288,23 @@ public class HomeActivity extends Activity {
         boolean hadFocus = railContinue.hasFocus();
         railContinue.removeAllViews();
 
-        // Controle parental ligado: tira o que tem nome adulto. Fica com no máximo 10.
+        // Controle parental ligado: tira o que tem nome adulto.
+        // Fica com no máximo 10 na faixa; total conta todos os visíveis (para o "Ver mais").
         boolean hideAdult = ParentalStore.isEnabled(this);
         List<ContinueStore.Saved> shown = new ArrayList<>();
+        int total = 0;
         if (list != null) {
             for (ContinueStore.Saved s : list) {
-                if (shown.size() >= LIMIT) {
-                    break;
-                }
                 if (s.url.isEmpty()) {
                     continue;
                 }
                 if (hideAdult && ParentalStore.isAdultName(s.name)) {
                     continue;
                 }
-                shown.add(s);
+                total++;
+                if (shown.size() < LIMIT) {
+                    shown.add(s);
+                }
             }
         }
 
@@ -338,6 +342,19 @@ public class HomeActivity extends Activity {
                 first = card;
             }
             last = card;
+        }
+
+        // Cartão "Ver mais ›" só se há mais itens do que cabem na faixa
+        if (total > LIMIT) {
+            View more = inflater.inflate(R.layout.item_card_small, railContinue, false);
+            TextView moreInitial = more.findViewById(R.id.tv_initial);
+            TextView moreName = more.findViewById(R.id.tv_name);
+            moreName.setText("Ver mais ›");
+            moreInitial.setText("›");
+            more.setOnFocusChangeListener(clearLiveOnFocus);
+            more.setOnClickListener(v -> startActivity(new Intent(this, ContinueActivity.class)));
+            railContinue.addView(more);
+            last = more;
         }
 
         // Último cartão: seta para a direita não faz nada (igual ao "Ver mais" das outras faixas)
