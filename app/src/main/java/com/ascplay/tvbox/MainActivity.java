@@ -63,7 +63,7 @@ import java.util.Locale;
  * M13: em episódio, um texto no alto à esquerda mostra "Temporada N - Episódio N". A tela da
  * série pode mandar, em EXTRA_LIST_LABELS, um texto pronto para cada episódio da fila (mesma
  * ordem). Sem isso, mostra "Episódio N" (posição na fila). O texto aparece ao começar o
- * episódio e ao apertar OK ou as setas, e some em 5 segundos.
+ * episódio por 5 segundos e também fica na tela enquanto a barra de controles está visível.
  *
  * Quando um episódio começa a tocar, anota a posição dele na fila (SeriesProgress), para a
  * tela da série abrir no episódio certo da próxima vez. A chave da série vem em EXTRA_SERIES_KEY.
@@ -80,8 +80,9 @@ import java.util.Locale;
  * - OK pausa e continua, mesmo com a barra de controles escondida;
  * - seta direita/esquerda, um toque: avança/volta 10 segundos;
  * - seta direita/esquerda segurada: vai avançando/voltando enquanto segura, cada vez mais rápido.
- * M13c: dos controles do player, só o botão play/pause aparece, meio transparente
- * (PLAY_BUTTON_ALPHA = 50%). Voltar, avançar, barra de tempo e números ficam escondidos.
+ * M13c: dos controles do player, os BOTÕES (voltar, avançar, anterior, próximo e extras) ficam
+ * escondidos. A barra de progresso, os números de tempo e o texto do episódio continuam
+ * aparecendo. O botão play/pause fica meio transparente (PLAY_BUTTON_ALPHA = 50%).
  */
 @OptIn(markerClass = UnstableApi.class)
 public class MainActivity extends Activity {
@@ -124,15 +125,19 @@ public class MainActivity extends Activity {
     private static final long SKIP_CHECK_MS = 1000L;
     // Quanto o botão play/pause fica visível (1.0 = nada transparente; 0.5 = meio transparente)
     private static final float PLAY_BUTTON_ALPHA = 0.5f;
-    // Peças do controle do player (da biblioteca media3) que ficam ESCONDIDAS (M13c)
+    // M13c: BOTÕES do controle do player (biblioteca media3) que ficam ESCONDIDOS.
+    // A barra de progresso, os números de tempo e o play/pause NÃO estão nesta lista.
     private static final String[] HIDDEN_CONTROL_IDS = {
-            "exo_controls_background", "exo_bottom_bar", "exo_time", "exo_progress",
-            "exo_progress_placeholder", "exo_position", "exo_duration", "exo_rew",
-            "exo_ffwd", "exo_prev", "exo_next", "exo_rew_with_amount", "exo_ffwd_with_amount",
+            "exo_rew", "exo_ffwd", "exo_prev", "exo_next",
+            "exo_rew_with_amount", "exo_ffwd_with_amount",
             "exo_repeat_toggle", "exo_shuffle", "exo_settings", "exo_subtitle",
-            "exo_fullscreen", "exo_overflow_show", "exo_overflow_hide", "exo_basic_controls",
+            "exo_fullscreen", "exo_overflow_show", "exo_overflow_hide",
             "exo_extra_controls", "exo_extra_controls_scroll_view", "exo_playback_speed",
-            "exo_audio_track", "exo_vr", "exo_minimal_fullscreen", "exo_minimal_controls"
+            "exo_audio_track", "exo_vr", "exo_minimal_fullscreen"
+    };
+    // Peças que continuam visíveis, mas não podem receber foco (as setas e o OK são nossos)
+    private static final String[] UNFOCUSABLE_CONTROL_IDS = {
+            "exo_progress", "exo_position", "exo_duration", "exo_bottom_bar", "exo_time"
     };
     private static final int MAX_LIST = 500;
     private static final int MAX_URL = 4096;
@@ -234,6 +239,20 @@ public class MainActivity extends Activity {
         makeControllerTransparent();
         createSkipButton();
         createEpisodeLabel();
+
+        // M13c: o texto do episódio fica na tela enquanto a barra de controles está visível
+        playerView.setControllerVisibilityListener(
+                new PlayerView.ControllerVisibilityListener() {
+                    @Override
+                    public void onVisibilityChanged(int visibility) {
+                        if (visibility == View.VISIBLE) {
+                            showEpisodeLabelWithControls();
+                        } else {
+                            handler.removeCallbacks(hideLabel);
+                            episodeLabel.setVisibility(View.GONE);
+                        }
+                    }
+                });
 
         groupNowbar = findViewById(R.id.group_nowbar);
         tvNbChannel = findViewById(R.id.tv_nb_channel);
@@ -338,10 +357,10 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * M13c: deixa só o botão play/pause no controle do player, meio transparente.
-     * Esconde todo o resto (fundo escuro, barra de tempo, números, voltar, avançar etc.).
-     * Se alguma peça não for achada, pula e segue: o player continua normal.
-     * Nenhuma peça recebe foco (o OK e as setas são tratados no dispatchKeyEvent).
+     * M13c: esconde só os BOTÕES do controle do player (voltar, avançar, anterior, próximo e
+     * extras) e deixa o play/pause meio transparente. A barra de progresso e os números de
+     * tempo continuam aparecendo. Se alguma peça não for achada, pula e segue: o player
+     * continua normal. Nenhuma peça recebe foco (OK e setas são tratados no dispatchKeyEvent).
      */
     private void makeControllerTransparent() {
         for (String name : HIDDEN_CONTROL_IDS) {
@@ -352,6 +371,16 @@ public class MainActivity extends Activity {
             View v = playerView.findViewById(hid);
             if (v != null) {
                 v.setVisibility(View.GONE);
+                v.setFocusable(false);
+            }
+        }
+        for (String name : UNFOCUSABLE_CONTROL_IDS) {
+            int uid = getResources().getIdentifier(name, "id", getPackageName());
+            if (uid == 0) {
+                continue;
+            }
+            View v = playerView.findViewById(uid);
+            if (v != null) {
                 v.setFocusable(false);
             }
         }
@@ -440,6 +469,18 @@ public class MainActivity extends Activity {
         episodeLabel.setText(text);
         episodeLabel.setVisibility(View.VISIBLE);
         handler.postDelayed(hideLabel, LABEL_HIDE_MS);
+    }
+
+    /** Mostra o texto do episódio e o deixa na tela enquanto a barra de controles está visível. */
+    private void showEpisodeLabelWithControls() {
+        String text = episodeLabelText();
+        handler.removeCallbacks(hideLabel);
+        if (text.isEmpty()) {
+            episodeLabel.setVisibility(View.GONE);
+            return;
+        }
+        episodeLabel.setText(text);
+        episodeLabel.setVisibility(View.VISIBLE);
     }
 
     private static boolean isHttp(String s) {
