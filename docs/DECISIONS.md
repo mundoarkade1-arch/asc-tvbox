@@ -302,5 +302,13 @@
 - Ordem de trabalho: item_continue.xml, activity_continue.xml, ContinueActivity.java, registro no AndroidManifest.xml, HomeActivity.java (cartão "Ver mais"), SettingsActivity.java. O Actions ficou verde em todos os passos.
 - Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9.
+
+- ## 26/10/2026 - Início do teste no TX9: dois pedidos novos (Rodada 4), ainda não feitos
+
+- Fato: o dono começou a testar a Rodada 3 e a M6 no TX9. Só relatou dois problemas; o resto do roteiro ficou sem resposta.
+- Pedido 1 (decidido, a fazer): o "Pesquisar" das abas deve ficar SEMPRE visível. Hoje é a linha 0 da lista de categorias (decisão da Rodada 3) e some quando a lista rola. Decisão: passa a ser um botão fixo fora da lista, no alto da coluna das categorias. Motivo: pedido do dono. Consequência: a regra "posição da lista = índice da categoria + 1" será desfeita (posição = índice) nas duas abas, e a SearchActivity, que reaproveita activity_browse.xml, deve esconder o botão.
+- Pedido 2 (decidido, a fazer): a tela inicial deve se adaptar à altura da tela, sem rolagem e sem cortar (as séries estavam cortadas no TX9). Decisão: cada faixa ocupa uma parte igual da altura (peso no layout) e o cartão pequeno se ajusta à faixa, em vez de ter altura fixa. Motivo: a altura real do TX9 não é conhecida e cartões fixos cortam; assim serve para qualquer tela e para 3 ou 4 faixas. O dono quer que "tudo se adapte ao tamanho da tela": depois conferir também abas e páginas de filme e série.
+- Ordem de trabalho planejada: tela inicial (item_card_small.xml, depois activity_home.xml), depois o "Pesquisar" (layout com botão escondido, as duas Activities, depois mostrar o botão).
+- Nada de código foi mudado nesta etapa. Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
