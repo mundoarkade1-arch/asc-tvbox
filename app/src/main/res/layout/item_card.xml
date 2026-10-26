@@ -11,7 +11,7 @@
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="90dp"
+        android:layout_height="130dp"
         android:background="#241D20">
 
         <TextView
