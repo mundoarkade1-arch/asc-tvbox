@@ -739,3 +739,310 @@ public class MainActivity extends Activity {
         saveFinished();
         playNextEpisode();
     }
+
+    private void startPlayer() {
+        if (player != null || streamUrl == null) {
+            return;
+        }
+        DefaultHttpDataSource.Factory http = new DefaultHttpDataSource.Factory()
+                .setUserAgent(USER_AGENT)
+                .setAllowCrossProtocolRedirects(true)
+                .setConnectTimeoutMs(TIMEOUT_MS)
+                .setReadTimeoutMs(TIMEOUT_MS);
+
+        player = new ExoPlayer.Builder(this)
+                .setMediaSourceFactory(new DefaultMediaSourceFactory(http))
+                .build();
+        playerView.setPlayer(player);
+        playerView.requestFocus();
+
+        player.addListener(new Player.Listener() {
+            @Override
+            public void onPlaybackStateChanged(int state) {
+                if (state == Player.STATE_BUFFERING) {
+                    showStatus("Carregando...");
+                } else if (state == Player.STATE_READY) {
+                    status.setVisibility(View.GONE);
+                    saveProgress();
+                    if (!nowbarShownOnce) {
+                        nowbarShownOnce = true;
+                        showNowbar();
+                    }
+                } else if (state == Player.STATE_ENDED) {
+                    skipButton.setVisibility(View.GONE);
+                    // Terminou um filme ou episódio: marca como visto
+                    saveFinished();
+                    // Terminou um episódio: toca o próximo da fila
+                    if (item != null && item.kind == XtreamApi.Kind.EPISODE) {
+                        playNextEpisode();
+                    }
+                }
+            }
+
+            @Override
+            public void onPlayerError(PlaybackException error) {
+                // Canal ao vivo do servidor: se não entregou HLS (.m3u8), tenta uma vez o .ts.
+                // (Na lista M3U o endereço é o que veio na lista: não mexemos nele.)
+                if (item != null && item.kind == XtreamApi.Kind.LIVE && item.url.isEmpty()
+                        && !triedTs && streamUrl != null && streamUrl.endsWith(".m3u8")) {
+                    triedTs = true;
+                    streamUrl = streamUrl.substring(0, streamUrl.length() - ".m3u8".length()) + ".ts";
+                    playCurrent();
+                    return;
+                }
+                // Não mostra a mensagem completa: ela pode conter o endereço com a senha.
+                showStatus("Não foi possível tocar (" + error.getErrorCodeName() + ").");
+            }
+        });
+
+        playCurrent();
+
+        // Filme e episódio: anota o minuto de tempos em tempos
+        handler.removeCallbacks(saveTick);
+        handler.postDelayed(saveTick, SAVE_EVERY_MS);
+
+        // Episódio: confere de tempos em tempos se já é hora do botão de pular
+        handler.removeCallbacks(skipTick);
+        handler.postDelayed(skipTick, SKIP_CHECK_MS);
+    }
+
+    private void playCurrent() {
+        if (player == null || streamUrl == null) {
+            return;
+        }
+        skipButton.setVisibility(View.GONE);
+        showEpisodeLabel();
+        showStatus("Carregando...");
+        MediaItem media = MediaItem.fromUri(Uri.parse(streamUrl));
+        if (pendingStartMs > 0) {
+            // Continuar de onde parou: começa neste minuto (vale uma vez só)
+            player.setMediaItem(media, pendingStartMs);
+            pendingStartMs = 0L;
+        } else {
+            player.setMediaItem(media);
+        }
+        player.prepare();
+        player.setPlayWhenReady(true);
+    }
+
+    /** Anota o episódio que começou a tocar (uma vez por episódio). */
+    private void saveProgress() {
+        if (item == null || item.kind != XtreamApi.Kind.EPISODE
+                || seriesKey == null || listIndex < 0 || listIndex == savedIndex) {
+            return;
+        }
+        savedIndex = listIndex;
+        SeriesProgress.save(this, seriesKey, listIndex);
+    }
+
+    // ---------- Minuto exato (filme e episódio) ----------
+
+    /** Chave do item que toca agora (resumo embaralhado é feito pelo PlaybackProgress). */
+    private String progressKey() {
+        if (item == null || creds == null || item.kind == XtreamApi.Kind.LIVE) {
+            return null;
+        }
+        // Lista M3U: o endereço do vídeo identifica o item
+        if (!item.url.isEmpty()) {
+            return PlaybackProgress.urlKey(item.url);
+        }
+        if (item.kind == XtreamApi.Kind.MOVIE) {
+            return PlaybackProgress.movieKey(creds.server, creds.user, item.id);
+        }
+        if (item.kind == XtreamApi.Kind.EPISODE) {
+            return PlaybackProgress.episodeKey(creds.server, creds.user, item.id);
+        }
+        return null;
+    }
+
+    /** Anota o minuto atual do filme ou episódio. Não faz nada em canal ao vivo. */
+    private void saveMark() {
+        if (player == null) {
+            return;
+        }
+        String key = progressKey();
+        if (key == null) {
+            return;
+        }
+        if (player.getPlaybackState() == Player.STATE_ENDED) {
+            return; // o fim é anotado em saveFinished()
+        }
+        long duration = player.getDuration();
+        if (duration == C.TIME_UNSET || duration <= 0) {
+            return;
+        }
+        long position = player.getCurrentPosition();
+        PlaybackProgress.save(this, key, position, duration);
+        updateContinue(position, duration);
+    }
+
+    /** Terminou o filme ou episódio: anota como visto (posição = duração). */
+    private void saveFinished() {
+        if (player == null) {
+            return;
+        }
+        String key = progressKey();
+        if (key == null) {
+            return;
+        }
+        long duration = player.getDuration();
+        if (duration == C.TIME_UNSET || duration <= 0) {
+            return;
+        }
+        PlaybackProgress.save(this, key, duration, duration);
+        // Terminou: sai da lista "Continue assistindo"
+        if (streamUrl != null) {
+            ContinueStore.remove(this, streamUrl);
+        }
+    }
+
+    /**
+     * Atualiza a lista "Continue assistindo": entra se parou entre 5 segundos e 95%,
+     * sai se passou de 95%. Só filme e episódio. O endereço é guardado criptografado.
+     */
+    private void updateContinue(long position, long duration) {
+        if (item == null || streamUrl == null || duration <= 0
+                || (item.kind != XtreamApi.Kind.MOVIE && item.kind != XtreamApi.Kind.EPISODE)) {
+            return;
+        }
+        if (position * 100L >= duration * 95L) {
+            ContinueStore.remove(this, streamUrl);
+            return;
+        }
+        if (position < MIN_START_MS) {
+            return;
+        }
+        String kindText = item.kind == XtreamApi.Kind.MOVIE ? "movie" : "episode";
+        ContinueStore.save(this, new ContinueStore.Saved(kindText, currentName, iconUrl,
+                streamUrl, item.id, item.ext == null ? "" : item.ext,
+                seriesKey == null ? "" : seriesKey, position, duration));
+    }
+
+    /** Se a pessoa sair e voltar a esta tela (por exemplo, Home), continua do mesmo minuto. */
+    private void rememberPositionForRestart() {
+        if (player == null || progressKey() == null) {
+            return;
+        }
+        if (player.getPlaybackState() == Player.STATE_ENDED) {
+            return;
+        }
+        long pos = player.getCurrentPosition();
+        if (pos >= MIN_START_MS) {
+            pendingStartMs = pos;
+        }
+    }
+
+    /**
+     * Passa para o próximo episódio da fila. A fila tem a série toda, então passa sozinho
+     * para a temporada seguinte. No último episódio da série avisa "Fim da série.".
+     */
+    private void playNextEpisode() {
+        int next = listIndex + 1;
+
+        // Lista M3U: a lista tem os endereços prontos
+        if (listUrls != null) {
+            if (next >= listUrls.size()) {
+                showStatus("Fim da série.");
+                return;
+            }
+            listIndex = next;
+            currentName = (baseName.isEmpty() ? "" : baseName + " - ") + "ep. " + (next + 1);
+            item = new XtreamApi.Item(XtreamApi.Kind.EPISODE, String.valueOf(next + 1), "", "",
+                    "", "", "", listUrls.get(next));
+            streamUrl = XtreamApi.streamUrl(creds.server, creds.user, creds.pass, item);
+            playCurrent();
+            return;
+        }
+
+        // Servidor: a lista tem números e extensões, e o endereço é montado aqui
+        if (listIds == null || listExts == null || next >= listIds.size()) {
+            showStatus("Fim da série.");
+            return;
+        }
+        listIndex = next;
+        currentName = (baseName.isEmpty() ? "" : baseName + " - ") + "ep. " + (next + 1);
+        item = new XtreamApi.Item(XtreamApi.Kind.EPISODE, listIds.get(next), "", "", "", "",
+                listExts.get(next));
+        streamUrl = XtreamApi.streamUrl(creds.server, creds.user, creds.pass, item);
+        playCurrent();
+    }
+
+    private void releasePlayer() {
+        if (player != null) {
+            playerView.setPlayer(null);
+            player.release();
+            player = null;
+        }
+    }
+
+    private void showStatus(String text) {
+        status.setText(text);
+        status.setVisibility(View.VISIBLE);
+    }
+
+    // ---------- Barra Agora / A seguir ----------
+
+    private void showNowbar() {
+        if (!canShowSchedule()) {
+            return;
+        }
+        handler.removeCallbacks(hideNowbar);
+        final int token = ++nowbarToken;
+
+        tvNbChannel.setText(item.name);
+        tvNbTitle.setText("Carregando...");
+        tvNbStart.setText("");
+        tvNbEnd.setText("");
+        tvNbNext.setText("");
+        pbNowbar.setProgress(0);
+        groupNowbar.setVisibility(View.VISIBLE);
+        handler.postDelayed(hideNowbar, NOWBAR_HIDE_MS);
+
+        EpgCache.get(creds.server, creds.user, creds.pass, item.id, epg -> {
+            if (isFinishing() || isDestroyed() || token != nowbarToken) {
+                return;
+            }
+            fillNowbar(epg);
+        });
+    }
+
+    private void fillNowbar(XtreamApi.Epg epg) {
+        if (epg == null) {
+            tvNbTitle.setText("Programação indisponível");
+            tvNbStart.setText("");
+            tvNbEnd.setText("");
+            tvNbNext.setText("");
+            pbNowbar.setProgress(0);
+            return;
+        }
+        tvNbTitle.setText(epg.title);
+        tvNbStart.setText(clock(epg.start));
+        tvNbEnd.setText(clock(epg.end));
+
+        long total = epg.end - epg.start;
+        long passed = System.currentTimeMillis() - epg.start;
+        int percent = 0;
+        if (total > 0) {
+            percent = (int) ((passed * 100L) / total);
+        }
+        if (percent < 0) {
+            percent = 0;
+        }
+        if (percent > 100) {
+            percent = 100;
+        }
+        pbNowbar.setProgress(percent);
+
+        if (epg.nextTitle == null || epg.nextTitle.isEmpty()) {
+            tvNbNext.setText("");
+        } else if (epg.nextStart > 0) {
+            tvNbNext.setText("A seguir: " + clock(epg.nextStart) + "  " + epg.nextTitle);
+        } else {
+            tvNbNext.setText("A seguir: " + epg.nextTitle);
+        }
+    }
+
+    private static String clock(long millis) {
+        return new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date(millis));
+    }
+}
