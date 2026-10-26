@@ -20,12 +20,14 @@ import android.widget.Toast;
 
 import androidx.annotation.OptIn;
 import androidx.media3.common.C;
+import androidx.media3.common.Format;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.datasource.DefaultHttpDataSource;
 import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.exoplayer.analytics.AnalyticsListener;
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
 import androidx.media3.ui.PlayerView;
 
@@ -83,6 +85,9 @@ import java.util.Locale;
  * M13c: dos controles do player, os BOTÕES (voltar, avançar, anterior, próximo e extras) ficam
  * escondidos. A barra de progresso, os números de tempo e o texto do episódio continuam
  * aparecendo. O botão play/pause fica meio transparente (PLAY_BUTTON_ALPHA = 50%).
+ *
+ * Diagnóstico de imagem (temporário): ao apertar OK em filme ou episódio, um texto no alto à
+ * direita mostra tamanho do vídeo, tipo, decodificador e tamanho da tela por 6 segundos.
  */
 @OptIn(markerClass = UnstableApi.class)
 public class MainActivity extends Activity {
@@ -108,6 +113,7 @@ public class MainActivity extends Activity {
     private static final int TIMEOUT_MS = 15000;
     private static final long NOWBAR_HIDE_MS = 6000L;
     private static final long LABEL_HIDE_MS = 5000L;
+    private static final long DIAG_HIDE_MS = 6000L;
     private static final long SAVE_EVERY_MS = 10000L;
     private static final long MIN_START_MS = 5000L;
     private static final long MAX_START_MS = 100L * 3600L * 1000L;
@@ -187,6 +193,10 @@ public class MainActivity extends Activity {
     // Texto "Temporada N - Episódio N" (criado no código, começa escondido)
     private TextView episodeLabel;
 
+    // Texto de diagnóstico da imagem (temporário) e nome do decodificador de vídeo
+    private TextView diagLabel;
+    private String decoderName = "";
+
     // Barra Agora / A seguir
     private View groupNowbar;
     private TextView tvNbChannel;
@@ -206,6 +216,12 @@ public class MainActivity extends Activity {
         @Override
         public void run() {
             episodeLabel.setVisibility(View.GONE);
+        }
+    };
+    private final Runnable hideDiag = new Runnable() {
+        @Override
+        public void run() {
+            diagLabel.setVisibility(View.GONE);
         }
     };
     // De tempos em tempos anota o minuto do filme ou episódio
@@ -239,6 +255,7 @@ public class MainActivity extends Activity {
         makeControllerTransparent();
         createSkipButton();
         createEpisodeLabel();
+        createDiagLabel();
 
         // M13c: o texto do episódio fica na tela enquanto a barra de controles está visível
         playerView.setControllerVisibilityListener(
@@ -444,6 +461,51 @@ public class MainActivity extends Activity {
         addContentView(episodeLabel, lp);
     }
 
+    /**
+     * Cria o texto de diagnóstico da imagem (no alto, à direita, escondido).
+     * Temporário: serve para descobrir por que a imagem parece pixelada. Não recebe foco.
+     */
+    private void createDiagLabel() {
+        diagLabel = new TextView(this);
+        diagLabel.setTextColor(Color.WHITE);
+        diagLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        diagLabel.setShadowLayer(6f, 0f, 0f, Color.BLACK);
+        diagLabel.setGravity(Gravity.END);
+        diagLabel.setFocusable(false);
+        diagLabel.setVisibility(View.GONE);
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.TOP | Gravity.END);
+        lp.setMargins(0, dp(24), dp(32), 0);
+        addContentView(diagLabel, lp);
+    }
+
+    /** Mostra por alguns segundos: tamanho do vídeo, tipo, decodificador e tamanho da tela. */
+    private void showDiag() {
+        if (player == null || diagLabel == null) {
+            return;
+        }
+        Format f = player.getVideoFormat();
+        String video;
+        if (f == null) {
+            video = "Vídeo: ainda sem dados";
+        } else {
+            String mime = f.sampleMimeType == null ? "?" : f.sampleMimeType.replace("video/", "");
+            video = "Vídeo: " + f.width + "x" + f.height + " - " + mime;
+            if (f.bitrate > 0) {
+                video = video + " - " + (f.bitrate / 1000) + " kbps";
+            }
+        }
+        String dec = decoderName.isEmpty() ? "?" : decoderName;
+        int sw = getResources().getDisplayMetrics().widthPixels;
+        int sh = getResources().getDisplayMetrics().heightPixels;
+        diagLabel.setText(video + "\nDecodificador: " + dec + "\nTela: " + sw + "x" + sh);
+        diagLabel.setVisibility(View.VISIBLE);
+        handler.removeCallbacks(hideDiag);
+        handler.postDelayed(hideDiag, DIAG_HIDE_MS);
+    }
+
     /** Texto do episódio que toca agora. Vazio se não for episódio. */
     private String episodeLabelText() {
         if (item == null || item.kind != XtreamApi.Kind.EPISODE || listIndex < 0) {
@@ -570,10 +632,12 @@ public class MainActivity extends Activity {
         super.onStop();
         handler.removeCallbacks(hideNowbar);
         handler.removeCallbacks(hideLabel);
+        handler.removeCallbacks(hideDiag);
         handler.removeCallbacks(saveTick);
         handler.removeCallbacks(skipTick);
         skipButton.setVisibility(View.GONE);
         episodeLabel.setVisibility(View.GONE);
+        diagLabel.setVisibility(View.GONE);
         nowbarToken++;
         // Anota o minuto e, se a pessoa voltar a esta tela, continua dali
         saveMark();
@@ -586,6 +650,7 @@ public class MainActivity extends Activity {
         super.onDestroy();
         handler.removeCallbacks(hideNowbar);
         handler.removeCallbacks(hideLabel);
+        handler.removeCallbacks(hideDiag);
         handler.removeCallbacks(saveTick);
         handler.removeCallbacks(skipTick);
         nowbarToken++;
@@ -670,6 +735,7 @@ public class MainActivity extends Activity {
                     skipToNextEpisode();
                 } else {
                     togglePause();
+                    showDiag();
                 }
             }
             return true;
@@ -820,6 +886,15 @@ public class MainActivity extends Activity {
                 .build();
         playerView.setPlayer(player);
         playerView.requestFocus();
+
+        // Diagnóstico: guarda o nome do decodificador de vídeo que o aparelho escolheu
+        player.addAnalyticsListener(new AnalyticsListener() {
+            @Override
+            public void onVideoDecoderInitialized(AnalyticsListener.EventTime eventTime,
+                    String name, long initializedTimestampMs, long initializationDurationMs) {
+                decoderName = name == null ? "" : name;
+            }
+        });
 
         player.addListener(new Player.Listener() {
             @Override
