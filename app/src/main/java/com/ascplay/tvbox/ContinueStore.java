@@ -15,7 +15,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -25,6 +27,7 @@ import javax.crypto.spec.GCMParameterSpec;
 /**
  * Lista do "Continue assistindo": filmes e episódios começados e não terminados.
  * Guarda no máximo 25 itens, do mais novo para o mais antigo.
+ * Cada série aparece UMA vez só, com o último episódio.
  * A lista inteira é criptografada (AES-GCM, chave do Android Keystore),
  * porque o endereço do vídeo pode ter usuário e senha.
  * Se o Keystore não funcionar, guarda sem criptografia
@@ -80,17 +83,39 @@ public final class ContinueStore {
     private ContinueStore() {
     }
 
-    /** Guarda o item no começo da lista. Se já existia, troca pelo novo. */
+    /**
+     * Guarda o item no começo da lista. Se o mesmo vídeo já existia, troca pelo novo.
+     * Episódio: só fica UM por série (o mais novo). Também limpa repetições antigas.
+     */
     public static synchronized void save(Context context, Saved item) {
         List<Saved> all = readAll(context);
         List<Saved> out = new ArrayList<>();
+        Set<String> seenSeries = new HashSet<>();
         out.add(item);
+        if (isEpisode(item)) {
+            seenSeries.add(item.seriesKey);
+        }
         for (Saved s : all) {
-            if (!s.key.equals(item.key) && out.size() < MAX_ITEMS) {
-                out.add(s);
+            if (out.size() >= MAX_ITEMS) {
+                break;
             }
+            if (s.key.equals(item.key)) {
+                continue;
+            }
+            if (isEpisode(s)) {
+                // Já tem um episódio mais novo desta série: este é descartado.
+                if (!seenSeries.add(s.seriesKey)) {
+                    continue;
+                }
+            }
+            out.add(s);
         }
         writeAll(context, out);
+    }
+
+    /** Episódio com chave de série preenchida (só estes são agrupados por série). */
+    private static boolean isEpisode(Saved s) {
+        return "episode".equals(s.kind) && !s.seriesKey.isEmpty();
     }
 
     /** Devolve a lista, do mais novo para o mais antigo. */
