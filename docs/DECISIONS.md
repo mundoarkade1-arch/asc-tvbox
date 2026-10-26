@@ -246,5 +246,15 @@
 - Capa do filme (activity_movie.xml, 340x510dp) confirmada pelo dono: salva e verde.
 - Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9.
+
+- ## 26/10/2026 - Rodada 3, M2: ícone do app
+
+- Decisão: o ícone do app é um desenho em texto (vetor), no arquivo res/drawable/ic_app_icon.xml: quadrado vermelho (#FF2A3D, o mesmo vermelho do título) de cantos redondos, com um triângulo branco de "play" no meio. Ligado no AndroidManifest.xml com android:icon="@drawable/ic_app_icon" dentro de <application>.
+- Motivo: o dono não tem imagem pronta e não usa terminal. Um desenho em texto se cria só pelo site do GitHub, é bem leve e não precisa de dependência nem de arquivo de imagem.
+- Decisão: ordem de trabalho: arquivo novo do desenho primeiro (nada usava), depois a ligação no AndroidManifest.xml. O Actions ficou verde nos dois passos.
+- Risco aceito: alguns TV box mostram na lista de apps um "banner" largo (android:banner) e não o ícone quadrado. Só se saberá no teste no TX9. Se aparecer sem imagem, criar o banner depois.
+- Limite: o ícone é simples e provisório. O dono pode pedir outro desenho depois.
+- Dependências: nenhuma nova.
+- Ainda NÃO visto no TX9.
 - Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
