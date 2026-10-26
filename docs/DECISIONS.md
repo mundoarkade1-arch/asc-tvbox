@@ -211,4 +211,20 @@
 - Sem dependências novas.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes são o próximo passo.
 - Dependências: nenhuma nova.
+
+- ## 26/10/2026 - Rodada 3 (parte 1): player, grade com 5 colunas e Pesquisar nas categorias
+
+- Fato: o dono testou R1 a R6 no TX9 e disse que funcionam. Fez novos pedidos (Rodada 3), anotados como METAS no STATUS.md.
+- Decisão: em filme e episódio, OK pausa e continua o vídeo, mesmo com a barra de controles escondida. Motivo: antes, o OK só mostrava a barra e não pausava.
+- Decisão: seta direita/esquerda em filme e episódio: um toque pula 10 segundos; segurando, continua pulando enquanto a tecla está apertada, com passos maiores quanto mais tempo segura (10 s até 2 s segurando, 30 s até 5 s, depois 60 s), um pulo a cada 250 ms. Motivo: pedido do dono (avançar o tanto que segurar). Os passos crescentes evitam que um filme longo demore demais para andar.
+- Decisão: em episódio, faltando 2 minutos, aparece um botão pequeno "Pular para o próximo episódio" embaixo, à direita. OK pula, marca o episódio como visto e toca o próximo. Enquanto o botão está na tela, OK pula (não pausa). Só aparece se existe próximo episódio na fila.
+- Motivo: o botão é criado dentro do MainActivity.java, sem mexer em layout. Ele não recebe foco; o OK é tratado em dispatchKeyEvent.
+- Decisão: o cartão das abas (item_card.xml) passou de 170dp para 150dp de largura (imagem de 110dp para 90dp, nome 14sp), e a grade das abas passou a ter 5 colunas fixas (activity_browse.xml). A coluna de categorias passou de 300dp para 190dp.
+- Motivo: pedido do dono (5 por linha e categorias menores, ainda com o nome). Os ids do cartão continuam iguais aos do item_card_small.xml.
+- Risco aceito: a largura real da tela do TX9 não é conhecida; se cortar, ajustar columnWidth e a largura da lista de categorias.
+- Decisão: "Pesquisar" é a PRIMEIRA linha da lista de categorias (linha 0); a categoria N fica na linha N+1. OK nessa linha abre o teclado de letras, como o botão fazia. Feito na BrowseActivity (servidor). Falta a M3uBrowseActivity e depois tirar o botão do alto do activity_browse.xml.
+- Motivo: pedido do dono. A seta esquerda, vinda da grade, volta para a linha da categoria aberta (com +1 por causa da linha do Pesquisar).
+- Ordem de trabalho: MainActivity primeiro; item_card.xml antes do activity_browse.xml; código antes do layout. O Actions ficou verde em todos os passos.
+- Dependências: nenhuma nova.
+- Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
