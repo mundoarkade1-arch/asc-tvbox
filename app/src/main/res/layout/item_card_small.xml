@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="130dp"
-    android:layout_height="wrap_content"
-    android:layout_margin="4dp"
+    android:layout_height="match_parent"
+    android:layout_margin="3dp"
     android:background="@drawable/bg_card"
     android:clickable="true"
     android:focusable="true"
     android:orientation="vertical"
-    android:padding="6dp">
+    android:padding="4dp">
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="68dp"
-        android:background="#241D20">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="#241D20"
+        android:minHeight="16dp">
 
         <TextView
             android:id="@+id/tv_initial"
@@ -20,7 +22,7 @@
             android:layout_height="match_parent"
             android:gravity="center"
             android:textColor="#5A4D52"
-            android:textSize="32sp"
+            android:textSize="28sp"
             android:textStyle="bold" />
 
         <ImageView
@@ -28,7 +30,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:contentDescription="@null"
-            android:padding="4dp"
+            android:padding="2dp"
             android:scaleType="fitCenter" />
     </FrameLayout>
 
@@ -36,10 +38,10 @@
         android:id="@+id/tv_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="2dp"
         android:ellipsize="end"
-        android:maxLines="2"
-        android:minLines="2"
+        android:maxLines="1"
+        android:minLines="1"
         android:textColor="#F6F2F3"
         android:textSize="13sp"
         android:textStyle="bold" />
@@ -48,7 +50,6 @@
         android:id="@+id/tv_now"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
         android:ellipsize="end"
         android:maxLines="1"
         android:textColor="#A39A9D"
