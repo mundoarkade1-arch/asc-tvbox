@@ -270,5 +270,22 @@
 - Limites anotados: o clique na faixa (a fazer) abrirá o player direto, sem a fila de episódios, então o próximo episódio não toca sozinho a partir da faixa. "Trocar de lista" ainda não limpa a ContinueStore (a fazer). Se o servidor mudar de endereço, os itens antigos deixam de tocar.
 - Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9.
+
+- ## 26/10/2026 - Rodada 3, M6 (parte 2): faixa "Continue assistindo" na tela inicial
+
+- Decisão (do dono): clicar num cartão da faixa NÃO toca o vídeo direto. Filme abre a página do filme (MovieActivity); episódio abre a página da série (SeriesActivity no servidor, M3uSeriesActivity na lista M3U). Lá o dono clica em "Continuar de onde parei" / "Continuar".
+- Motivo: pedido do dono ("mais fácil"). Também resolve o limite antigo: como a fila de episódios vem da página da série, o próximo episódio toca sozinho. Não foi preciso criar fila nova nem mexer no player.
+- Decisão: para abrir a página da série, a HomeActivity tira os dados do que a ContinueStore já guarda, sem mudar a ContinueStore. Servidor: o número da série é a última parte da seriesKey ("xt|servidor|usuário|número"); só vale se for número de até 12 dígitos. Lista M3U: o nome da série é o que vem antes de " - ep. N" no nome guardado. Se não der para tirar os dados (item de outra lista ou formato estranho), aparece o aviso "Não deu para abrir este item. Ele pode ser de outra lista." e nada abre.
+- Motivo: a seriesKey e o endereço do vídeo podem ter servidor, usuário e senha. Por isso NUNCA são mostrados nem registrados em log; só o número da série e o nome seguem para a outra tela.
+- Decisão: a faixa mostra os 10 itens mais novos da ContinueStore (a lista guarda até 25). Cada cartão usa item_card_small.xml e mostra capa, nome e "Parou em M:SS" (na linha tv_now). Itens sem endereço de vídeo são ignorados. Com o controle parental ligado, itens com nome adulto não aparecem.
+- Decisão: a lista é lida fora da thread principal (loadContinue) e refeita no onResume (depois do player), no Atualizar e quando o controle parental muda. Uma contagem (continueGen) ignora respostas antigas. Se a faixa fica vazia, ela some; se o foco estava nela, vai para "Tela inicial" do menu.
+- Motivo: a ContinueStore lê e descifra um arquivo; fazer isso fora da thread principal evita travar o TX9 (1 GB de RAM).
+- Decisão: o último cartão da faixa trava a seta direita (igual ao "Ver mais" das outras faixas, R6). O cartão "Ver mais" da faixa AINDA NÃO existe: a decisão sobre essa tela fica para o próximo passo, com o dono.
+- Decisão: o botão "Tela inicial" do menu leva o foco ao primeiro cartão da primeira faixa que tiver itens, agora contando a faixa "Continue assistindo".
+- Ordem de trabalho: activity_home.xml primeiro (faixa nova escondida e vazia, sem uso), depois HomeActivity.java. O Actions ficou verde nos dois passos.
+- Risco aceito: com a 4ª faixa aparecendo, a tela inicial pode cortar embaixo no TX9 (altura real desconhecida). Conferir no teste; se cortar, diminuir item_card_small.xml e os espaços.
+- Falta: "Ver mais" da faixa (decidir com o dono) e limpar a ContinueStore em "Trocar de lista" (SettingsActivity).
+- Dependências: nenhuma nova.
+- Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
