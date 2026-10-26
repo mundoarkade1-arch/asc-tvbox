@@ -310,5 +310,19 @@
 - Pedido 2 (decidido, a fazer): a tela inicial deve se adaptar à altura da tela, sem rolagem e sem cortar (as séries estavam cortadas no TX9). Decisão: cada faixa ocupa uma parte igual da altura (peso no layout) e o cartão pequeno se ajusta à faixa, em vez de ter altura fixa. Motivo: a altura real do TX9 não é conhecida e cartões fixos cortam; assim serve para qualquer tela e para 3 ou 4 faixas. O dono quer que "tudo se adapte ao tamanho da tela": depois conferir também abas e páginas de filme e série.
 - Ordem de trabalho planejada: tela inicial (item_card_small.xml, depois activity_home.xml), depois o "Pesquisar" (layout com botão escondido, as duas Activities, depois mostrar o botão).
 - Nada de código foi mudado nesta etapa. Dependências: nenhuma nova.
+
+- ## 26/10/2026 - Rodada 4, R4-2: tela inicial adaptada à altura da tela
+
+- Decisão: cada faixa da tela inicial (Continue assistindo, Canais, Filmes, Séries) ocupa uma parte IGUAL da altura. No activity_home.xml, cada faixa virou um bloco com altura 0dp e peso 1, e a rolagem lateral dentro dele também usa o resto da altura. O Continue assistindo continua escondido por padrão; quando some, as outras três dividem a tela.
+- Motivo: pedido do dono ("a tela inicial ficou cortando a parte das séries, quero que tudo se adapte ao tamanho da tela, sem rolagem"). A altura real da tela do TX9 não é conhecida; com cartões de altura fixa, a última faixa era cortada. Com peso, serve para qualquer tela e para 3 ou 4 faixas.
+- Decisão: o cartão pequeno (item_card_small.xml) passou a ter altura match_parent. A imagem ocupa o espaço que sobra (peso 1, mínimo de 16dp). O nome ficou em 1 linha (antes 2) e a linha "Agora/Parou em" continua embaixo. A largura continua 130dp. Os ids são os mesmos, então o código não mudou.
+- Motivo: a imagem precisa ser a parte que encolhe. O nome em 1 linha dá mais altura à imagem. Nome longo é cortado com "...".
+- Decisão: títulos das faixas de 20sp para 18sp, avisos de 16sp para 14sp, e espaços em volta menores. Motivo: ganhar altura para a imagem.
+- Decisão: HomeActivity.java NÃO foi mudado. Ele só põe os cartões nas faixas; o tamanho vem do layout.
+- Ordem de trabalho: activity_home.xml primeiro (o cartão antigo, de altura "wrap_content", continuava funcionando dentro das faixas novas), depois item_card_small.xml. O Actions ficou verde nos dois passos.
+- Risco aceito: com 4 faixas e o aviso de atualização aberto, a imagem do cartão pode ficar bem pequena. O dono confere no TX9. Se for o caso, tirar a linha "Carregando..." quando a faixa carregar ou diminuir mais os espaços.
+- Limite: o item_card.xml (abas e busca) NÃO foi mudado. As abas e as páginas de filme e série (capas de altura fixa) ainda não foram conferidas quanto ao tamanho da tela.
+- Dependências: nenhuma nova.
+- Ainda NÃO visto no TX9.
 - Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
