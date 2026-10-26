@@ -21,22 +21,25 @@ import java.util.List;
 /**
  * "Ver mais" para o login por lista M3U (também as abas Canais, Filmes e Séries do menu
  * à esquerda).
- * Esquerda: categorias (group-title da lista). Direita: itens, por páginas de 40 (máximo 400).
+ * Esquerda: botão "Pesquisar" fixo e, abaixo, as categorias (group-title da lista).
+ * Direita: itens, por páginas de 40 (máximo 400).
  *
  * A lista é lida aos poucos e de novo a cada página (a lista M3U não tem como pedir "só a página
  * 2"). Só uma página fica na memória. As categorias são achadas lendo a lista uma vez, depois que
  * a primeira página aparece, e só os nomes são guardados.
  *
- * Ordem do foco (da esquerda para a direita): menu, categorias, itens. Esquerda na primeira
- * coluna dos itens leva o foco às categorias (Rodada 1, R3).
+ * Ordem do foco: menu, Pesquisar, categorias, itens. Esquerda na primeira coluna dos itens
+ * leva o foco às categorias (Rodada 1, R3).
  *
  * Menu à esquerda (ícone e nome): ligado pelo NavBar, igual à BrowseActivity. Atualizar
  * recarrega a categoria aberta.
  *
- * Pesquisa (Rodada 3): é a PRIMEIRA linha da lista de categorias ("Pesquisar"). OK nela pesquisa
- * SÓ o tipo desta tela (canais, filmes ou séries): abre o teclado de letras e, ao buscar, a
- * tela de resultados (SearchActivity). Na lista, a linha 0 é a pesquisa e a linha N (N maior
- * que 0) é a categoria de índice N-1 em catNames (onde o índice 0 é "Todas as categorias").
+ * Pesquisa (Rodada 4, R4-1): o botão "Pesquisar" (btn_search_top) fica FIXO acima da lista de
+ * categorias, sempre à vista. No layout ele nasce escondido (a SearchActivity, que reaproveita
+ * o mesmo layout, não o mostra); esta tela o mostra. OK nele pesquisa SÓ o tipo desta tela
+ * (canais, filmes ou séries): abre o teclado de letras e, ao buscar, a tela de resultados
+ * (SearchActivity). A lista de categorias NÃO tem mais a linha "Pesquisar": a posição da lista
+ * é o índice em catNames (onde o índice 0 é "Todas as categorias").
  *
  * Controle parental (quando ligado): categorias adultas mostram um cadeado e pedem a senha de
  * 4 números. A liberação vale só para aquela categoria, enquanto a pessoa está nela. Em "Todas as
@@ -56,13 +59,13 @@ public class M3uBrowseActivity extends Activity {
     private static final int COLOR_NEUTRAL = 0xFFA39A9D;
     private static final int COLOR_ERROR = 0xFFFF6B78;
     private static final String LOCK = "\uD83D\uDD12 ";
-    private static final String SEARCH_ICON = "\uD83D\uDD0D ";
 
     private CredentialStore.Credentials creds;
     private XtreamApi.Kind kind;
 
     private TextView tvTitle;
     private TextView tvStatus;
+    private TextView btnSearch;
     private ListView lvCategories;
     private GridView gvItems;
 
@@ -109,12 +112,20 @@ public class M3uBrowseActivity extends Activity {
         setContentView(R.layout.activity_browse);
         tvTitle = findViewById(R.id.tv_title);
         tvStatus = findViewById(R.id.tv_status);
+        btnSearch = findViewById(R.id.btn_search_top);
         lvCategories = findViewById(R.id.lv_categories);
         gvItems = findViewById(R.id.gv_items);
 
         lvCategories.setDividerHeight(dp(6));
         gvItems.setHorizontalSpacing(dp(10));
         gvItems.setVerticalSpacing(dp(10));
+
+        // Botão "Pesquisar" fixo: sempre à vista, acima da lista de categorias (R4-1).
+        // Foco: do botão, baixo vai à lista; do alto da lista, cima volta ao botão.
+        btnSearch.setVisibility(View.VISIBLE);
+        btnSearch.setNextFocusDownId(R.id.lv_categories);
+        lvCategories.setNextFocusUpId(R.id.btn_search_top);
+        btnSearch.setOnClickListener(v -> openSearch());
 
         // Menu à esquerda (ícone e nome)
         NavBar.bind(this, navCurrent(), () -> refreshCurrent());
@@ -125,14 +136,8 @@ public class M3uBrowseActivity extends Activity {
         lvCategories.setAdapter(catAdapter);
         gvItems.setAdapter(itemAdapter);
 
-        // Linha 0 da lista = Pesquisar; linha N = categoria de índice N-1
-        lvCategories.setOnItemClickListener((parent, view, position, id) -> {
-            if (position == 0) {
-                openSearch();
-            } else {
-                onCategoryClick(position - 1);
-            }
-        });
+        // Posição da lista = índice da categoria em catNames
+        lvCategories.setOnItemClickListener((parent, view, position, id) -> onCategoryClick(position));
         gvItems.setOnItemClickListener((parent, view, position, id) -> {
             if (position >= 0 && position < items.size()) {
                 openItem(items.get(position));
@@ -174,7 +179,8 @@ public class M3uBrowseActivity extends Activity {
 
     /**
      * Com o foco na grade de itens, esquerda na primeira coluna leva o foco às categorias
-     * (ordem: menu, categorias, itens). Em qualquer outro lugar, as teclas funcionam como antes.
+     * (ordem: menu, Pesquisar, categorias, itens). Em qualquer outro lugar, as teclas funcionam
+     * como antes.
      */
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
@@ -202,8 +208,7 @@ public class M3uBrowseActivity extends Activity {
             }
         }
         lvCategories.requestFocus();
-        // +1 porque a linha 0 da lista é o "Pesquisar"
-        lvCategories.setSelection(position + 1);
+        lvCategories.setSelection(position);
     }
 
     // ---------- Menu à esquerda ----------
@@ -513,16 +518,16 @@ public class M3uBrowseActivity extends Activity {
 
     // ---------- Adaptadores (reaproveitam as linhas ao rolar) ----------
 
-    /** Linha 0 = Pesquisar; linha N (maior que 0) = categoria de índice N-1 em catNames. */
+    /** Posição da lista = índice da categoria em catNames (0 = Todas as categorias). */
     private final class CategoryAdapter extends BaseAdapter {
         @Override
         public int getCount() {
-            return catNames.size() + 1;
+            return catNames.size();
         }
 
         @Override
         public Object getItem(int position) {
-            return position == 0 ? "Pesquisar" : catNames.get(position - 1);
+            return catNames.get(position);
         }
 
         @Override
@@ -542,13 +547,8 @@ public class M3uBrowseActivity extends Activity {
             } else {
                 tv = (TextView) convertView;
             }
-            if (position == 0) {
-                tv.setText(SEARCH_ICON + "Pesquisar");
-                return tv;
-            }
-            int index = position - 1;
-            String name = catNames.get(index);
-            boolean locked = parentalOn && index > 0 && ParentalStore.isAdultCategory(name);
+            String name = catNames.get(position);
+            boolean locked = parentalOn && position > 0 && ParentalStore.isAdultCategory(name);
             tv.setText(locked ? LOCK + name : name);
             return tv;
         }
