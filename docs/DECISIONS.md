@@ -377,5 +377,18 @@
 - M12: categoria com mais de 400 itens só mostra os 400 primeiros. O limite de 400 foi escolhido por causa da memória (1 GB). Decisão do dono: carregar tudo. Direção: carregar por páginas ao chegar perto do fim da grade, sem guardar tudo de uma vez.
 - Ordem sugerida: M10 primeiro (um arquivo), depois M12, depois M11.
 - Dependências: nenhuma nova.
+
+- 
+## 26/10/2026 - M10, M12 e M11 (primeira tentativa)
+
+- Decisão (M10): ContinueStore.save passa a guardar UM episódio por série. Ao salvar, remove os outros itens "episode" com a MESMA seriesKey (fica o mais novo) e também limpa repetições antigas. Filme continua agrupado só pelo endereço. Motivo: a chave do item é o SHA-1 do endereço do vídeo e cada episódio tem um endereço, então a mesma série entrava várias vezes. Limite de 25, criptografia e "Trocar de lista" não mudaram.
+- Decisão (M12): MAX_ITEMS de BrowseActivity e M3uBrowseActivity passou de 400 para 5000, como teto de segurança. O carregamento por páginas de 40, ao chegar perto do fim da grade, já existia. Motivo: pedido do dono (carregar tudo). O limite de 400 da ChannelQueue (troca de canal) NÃO mudou. Risco: na lista M3U cada página relê a lista desde o começo, então páginas do fim de categoria enorme demoram mais. O aviso do teto agora manda usar o Pesquisar.
+- Decisão (M11, parte 1): XtreamApi.normalizeText pula o Normalizer quando o texto só tem ASCII, e usa uma regra (Pattern) preparada uma vez. M3uApi.search confere o nome contra as palavras ANTES de classificar o item. Resultado da busca igual ao de antes.
+- Decisão (M11, parte 2): nova interface XtreamApi.ResultListener e novas funções XtreamApi.searchStream e M3uApi.searchStream, que avisam cada resultado ao achar. As funções search antigas passaram a usá-las por dentro. Alternativa: mostrar resultados aos poucos.
+- Decisão (M11, parte 3): a SearchActivity mostrava cada resultado ao chegar, mas as capas piscavam (a grade se redesenhava a cada item). Passou a juntar tudo numa lista e mostrar de uma vez no fim. A busca é cancelada se a tela fechar (flag cancelled). Pedido do dono: pode esperar em "Buscando...".
+- Fato: no teste, o dono disse que a pesquisa continua LENTA ("demorou bastante"), em todas as abas e nos dois logins. Conclusão: o custo principal é ler a lista inteira pela internet a cada busca, e não o texto no aparelho. As três partes acima ajudam pouco. A solução real fica para o próximo agente (ideias no STATUS.md: busca por categoria no servidor, cópia da lista em arquivo no disco com validade curta, índice pequeno em disco). Nada decidido.
+- Ordem de trabalho: código novo primeiro (XtreamApi, M3uApi), depois quem usa (SearchActivity). O Actions ficou verde em todos os passos.
+- Dependências: nenhuma nova.
+- Ainda NÃO testados no TX9: M10, M12 e M9.
 - Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
