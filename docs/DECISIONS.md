@@ -338,5 +338,22 @@
 - Risco aceito: na tela de resultados da busca pode sobrar espaço vazio à esquerda, onde ficavam as categorias (não é novo; conferir no teste).
 - Dependências: nenhuma nova.
 - Ainda NÃO visto no TX9.
+
+- ## 26/10/2026 - Teste concluído e Rodada 5: abas, página do filme e página da série
+
+- Fato: o dono terminou o teste no TX9 (M7): tela inicial adaptável (R4-2), "Pesquisar" fixo (R4-1), Rodada 3, ícone, "Continue assistindo", "Ver mais", "Trocar de lista" e programação. Disse que tudo funciona.
+- Decisão: as abas (activity_browse.xml e item_card.xml) NÃO foram mudadas. Motivo: a área de categorias e a grade já usam a altura que sobra (peso 1) e a grade precisa rolar, pois tem centenas de itens. O pedido "sem rolagem" vale para a tela inicial, não para listas grandes.
+- Decisão: a capa da página do filme (activity_movie.xml) passou de 340x510dp fixos para altura match_parent, largura até 340dp (mínimo 120dp), com adjustViewBounds e fitCenter. MovieActivity.java não mudou. Motivo: em tela mais baixa a capa fixa cortava embaixo; assim ela encolhe e cabe inteira.
+- Decisão (pedido do dono): a página da série foi refeita. Botões "Continuar" (pequeno) e "Assistir" lado a lado; abaixo, um botão de temporada que abre uma janelinha (AlertDialog) com todas as temporadas (só aparece se há mais de uma); abaixo, a grade de episódios.
+- Decisão: "Assistir" toca o episódio atual (o mesmo do "Continuar") do começo; se a série nunca foi vista, toca o episódio 1. Clicar num episódio da grade também começa do zero.
+- Decisão: cores dos episódios: visto = vermelho, atual (o do "Continuar") = verde, resto = branco. Motivo: pedido do dono. Consequência: o episódio visto pela metade conta como "atual" (verde); a pintura em pedaços saiu.
+- Decisão: o título da página da série não mostra mais "- Temporada N"; só o botão de temporada mostra.
+- Problema achado pelo dono: na primeira versão (3 colunas, quadradinhos com foco próprio) só 18 de 60 episódios apareciam e a grade não rolava. Causa: os quadradinhos eram focáveis e clicáveis; no resto do app a lista ou grade controla o foco e as linhas não recebem foco.
+- Decisão (pedido do dono): o quadradinho mostra SÓ O NÚMERO do episódio, 15 por linha, 48dp de altura (item_episode.xml). Sem número, mostra a posição na temporada. Os quadradinhos não recebem foco nem clique; a grade controla setas, seleção, rolagem e clique (setOnItemClickListener). Série de 60 episódios cabe em 4 linhas; séries de 100 ou mais rolam.
+- Decisão: as listas antigas (lv_seasons e lv_episodes) ficaram no activity_series.xml, escondidas pelo código. Motivo: tirar do layout arriscava erro de compilação; custo de memória é desprezível. Limpeza opcional depois.
+- Risco aceito: o quadradinho selecionado usa o fundo bg_card; não foi conferido se a seleção fica bem visível. Se não ficar, criar um fundo próprio para item_episode.xml.
+- Ordem de trabalho: item_episode.xml, activity_series.xml (itens novos escondidos), SeriesActivity, M3uSeriesActivity; depois a correção (item_episode.xml, activity_series.xml com 15 colunas, SeriesActivity, M3uSeriesActivity). O Actions ficou verde em todos os passos.
+- Dependências: nenhuma nova.
+- Ainda NÃO visto no TX9 depois da correção.
 - Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
