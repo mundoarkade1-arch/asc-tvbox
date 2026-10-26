@@ -80,7 +80,8 @@ import java.util.Locale;
  * - OK pausa e continua, mesmo com a barra de controles escondida;
  * - seta direita/esquerda, um toque: avança/volta 10 segundos;
  * - seta direita/esquerda segurada: vai avançando/voltando enquanto segura, cada vez mais rápido.
- * M13b: a barra de controles fica quase invisível (CONTROLLER_ALPHA = 25%).
+ * M13c: dos controles do player, só o botão play/pause aparece, meio transparente
+ * (PLAY_BUTTON_ALPHA = 50%). Voltar, avançar, barra de tempo e números ficam escondidos.
  */
 @OptIn(markerClass = UnstableApi.class)
 public class MainActivity extends Activity {
@@ -121,8 +122,18 @@ public class MainActivity extends Activity {
     // Botão "Pular para o próximo episódio": aparece quando faltam 2 minutos
     private static final long SKIP_BEFORE_END_MS = 120000L;
     private static final long SKIP_CHECK_MS = 1000L;
-    // Quanto a barra de controles fica visível (1.0 = nada transparente; 0.25 = quase invisível)
-    private static final float CONTROLLER_ALPHA = 0.25f;
+    // Quanto o botão play/pause fica visível (1.0 = nada transparente; 0.5 = meio transparente)
+    private static final float PLAY_BUTTON_ALPHA = 0.5f;
+    // Peças do controle do player (da biblioteca media3) que ficam ESCONDIDAS (M13c)
+    private static final String[] HIDDEN_CONTROL_IDS = {
+            "exo_controls_background", "exo_bottom_bar", "exo_time", "exo_progress",
+            "exo_progress_placeholder", "exo_position", "exo_duration", "exo_rew",
+            "exo_ffwd", "exo_prev", "exo_next", "exo_rew_with_amount", "exo_ffwd_with_amount",
+            "exo_repeat_toggle", "exo_shuffle", "exo_settings", "exo_subtitle",
+            "exo_fullscreen", "exo_overflow_show", "exo_overflow_hide", "exo_basic_controls",
+            "exo_extra_controls", "exo_extra_controls_scroll_view", "exo_playback_speed",
+            "exo_audio_track", "exo_vr", "exo_minimal_fullscreen", "exo_minimal_controls"
+    };
     private static final int MAX_LIST = 500;
     private static final int MAX_URL = 4096;
     private static final int MAX_KEY = 8192;
@@ -327,17 +338,30 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Deixa a barra de controles do player quase invisível (dá para ver o vídeo por trás).
-     * Se a barra não for achada, não faz nada e o player continua normal.
+     * M13c: deixa só o botão play/pause no controle do player, meio transparente.
+     * Esconde todo o resto (fundo escuro, barra de tempo, números, voltar, avançar etc.).
+     * Se alguma peça não for achada, pula e segue: o player continua normal.
+     * Nenhuma peça recebe foco (o OK e as setas são tratados no dispatchKeyEvent).
      */
     private void makeControllerTransparent() {
-        int id = getResources().getIdentifier("exo_controller", "id", getPackageName());
-        if (id == 0) {
-            return;
+        for (String name : HIDDEN_CONTROL_IDS) {
+            int hid = getResources().getIdentifier(name, "id", getPackageName());
+            if (hid == 0) {
+                continue;
+            }
+            View v = playerView.findViewById(hid);
+            if (v != null) {
+                v.setVisibility(View.GONE);
+                v.setFocusable(false);
+            }
         }
-        View controller = playerView.findViewById(id);
-        if (controller != null) {
-            controller.setAlpha(CONTROLLER_ALPHA);
+        int pid = getResources().getIdentifier("exo_play_pause", "id", getPackageName());
+        if (pid != 0) {
+            View play = playerView.findViewById(pid);
+            if (play != null) {
+                play.setAlpha(PLAY_BUTTON_ALPHA);
+                play.setFocusable(false);
+            }
         }
     }
 
