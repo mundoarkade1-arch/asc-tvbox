@@ -355,5 +355,18 @@
 - Ordem de trabalho: item_episode.xml, activity_series.xml (itens novos escondidos), SeriesActivity, M3uSeriesActivity; depois a correção (item_episode.xml, activity_series.xml com 15 colunas, SeriesActivity, M3uSeriesActivity). O Actions ficou verde em todos os passos.
 - Dependências: nenhuma nova.
 - Ainda NÃO visto no TX9 depois da correção.
+
+- ## 26/10/2026 - Rodada 5 testada; Rodada 6: menu estreito e fundo em degradê
+
+- Fato: o dono testou a Rodada 5 no TX9 (página do filme e página da série nova) e disse que tudo que testou funcionou.
+- Decisão (pedido do dono): o menu da esquerda ficou estreito: 200dp para 110dp, com o ícone em cima (drawableTop) e o nome embaixo (14sp). Mudou em layout_nav.xml, na cópia dentro de activity_home.xml e nas larguras do include em activity_browse.xml e activity_settings.xml. NavBar.java e os ids não mudaram.
+- Decisão: primeiro os 6 botões dividiam a altura por igual (peso 1) e o dono achou "muito grande de altura". Passaram a ter 62dp fixos, agrupados no alto. Motivo: pedido do dono. Risco aceito: em tela baixa o último botão pode cortar (uns 440dp no total).
+- Decisão: a coluna do menu ficou transparente (antes #151113). Motivo: deixar o degradê aparecer atrás dela. Consequência: toda tela que incluir o menu precisa ter fundo escuro ou degradê.
+- Decisão (pedido do dono: "o app está muito escuro, o fundo só preto está sem sal"): novo arquivo res/drawable/bg_gradient.xml, degradê vertical de vermelho escuro (#8A1220) no alto, passando por #3A0A12, até quase preto (#0C0A0B) embaixo. Vermelho escuro para o texto continuar legível. Aplicado em activity_home, activity_browse (e a busca, que reaproveita o layout), activity_settings, activity_movie, activity_series e activity_continue. O player (activity_main.xml) fica preto. A tela de login não foi mudada.
+- Decisão: o dono quis também um fundo com imagem e um ícone novo (2 imagens enviadas). ADIADO pelo dono ("não deixa então, vamos mudar a barra só"). Motivo do cuidado: imagens grandes pesam no TX9 de 1 GB; precisam ser reduzidas antes de ir ao GitHub, e o agente não consegue enviar arquivos.
+- Decisão: otimização do app (fluidez, carregamento, código) pedida pelo dono e ADIADA. Regra combinada: nenhuma função some; um arquivo por vez; teste no TX9 a cada mudança; medir antes de mexer.
+- Ordem de trabalho: bg_gradient.xml (arquivo novo, nada usava), layout_nav.xml, activity_home.xml, depois os layouts das outras telas. O Actions ficou verde em todos os passos.
+- Dependências: nenhuma nova.
+- Ainda NÃO visto no TX9: menu estreito com botões de 62dp e o degradê.
 - Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
