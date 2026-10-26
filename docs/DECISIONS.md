@@ -324,5 +324,19 @@
 - Limite: o item_card.xml (abas e busca) NÃO foi mudado. As abas e as páginas de filme e série (capas de altura fixa) ainda não foram conferidas quanto ao tamanho da tela.
 - Dependências: nenhuma nova.
 - Ainda NÃO visto no TX9.
+
+- ## 26/10/2026 - Rodada 4, R4-1: "Pesquisar" fixo nas abas
+
+- Decisão: o "Pesquisar" das abas deixou de ser a linha 0 da lista de categorias e virou um botão FIXO (btn_search_top, um TextView) acima da lista, sempre à vista. Fica dentro de uma caixa nova (group_categories) com a lista de categorias, em activity_browse.xml.
+- Motivo: pedido do dono ("o botão de pesquisa some quando vou pra categorias, quero que ele sempre apareça"). Como linha da lista, ele rolava junto e sumia.
+- Decisão: o botão nasce ESCONDIDO no layout. BrowseActivity e M3uBrowseActivity o mostram (setVisibility VISIBLE) e ligam o clique. A SearchActivity, que reaproveita o mesmo layout, NÃO o mostra e não foi mudada.
+- Motivo: assim a tela de resultados da busca não ganha um botão de pesquisa que não existe nela, e não foi preciso mexer na SearchActivity.
+- Decisão: a caixa group_categories tem largura wrap_content. Quando a SearchActivity esconde a lista de categorias, o botão também está escondido e a caixa não ocupa espaço.
+- Decisão: ordem do foco: menu, Pesquisar, categorias, itens. O botão tem nextFocusDown para a lista, e a lista tem nextFocusUp para o botão (ligados no código, com setNextFocusDownId e setNextFocusUpId).
+- Decisão: a regra "posição da lista = índice da categoria + 1" foi DESFEITA. Volta a ser posição = índice em catIds/catNames (BrowseActivity) e em catNames (M3uBrowseActivity). Mudaram goToCategories, o clique da lista e o adaptador.
+- Ordem de trabalho: activity_browse.xml (botão escondido, nada usava), BrowseActivity, M3uBrowseActivity. Não houve passo final "mostrar o botão", porque o código das duas Activities já o mostra. O Actions ficou verde em todos os passos.
+- Risco aceito: na tela de resultados da busca pode sobrar espaço vazio à esquerda, onde ficavam as categorias (não é novo; conferir no teste).
+- Dependências: nenhuma nova.
+- Ainda NÃO visto no TX9.
 - Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
