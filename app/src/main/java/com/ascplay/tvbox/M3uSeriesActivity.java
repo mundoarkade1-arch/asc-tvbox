@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.GridView;
@@ -22,9 +23,9 @@ import java.util.List;
 /**
  * Tela da série para o login por lista M3U: no alto a capa do item e o título (a lista M3U não
  * tem sinopse: aparece "Sem sinopse nesta lista."); abaixo os botões "Continuar" e "Assistir",
- * o botão da temporada (abre uma janelinha com todas as temporadas) e a grade de episódios em
- * 3 colunas. Recebe o título da série (HomeActivity.EXTRA_NAME) e, se houver, o endereço da
- * capa (MovieActivity.EXTRA_ICON).
+ * o botão da temporada (abre uma janelinha com todas as temporadas) e a grade de episódios
+ * (15 colunas, só o número de cada episódio). Recebe o título da série
+ * (HomeActivity.EXTRA_NAME) e, se houver, o endereço da capa (MovieActivity.EXTRA_ICON).
  *
  * Os episódios são achados lendo a lista aos poucos e juntando os itens de série com o mesmo
  * título (M3uApi.episodes), no máximo 500. Só os episódios desta série ficam na memória.
@@ -39,6 +40,9 @@ import java.util.List;
  * parou, no minuto exato (PlaybackProgress, chave = endereço do vídeo). Se esse episódio já
  * terminou, leva ao próximo, do começo. Botão "Assistir": toca o episódio atual (o mesmo do
  * "Continuar") do começo; se a série nunca foi vista, toca o primeiro episódio.
+ *
+ * Grade: os quadradinhos NÃO recebem foco; quem controla as setas, a seleção e a rolagem é a
+ * própria grade (como nas outras listas do app). O clique é da grade (setOnItemClickListener).
  *
  * Cores dos episódios: visto = vermelho; atual (o do "Continuar") = verde; resto = branco.
  * As cores e os botões são refeitos ao voltar do player.
@@ -134,6 +138,15 @@ public class M3uSeriesActivity extends Activity {
 
         episodeAdapter = new EpisodeAdapter();
         gvEpisodes.setAdapter(episodeAdapter);
+        // O clique é da grade (os quadradinhos não recebem foco)
+        gvEpisodes.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long rowId) {
+                if (position >= 0 && position < shown.size()) {
+                    playEpisode(shown.get(position), 0L);
+                }
+            }
+        });
 
         btnContinue.setText("Continuar");
         btnContinue.setOnClickListener(v -> {
@@ -421,12 +434,9 @@ public class M3uSeriesActivity extends Activity {
         return season == 0 ? "Especiais" : "Temporada " + season;
     }
 
-    private static String episodeLabel(M3uApi.Episode e) {
-        String title = e.title == null ? "" : e.title;
-        if (!title.isEmpty()) {
-            return title;
-        }
-        return e.number > 0 ? "Episódio " + e.number : "Episódio";
+    /** Só o número do episódio. Sem número, usa a posição dele na temporada. */
+    private static String numberLabel(M3uApi.Episode e, int position) {
+        return String.valueOf(e.number > 0 ? e.number : position + 1);
     }
 
     /** Cor do episódio: atual = verde; visto = vermelho; resto = branco. */
@@ -473,13 +483,15 @@ public class M3uSeriesActivity extends Activity {
             if (convertView == null) {
                 tv = (TextView) LayoutInflater.from(M3uSeriesActivity.this)
                         .inflate(R.layout.item_episode, parent, false);
+                // Quem controla a seleção e o clique é a própria grade.
+                tv.setFocusable(false);
+                tv.setClickable(false);
             } else {
                 tv = (TextView) convertView;
             }
-            final M3uApi.Episode ep = shown.get(position);
-            tv.setText(episodeLabel(ep));
+            M3uApi.Episode ep = shown.get(position);
+            tv.setText(numberLabel(ep, position));
             tv.setTextColor(colorOf(ep));
-            tv.setOnClickListener(v -> playEpisode(ep, 0L));
             return tv;
         }
     }
