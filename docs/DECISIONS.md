@@ -419,5 +419,18 @@
 - Fato: o último salvamento do MainActivity.java foi CORTADO (Actions vermelho, "unclosed comment" linha 426). A correção é a primeira tarefa do próximo agente.
 - Ordem de trabalho do M13: MainActivity, SeriesActivity, M3uSeriesActivity. Verde nos três. M13b ficou vermelho.
 - Dependências: nenhuma nova.
+
+- ## 26/10/2026 - Conserto do MainActivity.java cortado (M13 e M13b)
+
+- Fato: o salvamento do MainActivity.java com M13 e M13b saiu CORTADO (erro "unclosed comment" na linha 426 e "reached end of file while parsing"). O Actions ficou vermelho e nenhuma versão nova saiu.
+- Fato: numa tentativa de conserto por partes, o arquivo .java ficou com o conteúdo do activity_main.xml (colado no arquivo errado). Por isso deu erro em tudo.
+- Decisão: o arquivo foi refeito INTEIRO, a partir do código completo que o dono tinha guardado, e salvo de uma vez (Ctrl+A, Delete, colar). O Actions ficou verde.
+- Motivo: consertar só o pedaço final se mostrou arriscado, porque não dava para ter certeza do que estava salvo. Refazer o arquivo todo é mais seguro e mais simples para o dono.
+- Decisão: antes de salvar um arquivo grande, o dono aperta Ctrl+End e confere que a última linha é só "}". Se não for, a colagem foi cortada e ele não salva.
+- Decisão: conferir sempre o nome do arquivo no endereço do GitHub antes de colar (.java e .xml já foram misturados).
+- Decisão: colar o arquivo inteiro de uma vez é o preferido do dono. Dividir em partes só se a colagem inteira for cortada de novo.
+- Conteúdo mantido: M13 (EXTRA_LIST_LABELS, texto "Temporada N - Episódio N" por 5 s) e CONTROLLER_ALPHA = 0.25f (M13b). Nenhuma mudança de comportamento.
+- Dependências: nenhuma nova.
+- Ainda NÃO testado no TX9: M13 e M13b.
 - Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
