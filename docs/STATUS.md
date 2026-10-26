@@ -1,10 +1,10 @@
 # Status do projeto
 
-Última atualização: 26/10/2026 (fim da Rodada 3, parte 2)
+Última atualização: 26/10/2026 (M5b pronta: capa maior na página da série)
 Regras de trabalho: AGENTS.md. Mapa e limites: docs/ARQUIVOS.md. Montagem e versão: docs/ARCHITECTURE.md. Decisões: docs/DECISIONS.md.
 
 ## Fase atual
-Nova aparência (a a f) pronta. Rodadas 1 e 2 (R1 a R6) testadas no TX9 e funcionam. A Rodada 3 (pedidos novos do dono) está quase toda pronta e VERDE no Actions, mas AINDA NÃO foi testada no TX9. Faltam as METAS abaixo.
+Nova aparência (a a f) pronta. Rodadas 1 e 2 (R1 a R6) testadas no TX9 e funcionam. A Rodada 3 (pedidos novos do dono) está pronta e VERDE no Actions, mas AINDA NÃO foi testada no TX9. Faltam as METAS abaixo.
 
 ## Já feito (uma linha cada; detalhes em ARQUIVOS.md e DECISIONS.md)
 - Base: login por servidor e lista M3U, atualização automática, controle parental, página inicial com 3 faixas, "Ver mais", séries (próxima temporada, onde parou), busca, EPG por canal (só servidor).
@@ -15,11 +15,11 @@ Nova aparência (a a f) pronta. Rodadas 1 e 2 (R1 a R6) testadas no TX9 e funcio
   - Abas: 5 colunas, categorias com 190dp, cartão com imagem de 130dp (item_card.xml).
   - "Pesquisar" é a 1ª linha da lista de categorias (BrowseActivity e M3uBrowseActivity); botão do alto removido do layout.
   - M3: nextFocusDown/Up no menu (layout_nav.xml e cópia em activity_home.xml), para o foco ir de Ajustes a Atualizar. Causa ainda a confirmar.
-  - M5 (parte do filme): capa em activity_movie.xml com 340x510dp. Foi enviada ao dono; CONFIRMAR que ficou salva e verde.
+  - M5 filme: capa em activity_movie.xml com 340x510dp (salva e verde).
+  - M5b série: capa em activity_series.xml com 160x240dp (salva e verde). Menor que a do filme de propósito, para sobrar altura para temporadas e episódios.
 
 ## METAS (pedidos do dono ainda não feitos). Apague a meta daqui quando ficar pronta e verde.
 - M2. Ícone do app (hoje o app está sem ícone). Precisa de uma imagem; explicar ao dono com calma como enviar pelo site do GitHub (ele não usa terminal).
-- M5b. Capa maior na página da SÉRIE (activity_series.xml; a do filme já foi feita). Pedir o arquivo, aumentar a capa pequena do alto e conferir que a sinopse (4 linhas) e as listas de temporadas e episódios ainda cabem.
 - M6. Faixa "Continue assistindo" na tela inicial, ACIMA das outras faixas, igual às de Canais, Filmes e Séries: 10 últimos e depois "Ver mais". Entra tudo que o dono começou e não terminou (filme e episódio). Limite de 25 itens: ao passar disso, apagar os mais antigos.
   - O PlaybackProgress guarda só chave embaralhada (SHA-1): não dá para listar nome e capa. Precisa de um arquivo novo de guardar com nome, capa, tipo, id, extensão e posição, e a hora, para apagar o mais antigo.
   - Na lista M3U o endereço do vídeo tem senha. Decidir com o dono como guardar sem expor (guardar criptografado, como o CredentialStore).
@@ -35,11 +35,11 @@ Nova aparência (a a f) pronta. Rodadas 1 e 2 (R1 a R6) testadas no TX9 e funcio
 - 5 colunas: se a 5ª coluna cortar ou o nome das categorias ficar apertado, ajustar columnWidth e a largura de lv_categories em activity_browse.xml.
 - Cartão com imagem de 130dp: se ficar alto demais, voltar para cerca de 110dp.
 - Capa do filme com 340x510dp: se cortar embaixo, diminuir.
+- Capa da série com 160x240dp: se ainda parecer pequena, aumentar; se os episódios ficarem apertados, diminuir.
 - M3: confirmar que descendo de Ajustes o foco vai a Atualizar, em todas as telas (tela inicial, abas e Ajustes).
 - R5: se a tela inicial ainda cortar embaixo, diminuir item_card_small.xml e os espaços do activity_home.xml.
 - Botão de pular episódio: confirmar que aparece faltando 2 minutos e que OK pula.
 
 ## Próximos passos
-1. Confirmar com o dono que activity_movie.xml está salvo e verde.
-2. M5b (capa da série), M2 (ícone), M6 (Continue assistindo).
-3. Dono testa no TX9 (M7) e corrigimos o que aparecer.
+1. M2 (ícone), depois M6 (Continue assistindo).
+2. Dono testa no TX9 (M7) e corrigimos o que aparecer.
