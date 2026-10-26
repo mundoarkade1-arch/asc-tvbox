@@ -11,11 +11,14 @@
 
     <ImageView
         android:id="@+id/iv_cover"
-        android:layout_width="340dp"
-        android:layout_height="510dp"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:adjustViewBounds="true"
         android:background="#1A1618"
         android:contentDescription="Capa"
-        android:scaleType="centerCrop" />
+        android:maxWidth="340dp"
+        android:minWidth="120dp"
+        android:scaleType="fitCenter" />
 
     <LinearLayout
         android:layout_width="0dp"
