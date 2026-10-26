@@ -432,5 +432,21 @@
 - Conteúdo mantido: M13 (EXTRA_LIST_LABELS, texto "Temporada N - Episódio N" por 5 s) e CONTROLLER_ALPHA = 0.25f (M13b). Nenhuma mudança de comportamento.
 - Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9: M13 e M13b.
+
+- ## 26/10/2026 - M13c: player só com play/pause meio transparente e diagnóstico da imagem
+
+- Decisão (do dono, "só o play pause meio transparente, o resto não apareça"): os BOTÕES do player (voltar, avançar, anterior, próximo e extras) ficam escondidos; o play/pause fica com alpha 0.5 (PLAY_BUTTON_ALPHA). Substitui o M13b (CONTROLLER_ALPHA = 0.25f no exo_controller inteiro, que foi removido).
+- Primeira versão escondeu demais (barra de progresso, números de tempo e fundo). O dono corrigiu: "a barra de progresso e o episódio e temporada eram pra continuar aparecendo, era pra só os botões". Segunda versão esconde só os botões. Lição: "só o botão" não inclui a barra nem os números.
+- Decisão: dois jeitos juntos. No activity_main.xml, o PlayerView ganhou show_rewind_button, show_fastforward_button, show_previous_button e show_next_button = false (o player não os recria sozinho). No MainActivity, makeControllerTransparent esconde por id (lista HIDDEN_CONTROL_IDS) os botões extras que sobrarem e tira o foco de barra, tempos e play/pause (lista UNFOCUSABLE_CONTROL_IDS). Peça não achada é pulada, sem erro.
+- Motivo: o código sozinho podia ser desfeito pela biblioteca; o layout sozinho não cobre os botões extras.
+- Decisão: o texto "Temporada N - Episódio N" fica na tela enquanto a barra de controles está visível (setControllerVisibilityListener) e some junto com ela. Também continua aparecendo 5 s ao começar o episódio e ao apertar OK ou setas.
+- Decisão: o OK continua pausando pelo dispatchKeyEvent. Nada no controle recebe foco.
+- Ordem de trabalho: activity_main.xml primeiro, depois MainActivity.java (inteiro). Verde nos dois passos e na correção.
+- Fato (queixa do dono): imagem "pixelada" em filmes e séries (em canais não); em outro app é melhor.
+- Decisão: texto de DIAGNÓSTICO temporário no player. OK em filme ou episódio mostra 6 s, no alto à direita, tamanho e tipo do vídeo, nome do decodificador (AnalyticsListener.onVideoDecoderInitialized) e tamanho da tela. Motivo: descobrir a causa sem mexer às cegas no player. Deve ser REMOVIDO depois.
+- Resultado do diagnóstico: vídeo 1280x720 AVC; decodificador OMX.amlogic.avc.decoder.awesome (hardware); tela do Android 1280x720.
+- Conclusão: não é o decodificador. O arquivo vem em 720p do servidor (o app toca o arquivo como vem, filme e episódio são um arquivo só) e a saída do TX9 está em 720p. Sugestão ao dono: colocar a saída do TX9 em 1080p nas Configurações. Resultado ainda não informado.
+- Dependências: nenhuma nova.
+- Ainda NÃO testado no TX9: M13 e M13c.
 - Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
