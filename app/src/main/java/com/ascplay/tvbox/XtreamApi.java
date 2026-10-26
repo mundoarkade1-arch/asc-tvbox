@@ -34,6 +34,14 @@ public final class XtreamApi {
     /** EPISODE é um episódio de série (não aparece em listas, só serve para tocar). */
     public enum Kind { LIVE, MOVIE, SERIES, EPISODE }
 
+    /**
+     * M11b: recebe cada resultado da busca assim que ele é achado.
+     * Devolve false para parar a busca.
+     */
+    public interface ResultListener {
+        boolean onItem(Item item);
+    }
+
     public static final class Category {
         public final String id;
         public final String name;
@@ -292,14 +300,30 @@ public final class XtreamApi {
      * tem todas as palavras de "query" (sem ligar para maiúsculas nem acentos).
      * Para ao juntar "limit" itens. Se skipAdult for verdadeiro, itens com nome adulto
      * são pulados. A lista inteira nunca fica na memória.
+     * (Agora usa searchStream por dentro; o resultado é o mesmo de antes.)
      */
     public static List<Item> search(String server, String user, String pass, Kind kind,
                                     String query, boolean skipAdult, int limit)
             throws IOException {
-        List<Item> out = new ArrayList<>();
+        final List<Item> out = new ArrayList<>();
+        searchStream(server, user, pass, kind, query, skipAdult, limit, item -> {
+            out.add(item);
+            return true;
+        });
+        return out;
+    }
+
+    /**
+     * M11b: igual à busca acima, mas AVISA cada resultado assim que o acha (pelo listener),
+     * sem esperar a lista inteira. Para ao juntar "limit" itens ou quando o listener devolver
+     * false. Roda na thread de quem chamou: NUNCA chamar na thread principal.
+     */
+    public static void searchStream(String server, String user, String pass, Kind kind,
+                                    String query, boolean skipAdult, int limit,
+                                    ResultListener listener) throws IOException {
         String[] words = searchWords(query);
         if (words.length == 0) {
-            return out;
+            return;
         }
         String url = apiUrl(server, user, pass, itemsAction(kind));
         HttpURLConnection conn = open(url);
@@ -311,7 +335,8 @@ public final class XtreamApi {
                     throw new IOException("resposta invalida");
                 }
                 r.beginArray();
-                while (r.hasNext() && out.size() < limit) {
+                int found = 0;
+                while (r.hasNext() && found < limit) {
                     if (r.peek() != JsonToken.BEGIN_OBJECT) {
                         r.skipValue();
                         continue;
@@ -326,9 +351,11 @@ public final class XtreamApi {
                     if (skipAdult && ParentalStore.isAdultName(item.name)) {
                         continue;
                     }
-                    out.add(item);
+                    found++;
+                    if (!listener.onItem(item)) {
+                        return;
+                    }
                 }
-                return out;
             } finally {
                 closeQuietly(r);
             }
