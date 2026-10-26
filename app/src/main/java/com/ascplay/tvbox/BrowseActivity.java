@@ -9,7 +9,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -42,8 +41,10 @@ import java.util.Set;
  * Menu à esquerda (ícone e nome): ligado pelo NavBar. Troca de aba, volta à tela inicial e
  * recarrega a categoria aberta (Atualizar).
  *
- * Barra de pesquisa (botão no alto): pesquisa SÓ o tipo desta tela (canais, filmes ou séries).
- * Abre o teclado de letras e, ao buscar, a tela de resultados (SearchActivity).
+ * Pesquisa (Rodada 3): é a PRIMEIRA linha da lista de categorias ("Pesquisar"). OK nela pesquisa
+ * SÓ o tipo desta tela (canais, filmes ou séries): abre o teclado de letras e, ao buscar, a
+ * tela de resultados (SearchActivity). Na lista, a linha 0 é a pesquisa e a linha N (N maior
+ * que 0) é a categoria de índice N-1 em catIds/catNames.
  *
  * Controle parental (quando ligado): categorias adultas mostram um cadeado e pedem a senha
  * de 4 números para abrir. A liberação vale só para aquela categoria, enquanto a pessoa está
@@ -57,13 +58,13 @@ public class BrowseActivity extends Activity {
     private static final int COLOR_NEUTRAL = 0xFFA39A9D;
     private static final int COLOR_ERROR = 0xFFFF6B78;
     private static final String LOCK = "\uD83D\uDD12 ";
+    private static final String SEARCH_ICON = "\uD83D\uDD0D ";
 
     private CredentialStore.Credentials creds;
     private XtreamApi.Kind kind;
 
     private TextView tvTitle;
     private TextView tvStatus;
-    private Button btnSearchBar;
     private ListView lvCategories;
     private GridView gvItems;
 
@@ -116,7 +117,6 @@ public class BrowseActivity extends Activity {
         setContentView(R.layout.activity_browse);
         tvTitle = findViewById(R.id.tv_title);
         tvStatus = findViewById(R.id.tv_status);
-        btnSearchBar = findViewById(R.id.btn_search_bar);
         lvCategories = findViewById(R.id.lv_categories);
         gvItems = findViewById(R.id.gv_items);
 
@@ -127,11 +127,6 @@ public class BrowseActivity extends Activity {
         // Menu à esquerda (ícone e nome)
         NavBar.bind(this, navCurrent(), () -> refreshCurrent());
 
-        // Barra de pesquisa: só este tipo (canais, filmes ou séries)
-        btnSearchBar.setText(searchLabel());
-        btnSearchBar.setVisibility(View.VISIBLE);
-        btnSearchBar.setOnClickListener(v -> openSearch());
-
         catIds.add(null);
         catNames.add("Todas as categorias");
         catAdapter = new CategoryAdapter();
@@ -139,7 +134,14 @@ public class BrowseActivity extends Activity {
         lvCategories.setAdapter(catAdapter);
         gvItems.setAdapter(itemAdapter);
 
-        lvCategories.setOnItemClickListener((parent, view, position, id) -> onCategoryClick(position));
+        // Linha 0 da lista = Pesquisar; linha N = categoria N-1
+        lvCategories.setOnItemClickListener((parent, view, position, id) -> {
+            if (position == 0) {
+                openSearch();
+            } else {
+                onCategoryClick(position - 1);
+            }
+        });
         gvItems.setOnItemClickListener((parent, view, position, id) -> {
             if (position >= 0 && position < items.size()) {
                 openItem(items.get(position));
@@ -230,7 +232,8 @@ public class BrowseActivity extends Activity {
             position = 0;
         }
         lvCategories.requestFocus();
-        lvCategories.setSelection(position);
+        // +1 porque a linha 0 da lista é o "Pesquisar"
+        lvCategories.setSelection(position + 1);
     }
 
     /** O canal ao vivo selecionado na grade, ou null se o foco está em outro lugar. */
@@ -279,17 +282,6 @@ public class BrowseActivity extends Activity {
     }
 
     // ---------- Pesquisa (só o tipo desta tela) ----------
-
-    private String searchLabel() {
-        switch (kind) {
-            case MOVIE:
-                return "Pesquisar filmes";
-            case SERIES:
-                return "Pesquisar séries";
-            default:
-                return "Pesquisar canais";
-        }
-    }
 
     private String keyboardTitle() {
         switch (kind) {
@@ -367,7 +359,7 @@ public class BrowseActivity extends Activity {
         }
     }
 
-    /** A pessoa escolheu uma categoria. Se for adulta e trancada, pede a senha antes. */
+    /** A pessoa escolheu uma categoria (índice em catIds). Se for adulta e trancada, pede a senha. */
     private void onCategoryClick(int position) {
         if (position < 0 || position >= catIds.size()) {
             return;
@@ -636,15 +628,16 @@ public class BrowseActivity extends Activity {
 
     // ---------- Adaptadores (reaproveitam as linhas ao rolar) ----------
 
+    /** Linha 0 = Pesquisar; linha N (maior que 0) = categoria de índice N-1. */
     private final class CategoryAdapter extends BaseAdapter {
         @Override
         public int getCount() {
-            return catNames.size();
+            return catNames.size() + 1;
         }
 
         @Override
         public Object getItem(int position) {
-            return catNames.get(position);
+            return position == 0 ? "Pesquisar" : catNames.get(position - 1);
         }
 
         @Override
@@ -664,9 +657,14 @@ public class BrowseActivity extends Activity {
             } else {
                 tv = (TextView) convertView;
             }
-            String id = catIds.get(position);
+            if (position == 0) {
+                tv.setText(SEARCH_ICON + "Pesquisar");
+                return tv;
+            }
+            int index = position - 1;
+            String id = catIds.get(index);
             boolean locked = parentalOn && id != null && adultCatIds.contains(id);
-            tv.setText(locked ? LOCK + catNames.get(position) : catNames.get(position));
+            tv.setText(locked ? LOCK + catNames.get(index) : catNames.get(index));
             return tv;
         }
     }
