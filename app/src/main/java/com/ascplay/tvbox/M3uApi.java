@@ -23,12 +23,13 @@ import java.util.regex.Pattern;
  * Para listas gigantes, a leitura também para depois de 200 MB ou de 1 minuto e devolve
  * o que já achou.
  *
- * Cinco funções públicas:
+ * Funções públicas:
  * - sample: os primeiros itens de cada tipo (página inicial).
  * - categories: os nomes das categorias de um tipo ("Ver mais").
  * - page: uma página de itens de um tipo, de uma categoria ou de todas ("Ver mais").
  * - episodes: os episódios de UMA série, achados pelo título (tela da série).
  * - search: os itens de um tipo cujo nome combina com o que a pessoa digitou (busca).
+ * - searchStream: igual à search, mas avisa cada resultado assim que o acha (M11b).
  *
  * Faz acesso à rede: NUNCA chamar na thread principal.
  * Os endereços dos vídeos costumam conter usuário e senha: nunca mostrar nem registrar em log.
@@ -252,20 +253,37 @@ public final class M3uApi {
      * Para ao juntar "limit" itens. Séries são comparadas e mostradas pelo título (sem
      * "S01E03"), um item por série. Se skipAdult for verdadeiro, itens adultos (pelo nome
      * ou pela categoria) são pulados. A lista inteira nunca fica na memória.
-     *
-     * M11: primeiro confere se o nome completo tem as palavras (conta barata); só os que
-     * passam são classificados (conta pesada). O resultado é o mesmo de antes, pois o título
-     * da série é um pedaço do nome completo.
+     * (Agora usa searchStream por dentro; o resultado é o mesmo de antes.)
      */
     public static List<XtreamApi.Item> search(String m3uUrl, XtreamApi.Kind kind, String query,
                                               boolean skipAdult, int limit)
             throws IOException {
         final List<XtreamApi.Item> out = new ArrayList<>();
+        searchStream(m3uUrl, kind, query, skipAdult, limit, item -> {
+            out.add(item);
+            return true;
+        });
+        return out;
+    }
+
+    /**
+     * M11b: igual à busca acima, mas AVISA cada resultado assim que o acha (pelo listener),
+     * sem esperar a lista inteira. Para ao juntar "limit" itens ou quando o listener devolver
+     * false. Se a leitura falhar no meio depois de achar algo, termina sem erro (como a busca
+     * antiga). Roda na thread de quem chamou: NUNCA chamar na thread principal.
+     *
+     * Primeiro confere se o nome completo tem as palavras (conta barata); só os que passam
+     * são classificados (conta pesada). O título da série é um pedaço do nome completo.
+     */
+    public static void searchStream(String m3uUrl, XtreamApi.Kind kind, String query,
+                                    boolean skipAdult, int limit,
+                                    XtreamApi.ResultListener listener) throws IOException {
         final String[] words = XtreamApi.searchWords(query);
         if (words.length == 0) {
-            return out;
+            return;
         }
         final HashSet<String> seenSeries = new HashSet<>();
+        final int[] found = {0};
         try {
             readList(m3uUrl, reader -> walk(reader, (url, grp, name, icon, tvgId, counter) -> {
                 // Filtro rápido: se o nome completo não tem as palavras, nenhum tipo serve.
@@ -286,25 +304,29 @@ public final class M3uApi {
                         || ParentalStore.isAdultName(name))) {
                     return true;
                 }
+                XtreamApi.Item item;
                 if (kind == XtreamApi.Kind.SERIES) {
                     if (!seenSeries.add(shownName.toLowerCase(Locale.ROOT))) {
                         return true;
                     }
                     // Série: sem endereço próprio. Os episódios são buscados quando a série abrir.
-                    out.add(new XtreamApi.Item(kind, String.valueOf(counter), cut(shownName),
-                            icon, grp, "", ""));
+                    item = new XtreamApi.Item(kind, String.valueOf(counter), cut(shownName),
+                            icon, grp, "", "");
                 } else {
-                    out.add(new XtreamApi.Item(kind, String.valueOf(counter), cut(shownName),
-                            icon, grp, tvgId, "", url));
+                    item = new XtreamApi.Item(kind, String.valueOf(counter), cut(shownName),
+                            icon, grp, tvgId, "", url);
                 }
-                return out.size() < limit;
+                found[0]++;
+                if (!listener.onItem(item)) {
+                    return false;
+                }
+                return found[0] < limit;
             }));
         } catch (IOException e) {
-            if (out.isEmpty()) {
+            if (found[0] == 0) {
                 throw e;
             }
         }
-        return out;
     }
 
     // ---------- Leitura da lista ----------
