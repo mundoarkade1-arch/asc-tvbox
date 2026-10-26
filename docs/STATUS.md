@@ -1,40 +1,36 @@
 # Status do projeto
 
-Última atualização: 26/10/2026 (menu estreito e fundo em degradê: VERDES no Actions; AINDA NÃO vistos no TX9)
+Última atualização: 26/10/2026 (menu estreito e degradê VERDES; dono achou 3 problemas novos: M10, M11, M12)
 Regras de trabalho: AGENTS.md. Mapa e limites: docs/ARQUIVOS.md. Montagem e versão: docs/ARCHITECTURE.md. Decisões: docs/DECISIONS.md.
 
 ## Fase atual
-Tudo até a Rodada 5 está pronto e TESTADO pelo dono no TX9 (tela inicial adaptável, Pesquisar fixo, página do filme, página da série nova, Continue assistindo etc.). Agora é a Rodada 6 (visual): menu da esquerda estreito e fundo em degradê vermelho para preto. Código VERDE. Falta o dono ver no TX9.
+Tudo até a Rodada 5 está pronto e TESTADO pelo dono no TX9. Rodada 6 (menu estreito 110dp com botões de 62dp e fundo em degradê bg_gradient.xml) está VERDE no Actions. O dono começou a usar e achou 3 problemas (M10 a M12), ainda NÃO corrigidos. Nada em andamento no código.
 
 ## Já feito (uma linha cada; detalhes em ARQUIVOS.md e DECISIONS.md)
 - Base: login por servidor e lista M3U, atualização automática, controle parental, página inicial, "Ver mais", séries, busca, EPG por canal (só servidor).
-- (a) a (f) nova aparência. R1 a R6, Rodadas 3 a 5, M6, R4-1, R4-2: testadas no TX9, funcionam.
-- Rodada 5 (testada): abas conferidas e NÃO mudadas; capa do filme adaptável; página da série nova (Continuar, Assistir, botão de temporada, grade de 15 colunas só com o número; cores vermelho/verde/branco).
-- Rodada 6 (verde, a ver no TX9), pedido do dono:
-  - Menu da esquerda: 110dp de largura, ícone em cima e nome embaixo (drawableTop, 14sp), 6 botões de 62dp fixos agrupados no alto, coluna transparente. Em layout_nav.xml E na cópia dentro de activity_home.xml. As larguras do include em activity_browse.xml e activity_settings.xml também são 110dp.
-  - Fundo: arquivo novo res/drawable/bg_gradient.xml (degradê vertical: #8A1220 no alto, #3A0A12 no meio, #0C0A0B embaixo). Usado como fundo em activity_home, activity_browse (e portanto a busca), activity_settings, activity_movie, activity_series e activity_continue. O player (activity_main.xml) continua preto, de propósito.
+- (a) a (f) nova aparência. R1 a R6, Rodadas 3 a 5, M6, R4-1, R4-2: testadas no TX9.
+- Rodada 5 (testada): capa do filme adaptável; página da série nova (Continuar, Assistir, temporadas, grade de 15 colunas só com número).
+- Rodada 6 (verde): menu estreito (layout_nav.xml e cópia em activity_home.xml) e degradê em todas as telas menos o player. O dono ainda não confirmou se gostou do visual (M9).
 
-## METAS (pedidos do dono ainda não feitos)
-- M9. Dono olha no TX9: menu estreito com botões menores (todos os 6 aparecem, foco desce até Atualizar, "Tela inicial" cabe sem "..."); degradê em todas as telas menos o player; texto legível. Se o vermelho do alto ficar forte ou fraco demais, ajustar só o bg_gradient.xml.
-- Fundo com imagem e ícone novo do app: ADIADOS pelo dono. O dono tem 2 imagens (fundo largo com logo ASC play em chamas e ondas vermelhas; logo quadrado). Para o TX9 (1 GB) elas precisam ser reduzidas ANTES (fundo JPG ~1280 de largura, qualidade ~70; ícone PNG 512x512), por exemplo no squoosh.app, com nomes bg_app.jpg e ic_app_logo.png, enviadas pelo GitHub (Add file, Upload files). O agente NÃO consegue enviar imagens. O logo no centro do fundo atrapalharia a leitura: precisaria de camada escura por cima.
-- Otimização (velocidade, memória, carregamento) SEM perder funções: pedida pelo dono, adiada. Exige ver os arquivos pesados (ImageLoader, XtreamApi, M3uApi, HomeActivity, MainActivity), um por vez, com teste no TX9 a cada mudança. Antes, perguntar onde ele sente lentidão.
+## METAS (pedidos do dono ainda não feitos). Apague a meta daqui quando ficar pronta e verde.
+- M10. "Continue assistindo" repetido. Fato (relatado pelo dono): abrir um episódio, sair e abrir outro da mesma série deixa a série DUAS vezes na faixa, com episódios diferentes. Pedido: UMA entrada por série, sempre o ÚLTIMO episódio. Causa provável (suposição, conferir): ContinueStore.save tira repetido pelo endereço do vídeo (key = SHA-1 do endereço); cada episódio tem endereço diferente. Correção provável: ao salvar um item com kind "episode", remover antes os itens com a MESMA seriesKey. Peça ContinueStore.java inteiro antes. Conferir que "Trocar de lista", limite de 25 e criptografia continuam iguais, e que a faixa e a ContinueActivity mostram bem.
+- M11. Pesquisa MUITO lenta (canais, filmes e séries). Fato: o dono acha demorada. Causa provável (suposição): XtreamApi.search baixa a lista inteira do tipo (limite 80 MB) e filtra no aparelho; M3uApi.search lê a lista toda (até 1 minuto). Medir antes: perguntar se é pior no servidor ou na lista M3U e em qual aba. Peça XtreamApi.java, M3uApi.java e SearchActivity.java, um por vez. Ideias a avaliar (não decididas): parar de ler ao juntar 100 resultados (limite atual da busca); usar busca por categoria; mostrar resultados aos poucos; cache curto da lista para buscas seguidas (cuidado com memória, 1 GB).
+- M12. Categoria com mais de 400 itens mostra só os 400 primeiros. Fato (relatado): numa categoria com "mil e poucos" itens só carregaram 400; o resto não aparece. Causa provável: limite de 400 itens por categoria nas abas, escolhido por causa da memória (1 GB). Pedido do dono: carregar tudo. Correção provável: carregar MAIS itens por páginas quando a seleção chega perto do fim da grade, sem guardar tudo de uma vez. Peça BrowseActivity.java e M3uBrowseActivity.java (e a função que busca as páginas em XtreamApi/M3uApi). Não confundir com o limite de 400 da fila de troca de canal (ChannelQueue), que é outro assunto.
+- M9. Dono olha no TX9 o menu novo e o degradê (6 botões aparecem, foco desce até Atualizar, "Tela inicial" cabe, texto legível no vermelho).
+- ADIADO: fundo com imagem e ícone novo (imagens grandes; precisam ser reduzidas no squoosh.app antes, nomes bg_app.jpg e ic_app_logo.png; agente não envia imagens). ADIADO: otimização geral sem perder funções (medir antes; M11 é parte disso).
 - Rodada 6: o dono pode lembrar de mais pedidos.
 
 ## Perguntas e ideias abertas
 - Fim da lista na troca de canal: hoje dá a volta (escolha do agente).
 - Ideia que precisa do OK do dono: o Actions ignorar mudanças só em .md.
-- Ícone: simples e provisório (quadrado vermelho com play). Se o TX9 mostrar o app sem imagem, criar o banner.
-- Nome do episódio no Continue assistindo é "Série - ep. N".
-- Não há botão para apagar um item só do Continue assistindo.
-- Se na tela de resultados da busca sobrar espaço vazio à esquerda, pedir SearchActivity.java.
-- Limpeza opcional: tirar lv_seasons e lv_episodes do activity_series.xml (hoje escondidas pelo código).
-- A tela de login (activity_login.xml) NÃO foi mudada: continua com o fundo antigo. Perguntar se o dono quer o degradê nela.
+- Ícone provisório; se o TX9 mostrar o app sem imagem, criar o banner.
+- Tela de login ainda com o fundo antigo: perguntar se quer o degradê.
+- Limpeza opcional: tirar lv_seasons e lv_episodes do activity_series.xml.
 
 ## Pontos a conferir no teste (riscos conhecidos)
-- Menu: 6 botões x 70dp + 20dp = uns 440dp de altura. Em tela baixa pode cortar o último (Atualizar).
-- Menu transparente: telas novas que incluírem o menu precisam de fundo escuro ou degradê.
-- Degradê: o texto cinza (#A39A9D) sobre o vermelho do alto pode ficar menos legível.
+- Menu: uns 440dp de altura; em tela baixa o último botão pode cortar.
+- Degradê: texto cinza pode ficar menos legível sobre o vermelho do alto.
 
 ## Próximos passos
-1. Perguntar ao dono o que ele viu (M9) e corrigir, um arquivo por vez.
-2. Depois, atender o que ele escolher: imagens (fundo e ícone), otimização ou novos pedidos.
+1. Perguntar ao dono por onde começar: M10 (mais simples, um arquivo), M12 ou M11.
+2. Para cada um: pedir o arquivo atual, explicar o plano em uma frase, entregar o arquivo completo, esperar o "ok".
