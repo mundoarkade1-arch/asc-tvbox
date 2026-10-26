@@ -18,7 +18,9 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Tela da série: no alto a capa, o título, a linha de informações e a sinopse; abaixo os
@@ -30,8 +32,9 @@ import java.util.List;
  *
  * Ao escolher um episódio, abre o player (MainActivity) levando a lista de TODOS os episódios
  * da série, em ordem (temporadas normais primeiro, "Especiais" no fim), para o player tocar
- * o próximo sozinho no fim. Também manda a capa (MainActivity.EXTRA_ICON) e o nome
- * "Série - ep. N" para a lista "Continue assistindo".
+ * o próximo sozinho no fim. Também manda a capa (MainActivity.EXTRA_ICON), o nome
+ * "Série - ep. N" para a lista "Continue assistindo" e, em MainActivity.EXTRA_LIST_LABELS,
+ * o texto "Temporada N - Episódio N" de cada episódio da fila (M13).
  *
  * Botão "Continuar" (escondido se não há nada para continuar): vai ao episódio onde a pessoa
  * parou, no minuto exato (PlaybackProgress). Se esse episódio já terminou, leva ao próximo,
@@ -428,6 +431,28 @@ public class SeriesActivity extends Activity {
         return queue;
     }
 
+    /**
+     * M13: texto "Temporada N - Episódio N" de cada episódio, na ordem da fila.
+     * O número é o do servidor; sem número, é a posição do episódio dentro da temporada
+     * (igual ao que a grade mostra).
+     */
+    private ArrayList<String> buildLabels(List<XtreamApi.Episode> queue) {
+        Map<XtreamApi.Episode, String> byEpisode = new HashMap<>();
+        Map<Integer, Integer> counters = new HashMap<>();
+        for (XtreamApi.Episode e : allEpisodes) {
+            Integer c = counters.get(e.season);
+            int pos = c == null ? 0 : c;
+            counters.put(e.season, pos + 1);
+            byEpisode.put(e, seasonLabel(e.season) + " - Episódio " + numberLabel(e, pos));
+        }
+        ArrayList<String> labels = new ArrayList<>();
+        for (XtreamApi.Episode e : queue) {
+            String t = byEpisode.get(e);
+            labels.add(t == null ? "" : t);
+        }
+        return labels;
+    }
+
     /** Abre o player neste episódio. Se startMs for maior que zero, começa naquele minuto. */
     private void playEpisode(XtreamApi.Episode chosen, long startMs) {
         ArrayList<XtreamApi.Episode> queue = buildQueue();
@@ -453,6 +478,7 @@ public class SeriesActivity extends Activity {
         i.putExtra(HomeActivity.EXTRA_NAME, continueName);
         i.putStringArrayListExtra(EXTRA_LIST_IDS, ids);
         i.putStringArrayListExtra(EXTRA_LIST_EXTS, exts);
+        i.putStringArrayListExtra(MainActivity.EXTRA_LIST_LABELS, buildLabels(queue));
         i.putExtra(EXTRA_LIST_INDEX, index);
         i.putExtra(MainActivity.EXTRA_SERIES_KEY, seriesKey);
         if (seriesIcon != null && !seriesIcon.isEmpty()) {
