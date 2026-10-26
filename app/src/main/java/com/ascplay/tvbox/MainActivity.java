@@ -67,6 +67,10 @@ import java.util.Locale;
  * e ao terminar (marca como visto). Canal ao vivo não anota nada. O recado EXTRA_START_MS faz o
  * primeiro vídeo começar naquele minuto ("Continuar de onde parei").
  *
+ * "Continue assistindo" (ContinueStore): junto com o minuto, filme e episódio parados entre
+ * 5 segundos e 95% entram na lista (com nome, capa, endereço e minuto). Ao chegar a 95% ou
+ * terminar, saem da lista. A capa vem em EXTRA_ICON (opcional).
+ *
  * Controles de filme e episódio (o foco não fica preso nos botões):
  * - OK pausa e continua, mesmo com a barra de controles escondida;
  * - seta direita/esquerda, um toque: avança/volta 10 segundos;
@@ -88,6 +92,8 @@ public class MainActivity extends Activity {
     public static final String EXTRA_QUEUE = "channel_queue";
     /** Categoria de onde o canal veio (servidor: número; lista M3U: nome). Nulo = todas. */
     public static final String EXTRA_QUEUE_CAT = "channel_queue_cat";
+    /** Endereço da capa, só para a lista "Continue assistindo". Opcional. */
+    public static final String EXTRA_ICON = "continue_icon";
 
     private static final String USER_AGENT = "ASC-TVBox/1.0 (Android)";
     private static final int TIMEOUT_MS = 15000;
@@ -135,6 +141,11 @@ public class MainActivity extends Activity {
     // Lembrar onde parou
     private String seriesKey = null;
     private int savedIndex = -1;
+
+    // "Continue assistindo": nome base, nome atual e capa
+    private String baseName = "";
+    private String currentName = "";
+    private String iconUrl = "";
 
     // Minuto onde o próximo vídeo deve começar (0 = do começo). Usado uma vez.
     private long pendingStartMs = 0L;
@@ -239,6 +250,14 @@ public class MainActivity extends Activity {
 
         item = new XtreamApi.Item(kind, id, name == null ? "" : name, "", "", "", ext, url);
         streamUrl = XtreamApi.streamUrl(creds.server, creds.user, creds.pass, item);
+
+        // "Continue assistindo": nome e capa que a tela anterior mandou (a capa é opcional)
+        baseName = name == null ? "" : name;
+        currentName = baseName;
+        String ic = getIntent().getStringExtra(EXTRA_ICON);
+        if (ic != null && ic.length() <= MAX_URL) {
+            iconUrl = ic;
+        }
 
         // "Continuar de onde parei": só filme e episódio começam no meio
         if (kind == XtreamApi.Kind.MOVIE || kind == XtreamApi.Kind.EPISODE) {
@@ -754,7 +773,9 @@ public class MainActivity extends Activity {
         if (duration == C.TIME_UNSET || duration <= 0) {
             return;
         }
-        PlaybackProgress.save(this, key, player.getCurrentPosition(), duration);
+        long position = player.getCurrentPosition();
+        PlaybackProgress.save(this, key, position, duration);
+        updateContinue(position, duration);
     }
 
     /** Terminou o filme ou episódio: anota como visto (posição = duração). */
@@ -771,6 +792,32 @@ public class MainActivity extends Activity {
             return;
         }
         PlaybackProgress.save(this, key, duration, duration);
+        // Terminou: sai da lista "Continue assistindo"
+        if (streamUrl != null) {
+            ContinueStore.remove(this, streamUrl);
+        }
+    }
+
+    /**
+     * Atualiza a lista "Continue assistindo": entra se parou entre 5 segundos e 95%,
+     * sai se passou de 95%. Só filme e episódio. O endereço é guardado criptografado.
+     */
+    private void updateContinue(long position, long duration) {
+        if (item == null || streamUrl == null || duration <= 0
+                || (item.kind != XtreamApi.Kind.MOVIE && item.kind != XtreamApi.Kind.EPISODE)) {
+            return;
+        }
+        if (position * 100L >= duration * 95L) {
+            ContinueStore.remove(this, streamUrl);
+            return;
+        }
+        if (position < MIN_START_MS) {
+            return;
+        }
+        String kindText = item.kind == XtreamApi.Kind.MOVIE ? "movie" : "episode";
+        ContinueStore.save(this, new ContinueStore.Saved(kindText, currentName, iconUrl,
+                streamUrl, item.id, item.ext == null ? "" : item.ext,
+                seriesKey == null ? "" : seriesKey, position, duration));
     }
 
     /** Se a pessoa sair e voltar a esta tela (por exemplo, Home), continua do mesmo minuto. */
@@ -801,6 +848,7 @@ public class MainActivity extends Activity {
                 return;
             }
             listIndex = next;
+            currentName = (baseName.isEmpty() ? "" : baseName + " - ") + "ep. " + (next + 1);
             item = new XtreamApi.Item(XtreamApi.Kind.EPISODE, String.valueOf(next + 1), "", "",
                     "", "", "", listUrls.get(next));
             streamUrl = XtreamApi.streamUrl(creds.server, creds.user, creds.pass, item);
@@ -814,6 +862,7 @@ public class MainActivity extends Activity {
             return;
         }
         listIndex = next;
+        currentName = (baseName.isEmpty() ? "" : baseName + " - ") + "ep. " + (next + 1);
         item = new XtreamApi.Item(XtreamApi.Kind.EPISODE, listIds.get(next), "", "", "", "",
                 listExts.get(next));
         streamUrl = XtreamApi.streamUrl(creds.server, creds.user, creds.pass, item);
