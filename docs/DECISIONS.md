@@ -237,5 +237,14 @@
 - Decisão: novas metas do dono anotadas no STATUS.md (M2 ícone, M6 "Continue assistindo" na tela inicial), para os próximos agentes irem eliminando.
 - Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9.
+
+- ## 26/10/2026 - Rodada 3, M5b: capa maior na página da série
+
+- Decisão: a capa da página da série (activity_series.xml) passou de 100x150dp para 160x240dp, mantendo o formato de pôster. Só mudaram a largura e a altura do ImageView iv_cover. Sinopse (4 linhas, sem foco), botão Continuar e listas de temporadas e episódios não mudaram.
+- Motivo: pedido do dono (capa pequena). A capa NÃO ficou do tamanho da do filme (340x510dp) porque, na página da série, ela fica no alto e as listas de temporadas e episódios ficam embaixo. Uma capa muito alta tiraria o espaço dos episódios.
+- Risco aceito: a altura real da tela do TX9 não é conhecida. Se a capa ainda parecer pequena, aumentar; se os episódios ficarem apertados, diminuir.
+- Capa do filme (activity_movie.xml, 340x510dp) confirmada pelo dono: salva e verde.
+- Dependências: nenhuma nova.
+- Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
