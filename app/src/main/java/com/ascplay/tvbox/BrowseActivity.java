@@ -26,7 +26,8 @@ import java.util.Set;
  * Navegação por categorias ("Ver mais" da página inicial; também as abas Canais, Filmes e Séries
  * do menu à esquerda).
  * Esquerda: botão "Pesquisar" fixo e, abaixo, as categorias. Direita: itens, carregados por
- * páginas de 40 (máximo de 400 por categoria).
+ * páginas de 40, só quando a seleção chega perto do fim da grade (M12: teto de segurança de
+ * 5000 por categoria; antes era 400).
  * Nunca baixa a lista inteira: pede ao servidor só a página necessária.
  * Nos canais ao vivo, cada cartão mostra o programa que passa agora (EPG por canal).
  * Sobre um canal ao vivo, a tecla das três listras ou segurar o OK abre a janela com a
@@ -56,7 +57,7 @@ import java.util.Set;
 public class BrowseActivity extends Activity {
 
     private static final int PAGE = 40;
-    private static final int MAX_ITEMS = 400;
+    private static final int MAX_ITEMS = 5000;
     private static final int LOAD_AHEAD = 12;
     private static final int COLOR_NEUTRAL = 0xFFA39A9D;
     private static final int COLOR_ERROR = 0xFFFF6B78;
@@ -527,8 +528,9 @@ public class BrowseActivity extends Activity {
             ended = true;
         } else if (items.size() >= MAX_ITEMS) {
             ended = true;
-            Toast.makeText(this, "Mostrando os primeiros " + MAX_ITEMS
-                    + ". Escolha uma categoria para ver mais.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Limite de " + MAX_ITEMS
+                    + " itens atingido. Use o Pesquisar para achar o resto.",
+                    Toast.LENGTH_LONG).show();
         }
         itemAdapter.notifyDataSetChanged();
 
