@@ -252,6 +252,10 @@ public final class M3uApi {
      * Para ao juntar "limit" itens. Séries são comparadas e mostradas pelo título (sem
      * "S01E03"), um item por série. Se skipAdult for verdadeiro, itens adultos (pelo nome
      * ou pela categoria) são pulados. A lista inteira nunca fica na memória.
+     *
+     * M11: primeiro confere se o nome completo tem as palavras (conta barata); só os que
+     * passam são classificados (conta pesada). O resultado é o mesmo de antes, pois o título
+     * da série é um pedaço do nome completo.
      */
     public static List<XtreamApi.Item> search(String m3uUrl, XtreamApi.Kind kind, String query,
                                               boolean skipAdult, int limit)
@@ -264,15 +268,19 @@ public final class M3uApi {
         final HashSet<String> seenSeries = new HashSet<>();
         try {
             readList(m3uUrl, reader -> walk(reader, (url, grp, name, icon, tvgId, counter) -> {
+                // Filtro rápido: se o nome completo não tem as palavras, nenhum tipo serve.
+                if (!XtreamApi.matchesWords(name, words)) {
+                    return true;
+                }
                 if (classify(url, grp, name) != kind) {
                     return true;
                 }
                 String shownName = name;
                 if (kind == XtreamApi.Kind.SERIES) {
                     shownName = seriesTitle(name);
-                }
-                if (!XtreamApi.matchesWords(shownName, words)) {
-                    return true;
+                    if (!XtreamApi.matchesWords(shownName, words)) {
+                        return true;
+                    }
                 }
                 if (skipAdult && (ParentalStore.isAdultCategory(grp)
                         || ParentalStore.isAdultName(name))) {
