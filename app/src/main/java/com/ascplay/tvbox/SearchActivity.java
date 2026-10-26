@@ -22,8 +22,8 @@ import java.util.List;
  *
  * Servidor (Xtream): XtreamApi.searchStream lê a lista aos poucos e avisa cada resultado.
  * Lista M3U: M3uApi.searchStream faz o mesmo, linha por linha. No máximo 100 resultados.
- * M11b: os resultados aparecem na grade um a um, assim que são achados. Enquanto a busca
- * continua, o título mostra "(buscando...)". Voltar para a tela cancela a busca.
+ * M11c: os resultados são juntados em segundo plano e aparecem TODOS DE UMA VEZ quando a
+ * busca termina (mostrar um a um fazia as capas piscarem). Voltar para a tela cancela a busca.
  * Controle parental ligado: itens adultos não aparecem.
  *
  * Ao escolher um resultado: canal toca direto; filme abre a página do filme (MovieActivity);
@@ -54,7 +54,6 @@ public class SearchActivity extends Activity {
 
     // Cancela a busca ao fechar a tela (lido pela thread da busca)
     private volatile boolean cancelled = false;
-    private boolean focusGridWhenReady = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,7 +94,7 @@ public class SearchActivity extends Activity {
             }
         });
 
-        tvTitle.setText(titleText(true));
+        tvTitle.setText(kindLabel() + ": " + query);
         showStatus("Buscando... pode levar alguns segundos.", COLOR_NEUTRAL);
         startSearch();
     }
@@ -124,12 +123,14 @@ public class SearchActivity extends Activity {
         final XtreamApi.Kind k = kind;
         final String q = query;
         new Thread(() -> {
+            // Só esta thread mexe nesta lista; ela vai inteira para a tela no fim.
+            final List<XtreamApi.Item> found = new ArrayList<>();
             boolean failed = false;
             XtreamApi.ResultListener listener = item -> {
                 if (cancelled) {
                     return false; // tela fechada: para de procurar
                 }
-                runOnUiThread(() -> onResult(item));
+                found.add(item);
                 return true;
             };
             try {
@@ -143,32 +144,16 @@ public class SearchActivity extends Activity {
                 failed = true;
             }
             final boolean fail = failed;
-            runOnUiThread(() -> onDone(fail));
+            runOnUiThread(() -> onDone(found, fail));
         }).start();
     }
 
-    /** Chega um resultado: entra na grade na hora (sempre na thread principal). */
-    private void onResult(XtreamApi.Item item) {
+    /** A busca terminou (ou falhou): mostra tudo de uma vez. */
+    private void onDone(List<XtreamApi.Item> found, boolean failed) {
         if (isFinishing() || isDestroyed()) {
             return;
         }
-        items.add(item);
-        itemAdapter.notifyDataSetChanged();
-        if (focusGridWhenReady) {
-            focusGridWhenReady = false;
-            tvStatus.setVisibility(View.GONE);
-            gvItems.setSelection(0);
-            gvItems.requestFocus();
-        }
-    }
-
-    /** A busca terminou (ou falhou). */
-    private void onDone(boolean failed) {
-        if (isFinishing() || isDestroyed()) {
-            return;
-        }
-        tvTitle.setText(titleText(false));
-        if (items.isEmpty()) {
+        if (found.isEmpty()) {
             if (failed) {
                 showStatus("Não foi possível buscar. Confira a internet e o login.", COLOR_ERROR);
             } else {
@@ -176,7 +161,12 @@ public class SearchActivity extends Activity {
             }
             return;
         }
+        items.clear();
+        items.addAll(found);
+        itemAdapter.notifyDataSetChanged();
         tvStatus.setVisibility(View.GONE);
+        gvItems.setSelection(0);
+        gvItems.requestFocus();
         if (failed) {
             Toast.makeText(this, "A busca parou antes do fim.", Toast.LENGTH_SHORT).show();
         }
@@ -223,10 +213,6 @@ public class SearchActivity extends Activity {
             default:
                 return "Canais";
         }
-    }
-
-    private String titleText(boolean searching) {
-        return kindLabel() + ": " + query + (searching ? " (buscando...)" : "");
     }
 
     private void showStatus(String text, int color) {
