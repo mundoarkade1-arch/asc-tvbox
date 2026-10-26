@@ -22,6 +22,9 @@ import java.util.Locale;
  * player (MainActivity) vai anotando. A conferência é refeita toda vez que a pessoa volta do
  * player (onResume).
  *
+ * A capa (movieIcon) também é mandada ao player (MainActivity.EXTRA_ICON), para a lista
+ * "Continue assistindo".
+ *
  * Só é aberta a partir de itens que já passaram pelo filtro do controle parental.
  * Não tem menu à esquerda (tela de passagem, como a de resultados da busca).
  */
@@ -45,6 +48,8 @@ public class MovieActivity extends Activity {
     private String movieExt;
     private String movieName;
     private String movieUrl;
+    // Capa do filme (a do item; trocada pela do servidor, se ela chegar)
+    private String movieIcon = "";
 
     // Minuto onde a pessoa parou (0 = nada para continuar)
     private long resumeMs = 0L;
@@ -75,6 +80,7 @@ public class MovieActivity extends Activity {
         if (icon == null) {
             icon = "";
         }
+        movieIcon = icon;
 
         setContentView(R.layout.activity_movie);
 
@@ -194,6 +200,7 @@ public class MovieActivity extends Activity {
             return;
         }
         if (!d.cover.isEmpty()) {
+            movieIcon = d.cover;
             ImageLoader.load(ivCover, d.cover);
         }
         if (!d.meta.isEmpty()) {
@@ -219,6 +226,9 @@ public class MovieActivity extends Activity {
         i.putExtra(HomeActivity.EXTRA_NAME, movieName);
         if (CredentialStore.MODE_M3U.equals(creds.mode) && movieUrl != null) {
             i.putExtra(MainActivity.EXTRA_URL, movieUrl);
+        }
+        if (movieIcon != null && !movieIcon.isEmpty()) {
+            i.putExtra(MainActivity.EXTRA_ICON, movieIcon);
         }
         if (startMs > 0L) {
             i.putExtra(MainActivity.EXTRA_START_MS, startMs);
