@@ -11,8 +11,8 @@
 
     <ImageView
         android:id="@+id/iv_cover"
-        android:layout_width="240dp"
-        android:layout_height="360dp"
+        android:layout_width="340dp"
+        android:layout_height="510dp"
         android:background="#1A1618"
         android:contentDescription="Capa"
         android:scaleType="centerCrop" />
