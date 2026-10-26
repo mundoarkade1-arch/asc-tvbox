@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.GridView;
@@ -22,7 +23,7 @@ import java.util.List;
 /**
  * Tela da série: no alto a capa, o título, a linha de informações e a sinopse; abaixo os
  * botões "Continuar" e "Assistir", o botão da temporada (abre uma janelinha com todas as
- * temporadas) e a grade de episódios em 3 colunas.
+ * temporadas) e a grade de episódios (15 colunas, só o número de cada episódio).
  * Recebe o número da série e o nome (HomeActivity.EXTRA_ID e EXTRA_NAME).
  * Pede ao servidor só os episódios desta série (no máximo 500) e, em outro pedido, a capa e a
  * sinopse (XtreamApi.details, uma vez). Se a capa e a sinopse falharem, a tela abre sem elas.
@@ -36,6 +37,9 @@ import java.util.List;
  * parou, no minuto exato (PlaybackProgress). Se esse episódio já terminou, leva ao próximo,
  * do começo. Botão "Assistir": toca o episódio atual (o mesmo do "Continuar") do começo; se
  * a série nunca foi vista, toca o primeiro episódio.
+ *
+ * Grade: os quadradinhos NÃO recebem foco; quem controla as setas, a seleção e a rolagem é a
+ * própria grade (como nas outras listas do app). O clique é da grade (setOnItemClickListener).
  *
  * Cores dos episódios: visto = vermelho; atual (o do "Continuar") = verde; resto = branco.
  * As cores e os botões são refeitos ao voltar do player.
@@ -138,6 +142,15 @@ public class SeriesActivity extends Activity {
 
         episodeAdapter = new EpisodeAdapter();
         gvEpisodes.setAdapter(episodeAdapter);
+        // O clique é da grade (os quadradinhos não recebem foco)
+        gvEpisodes.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long rowId) {
+                if (position >= 0 && position < shown.size()) {
+                    playEpisode(shown.get(position), 0L);
+                }
+            }
+        });
 
         btnContinue.setText("Continuar");
         btnContinue.setOnClickListener(v -> {
@@ -457,12 +470,9 @@ public class SeriesActivity extends Activity {
         return season == 0 ? "Especiais" : "Temporada " + season;
     }
 
-    private static String episodeLabel(XtreamApi.Episode e) {
-        String title = e.title == null ? "" : e.title;
-        if (e.number > 0) {
-            return title.isEmpty() ? "Episódio " + e.number : e.number + ". " + title;
-        }
-        return title.isEmpty() ? "Episódio" : title;
+    /** Só o número do episódio. Sem número, usa a posição dele na temporada. */
+    private static String numberLabel(XtreamApi.Episode e, int position) {
+        return String.valueOf(e.number > 0 ? e.number : position + 1);
     }
 
     /** Cor do episódio: atual = verde; visto = vermelho; resto = branco. */
@@ -509,13 +519,15 @@ public class SeriesActivity extends Activity {
             if (convertView == null) {
                 tv = (TextView) LayoutInflater.from(SeriesActivity.this)
                         .inflate(R.layout.item_episode, parent, false);
+                // Quem controla a seleção e o clique é a própria grade.
+                tv.setFocusable(false);
+                tv.setClickable(false);
             } else {
                 tv = (TextView) convertView;
             }
-            final XtreamApi.Episode ep = shown.get(position);
-            tv.setText(episodeLabel(ep));
+            XtreamApi.Episode ep = shown.get(position);
+            tv.setText(numberLabel(ep, position));
             tv.setTextColor(colorOf(ep));
-            tv.setOnClickListener(v -> playEpisode(ep, 0L));
             return tv;
         }
     }
