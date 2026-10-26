@@ -25,7 +25,8 @@ import java.util.Set;
 /**
  * Navegação por categorias ("Ver mais" da página inicial; também as abas Canais, Filmes e Séries
  * do menu à esquerda).
- * Esquerda: categorias. Direita: itens, carregados por páginas de 40 (máximo de 400 por categoria).
+ * Esquerda: botão "Pesquisar" fixo e, abaixo, as categorias. Direita: itens, carregados por
+ * páginas de 40 (máximo de 400 por categoria).
  * Nunca baixa a lista inteira: pede ao servidor só a página necessária.
  * Nos canais ao vivo, cada cartão mostra o programa que passa agora (EPG por canal).
  * Sobre um canal ao vivo, a tecla das três listras ou segurar o OK abre a janela com a
@@ -35,16 +36,18 @@ import java.util.Set;
  * Ao escolher um canal ao vivo, o player pode trocar de canal com cima e baixo (R4): esta tela
  * manda EXTRA_QUEUE = true e a categoria aberta (EXTRA_QUEUE_CAT; nada = todas as categorias).
  *
- * Ordem do foco (da esquerda para a direita): menu, categorias, itens. Esquerda na primeira
- * coluna dos itens leva o foco às categorias (Rodada 1, R3).
+ * Ordem do foco: menu, Pesquisar, categorias, itens. Esquerda na primeira coluna dos itens
+ * leva o foco às categorias (Rodada 1, R3).
  *
  * Menu à esquerda (ícone e nome): ligado pelo NavBar. Troca de aba, volta à tela inicial e
  * recarrega a categoria aberta (Atualizar).
  *
- * Pesquisa (Rodada 3): é a PRIMEIRA linha da lista de categorias ("Pesquisar"). OK nela pesquisa
- * SÓ o tipo desta tela (canais, filmes ou séries): abre o teclado de letras e, ao buscar, a
- * tela de resultados (SearchActivity). Na lista, a linha 0 é a pesquisa e a linha N (N maior
- * que 0) é a categoria de índice N-1 em catIds/catNames.
+ * Pesquisa (Rodada 4, R4-1): o botão "Pesquisar" (btn_search_top) fica FIXO acima da lista de
+ * categorias, sempre à vista. No layout ele nasce escondido (a SearchActivity, que reaproveita
+ * o mesmo layout, não o mostra); esta tela o mostra. OK nele pesquisa SÓ o tipo desta tela
+ * (canais, filmes ou séries): abre o teclado de letras e, ao buscar, a tela de resultados
+ * (SearchActivity). A lista de categorias NÃO tem mais a linha "Pesquisar": a posição da lista
+ * é o índice em catIds/catNames.
  *
  * Controle parental (quando ligado): categorias adultas mostram um cadeado e pedem a senha
  * de 4 números para abrir. A liberação vale só para aquela categoria, enquanto a pessoa está
@@ -58,13 +61,13 @@ public class BrowseActivity extends Activity {
     private static final int COLOR_NEUTRAL = 0xFFA39A9D;
     private static final int COLOR_ERROR = 0xFFFF6B78;
     private static final String LOCK = "\uD83D\uDD12 ";
-    private static final String SEARCH_ICON = "\uD83D\uDD0D ";
 
     private CredentialStore.Credentials creds;
     private XtreamApi.Kind kind;
 
     private TextView tvTitle;
     private TextView tvStatus;
+    private TextView btnSearch;
     private ListView lvCategories;
     private GridView gvItems;
 
@@ -117,12 +120,20 @@ public class BrowseActivity extends Activity {
         setContentView(R.layout.activity_browse);
         tvTitle = findViewById(R.id.tv_title);
         tvStatus = findViewById(R.id.tv_status);
+        btnSearch = findViewById(R.id.btn_search_top);
         lvCategories = findViewById(R.id.lv_categories);
         gvItems = findViewById(R.id.gv_items);
 
         lvCategories.setDividerHeight(dp(6));
         gvItems.setHorizontalSpacing(dp(10));
         gvItems.setVerticalSpacing(dp(10));
+
+        // Botão "Pesquisar" fixo: sempre à vista, acima da lista de categorias (R4-1).
+        // Foco: do botão, baixo vai à lista; do alto da lista, cima volta ao botão.
+        btnSearch.setVisibility(View.VISIBLE);
+        btnSearch.setNextFocusDownId(R.id.lv_categories);
+        lvCategories.setNextFocusUpId(R.id.btn_search_top);
+        btnSearch.setOnClickListener(v -> openSearch());
 
         // Menu à esquerda (ícone e nome)
         NavBar.bind(this, navCurrent(), () -> refreshCurrent());
@@ -134,14 +145,8 @@ public class BrowseActivity extends Activity {
         lvCategories.setAdapter(catAdapter);
         gvItems.setAdapter(itemAdapter);
 
-        // Linha 0 da lista = Pesquisar; linha N = categoria N-1
-        lvCategories.setOnItemClickListener((parent, view, position, id) -> {
-            if (position == 0) {
-                openSearch();
-            } else {
-                onCategoryClick(position - 1);
-            }
-        });
+        // Posição da lista = índice da categoria em catIds/catNames
+        lvCategories.setOnItemClickListener((parent, view, position, id) -> onCategoryClick(position));
         gvItems.setOnItemClickListener((parent, view, position, id) -> {
             if (position >= 0 && position < items.size()) {
                 openItem(items.get(position));
@@ -185,7 +190,8 @@ public class BrowseActivity extends Activity {
 
     /**
      * Com o foco na grade de itens:
-     * - esquerda na primeira coluna leva o foco às categorias (ordem: menu, categorias, itens);
+     * - esquerda na primeira coluna leva o foco às categorias (ordem: menu, Pesquisar,
+     *   categorias, itens);
      * - com um canal ao vivo selecionado, a tecla das três listras (menu) abre a janela da
      *   programação do canal, e OK segurado faz o mesmo (segunda via).
      * Em qualquer outro lugar, as teclas funcionam como antes.
@@ -232,8 +238,7 @@ public class BrowseActivity extends Activity {
             position = 0;
         }
         lvCategories.requestFocus();
-        // +1 porque a linha 0 da lista é o "Pesquisar"
-        lvCategories.setSelection(position + 1);
+        lvCategories.setSelection(position);
     }
 
     /** O canal ao vivo selecionado na grade, ou null se o foco está em outro lugar. */
@@ -628,16 +633,16 @@ public class BrowseActivity extends Activity {
 
     // ---------- Adaptadores (reaproveitam as linhas ao rolar) ----------
 
-    /** Linha 0 = Pesquisar; linha N (maior que 0) = categoria de índice N-1. */
+    /** Posição da lista = índice da categoria em catIds/catNames. */
     private final class CategoryAdapter extends BaseAdapter {
         @Override
         public int getCount() {
-            return catNames.size() + 1;
+            return catNames.size();
         }
 
         @Override
         public Object getItem(int position) {
-            return position == 0 ? "Pesquisar" : catNames.get(position - 1);
+            return catNames.get(position);
         }
 
         @Override
@@ -657,14 +662,9 @@ public class BrowseActivity extends Activity {
             } else {
                 tv = (TextView) convertView;
             }
-            if (position == 0) {
-                tv.setText(SEARCH_ICON + "Pesquisar");
-                return tv;
-            }
-            int index = position - 1;
-            String id = catIds.get(index);
+            String id = catIds.get(position);
             boolean locked = parentalOn && id != null && adultCatIds.contains(id);
-            tv.setText(locked ? LOCK + catNames.get(index) : catNames.get(index));
+            tv.setText(locked ? LOCK + catNames.get(position) : catNames.get(position));
             return tv;
         }
     }
