@@ -14,15 +14,16 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
- * Página inicial: 10 primeiros canais, filmes e séries.
+ * Página inicial: faixa "Continue assistindo" (se houver) e os 10 primeiros canais, filmes e séries.
  * Servidor com login (Xtream): busca só o começo de cada lista (nunca a lista inteira).
  * No fim de cada faixa há o cartão "Ver mais ›", que abre a navegação por categorias.
  * Nesse cartão, a seta para a direita não faz nada (R6): para mudar de faixa, só cima e baixo.
  * Nos canais ao vivo, cada cartão mostra o programa que passa agora (EPG por canal).
  * Não há caixinha de prévia nesta tela (pedido do dono, Rodada 1, R2).
- * Os cartões desta tela usam o layout menor item_card_small (R5), para as três faixas
+ * Os cartões desta tela usam o layout menor item_card_small (R5), para as faixas
  * caberem na tela sem rolagem. As abas continuam com o item_card normal.
  * Sobre um canal ao vivo (servidor), a tecla das três listras ou segurar o OK abre a janela
  * com a programação do canal (o que passa agora e os próximos programas).
@@ -30,6 +31,13 @@ import java.util.List;
  * Ao escolher um filme, abre a página do filme (MovieActivity), com capa e sinopse.
  * Ao escolher um canal ao vivo, o player pode trocar de canal com cima e baixo (R4):
  * esta tela manda EXTRA_QUEUE = true e nenhuma categoria (nula = todas as categorias).
+ *
+ * Faixa "Continue assistindo" (M6): lê a ContinueStore fora da thread principal e mostra até
+ * 10 itens, do mais novo ao mais antigo. Cartão de filme abre a página do filme; cartão de
+ * episódio abre a página da série (servidor: número da série tirado da chave guardada; lista
+ * M3U: nome da série tirado do nome "Série - ep. N"). Lá a pessoa clica em "Continuar".
+ * Controle parental ligado: itens com nome adulto não aparecem. A faixa é refeita no onResume.
+ * O endereço do vídeo e a chave da série NUNCA são mostrados nem registrados em log.
  *
  * Lista M3U: lê a lista aos poucos, só até achar 10 itens de cada tipo (M3uApi).
  * O cartão "Ver mais ›" abre a navegação por categorias da lista M3U (M3uBrowseActivity).
@@ -62,6 +70,8 @@ public class HomeActivity extends Activity {
 
     private CredentialStore.Credentials creds;
 
+    private LinearLayout railContinue;
+    private View groupContinue;
     private LinearLayout railLive;
     private LinearLayout railMovie;
     private LinearLayout railSeries;
@@ -79,6 +89,9 @@ public class HomeActivity extends Activity {
 
     // Para ignorar respostas antigas quando as faixas são recarregadas
     private int railGen = 0;
+
+    // Para ignorar respostas antigas da faixa "Continue assistindo"
+    private int continueGen = 0;
 
     // Estado do controle parental na última vez que as faixas foram montadas
     private boolean parentalSeen = false;
@@ -120,6 +133,8 @@ public class HomeActivity extends Activity {
 
         setContentView(R.layout.activity_home);
 
+        groupContinue = findViewById(R.id.group_continue);
+        railContinue = findViewById(R.id.rail_continue);
         railLive = findViewById(R.id.rail_live);
         railMovie = findViewById(R.id.rail_movie);
         railSeries = findViewById(R.id.rail_series);
@@ -170,10 +185,16 @@ public class HomeActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (creds == null) {
+            return;
+        }
         // Voltou de outra tela (por exemplo, Ajustes): se o controle parental mudou, recarrega
-        if (creds != null && ParentalStore.isEnabled(this) != parentalSeen) {
+        if (ParentalStore.isEnabled(this) != parentalSeen) {
             parentalSeen = ParentalStore.isEnabled(this);
             reloadRails();
+        } else {
+            // A lista do "Continue assistindo" pode ter mudado depois do player
+            loadContinue();
         }
     }
 
@@ -215,9 +236,9 @@ public class HomeActivity extends Activity {
 
     // ---------- Menu à esquerda ----------
 
-    /** Tela inicial: leva o foco para o primeiro canal (ou filme, ou série) já carregado. */
+    /** Tela inicial: leva o foco para o primeiro cartão (continue assistindo, canal, filme ou série). */
     private void goToFirstCard() {
-        LinearLayout[] rails = {railLive, railMovie, railSeries};
+        LinearLayout[] rails = {railContinue, railLive, railMovie, railSeries};
         for (LinearLayout rail : rails) {
             if (rail.getChildCount() > 0) {
                 rail.getChildAt(0).requestFocus();
@@ -232,6 +253,179 @@ public class HomeActivity extends Activity {
             return;
         }
         openBrowse(kind);
+    }
+
+    // ---------- Faixa "Continue assistindo" ----------
+
+    /** Lê a ContinueStore fora da thread principal e monta a faixa. */
+    private void loadContinue() {
+        if (creds == null) {
+            return;
+        }
+        final int gen = ++continueGen;
+        new Thread(() -> {
+            List<ContinueStore.Saved> all = null;
+            try {
+                all = ContinueStore.list(this);
+            } catch (Exception e) {
+                // não conseguiu ler: a faixa fica escondida
+            }
+            final List<ContinueStore.Saved> result = all;
+            runOnUiThread(() -> {
+                if (gen == continueGen) {
+                    showContinue(result);
+                }
+            });
+        }).start();
+    }
+
+    private void showContinue(List<ContinueStore.Saved> list) {
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
+        boolean hadFocus = railContinue.hasFocus();
+        railContinue.removeAllViews();
+
+        // Controle parental ligado: tira o que tem nome adulto. Fica com no máximo 10.
+        boolean hideAdult = ParentalStore.isEnabled(this);
+        List<ContinueStore.Saved> shown = new ArrayList<>();
+        if (list != null) {
+            for (ContinueStore.Saved s : list) {
+                if (shown.size() >= LIMIT) {
+                    break;
+                }
+                if (s.url.isEmpty()) {
+                    continue;
+                }
+                if (hideAdult && ParentalStore.isAdultName(s.name)) {
+                    continue;
+                }
+                shown.add(s);
+            }
+        }
+
+        if (shown.isEmpty()) {
+            groupContinue.setVisibility(View.GONE);
+            if (hadFocus) {
+                navHome.requestFocus();
+            }
+            return;
+        }
+
+        groupContinue.setVisibility(View.VISIBLE);
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View first = null;
+        View last = null;
+        for (final ContinueStore.Saved s : shown) {
+            View card = inflater.inflate(R.layout.item_card_small, railContinue, false);
+            TextView initial = card.findViewById(R.id.tv_initial);
+            TextView name = card.findViewById(R.id.tv_name);
+            ImageView logo = card.findViewById(R.id.iv_logo);
+            TextView now = card.findViewById(R.id.tv_now);
+
+            name.setText(s.name);
+            initial.setText(firstLetter(s.name));
+            if (!s.icon.isEmpty()) {
+                ImageLoader.load(logo, s.icon);
+            }
+            now.setText("Parou em " + clock(s.posMs));
+            now.setVisibility(View.VISIBLE);
+
+            card.setOnFocusChangeListener(clearLiveOnFocus);
+            card.setOnClickListener(v -> openContinue(s));
+            railContinue.addView(card);
+            if (first == null) {
+                first = card;
+            }
+            last = card;
+        }
+
+        // Último cartão: seta para a direita não faz nada (igual ao "Ver mais" das outras faixas)
+        if (last != null) {
+            last.setId(View.generateViewId());
+            last.setNextFocusRightId(last.getId());
+        }
+
+        if (hadFocus && first != null) {
+            first.requestFocus();
+        }
+    }
+
+    /**
+     * Cartão do "Continue assistindo": filme abre a página do filme; episódio abre a página
+     * da série. Em ambas, a pessoa clica em "Continuar".
+     */
+    private void openContinue(ContinueStore.Saved s) {
+        if ("movie".equals(s.kind)) {
+            Intent i = new Intent(this, MovieActivity.class);
+            i.putExtra(EXTRA_KIND, XtreamApi.Kind.MOVIE.name());
+            i.putExtra(EXTRA_ID, s.id);
+            i.putExtra(EXTRA_EXT, s.ext);
+            i.putExtra(EXTRA_NAME, s.name);
+            if (!s.icon.isEmpty()) {
+                i.putExtra(MovieActivity.EXTRA_ICON, s.icon);
+            }
+            if (isM3u()) {
+                i.putExtra(MainActivity.EXTRA_URL, s.url);
+            }
+            startActivity(i);
+            return;
+        }
+
+        if ("episode".equals(s.kind)) {
+            Intent i;
+            if (isXtream() && s.seriesKey.startsWith("xt|")) {
+                // Chave: xt|servidor|usuário|número da série. O número é a última parte.
+                int p = s.seriesKey.lastIndexOf('|');
+                String seriesId = p >= 0 ? s.seriesKey.substring(p + 1) : "";
+                int q = s.name.lastIndexOf(" - ep. ");
+                String seriesName = q > 0 ? s.name.substring(0, q).trim() : s.name;
+                if (!seriesId.matches("\\d{1,12}")) {
+                    cannotOpen();
+                    return;
+                }
+                i = new Intent(this, SeriesActivity.class);
+                i.putExtra(EXTRA_ID, seriesId);
+                i.putExtra(EXTRA_NAME, seriesName);
+            } else if (isM3u() && s.seriesKey.startsWith("m3u|")) {
+                // Lista M3U: a série é achada pelo título, que vem antes de " - ep. N"
+                int q = s.name.lastIndexOf(" - ep. ");
+                String seriesName = q > 0 ? s.name.substring(0, q).trim() : "";
+                if (seriesName.isEmpty()) {
+                    cannotOpen();
+                    return;
+                }
+                i = new Intent(this, M3uSeriesActivity.class);
+                i.putExtra(EXTRA_NAME, seriesName);
+            } else {
+                cannotOpen();
+                return;
+            }
+            if (!s.icon.isEmpty()) {
+                i.putExtra(MovieActivity.EXTRA_ICON, s.icon);
+            }
+            startActivity(i);
+            return;
+        }
+
+        cannotOpen();
+    }
+
+    private void cannotOpen() {
+        Toast.makeText(this, "Não deu para abrir este item. Ele pode ser de outra lista.",
+                Toast.LENGTH_LONG).show();
+    }
+
+    /** Minuto em texto: 5:07 ou 1:23:45. */
+    private static String clock(long ms) {
+        long total = ms / 1000L;
+        long h = total / 3600L;
+        long m = (total % 3600L) / 60L;
+        long sec = total % 60L;
+        if (h > 0) {
+            return String.format(Locale.US, "%d:%02d:%02d", h, m, sec);
+        }
+        return String.format(Locale.US, "%d:%02d", m, sec);
     }
 
     // ---------- Faixas de canais, filmes e séries ----------
@@ -326,6 +520,7 @@ public class HomeActivity extends Activity {
             states[i].setVisibility(View.VISIBLE);
         }
         loadAllRails();
+        loadContinue();
     }
 
     private void showRail(final XtreamApi.Kind kind, List<XtreamApi.Item> items,
