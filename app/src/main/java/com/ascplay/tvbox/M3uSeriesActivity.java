@@ -18,7 +18,9 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Tela da série para o login por lista M3U: no alto a capa do item e o título (a lista M3U não
@@ -34,7 +36,8 @@ import java.util.List;
  * endereços de TODOS os episódios da série, em ordem (temporadas normais primeiro, "Especiais"
  * no fim), para o player tocar o próximo sozinho. Se a lista de endereços for grande demais
  * para passar entre telas, vai só o episódio escolhido. Também manda a capa
- * (MainActivity.EXTRA_ICON) e o nome "Série - ep. N" para a lista "Continue assistindo".
+ * (MainActivity.EXTRA_ICON), o nome "Série - ep. N" para a lista "Continue assistindo" e, em
+ * MainActivity.EXTRA_LIST_LABELS, o texto "Temporada N - Episódio N" de cada episódio (M13).
  *
  * Botão "Continuar" (escondido se não há nada para continuar): vai ao episódio onde a pessoa
  * parou, no minuto exato (PlaybackProgress, chave = endereço do vídeo). Se esse episódio já
@@ -383,6 +386,28 @@ public class M3uSeriesActivity extends Activity {
         return queue;
     }
 
+    /**
+     * M13: texto "Temporada N - Episódio N" de cada episódio, na ordem da fila.
+     * O número é o da lista; sem número, é a posição do episódio dentro da temporada
+     * (igual ao que a grade mostra).
+     */
+    private ArrayList<String> buildLabels(List<M3uApi.Episode> queue) {
+        Map<M3uApi.Episode, String> byEpisode = new HashMap<>();
+        Map<Integer, Integer> counters = new HashMap<>();
+        for (M3uApi.Episode e : allEpisodes) {
+            Integer c = counters.get(e.season);
+            int pos = c == null ? 0 : c;
+            counters.put(e.season, pos + 1);
+            byEpisode.put(e, seasonLabel(e.season) + " - Episódio " + numberLabel(e, pos));
+        }
+        ArrayList<String> labels = new ArrayList<>();
+        for (M3uApi.Episode e : queue) {
+            String t = byEpisode.get(e);
+            labels.add(t == null ? "" : t);
+        }
+        return labels;
+    }
+
     /** Abre o player neste episódio. Se startMs for maior que zero, começa naquele minuto. */
     private void playEpisode(M3uApi.Episode chosen, long startMs) {
         ArrayList<M3uApi.Episode> queue = buildQueue();
@@ -423,6 +448,7 @@ public class M3uSeriesActivity extends Activity {
                 urls.add(e.url);
             }
             i.putStringArrayListExtra(MainActivity.EXTRA_LIST_URLS, urls);
+            i.putStringArrayListExtra(MainActivity.EXTRA_LIST_LABELS, buildLabels(queue));
             i.putExtra(SeriesActivity.EXTRA_LIST_INDEX, index);
         }
         startActivity(i);
