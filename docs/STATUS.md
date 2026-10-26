@@ -1,24 +1,28 @@
 # Status do projeto
 
-Última atualização: 26/10/2026 (tudo VERDE no Actions; pedido novo M13c ainda não feito)
+Última atualização: 26/10/2026 (tudo VERDE no Actions)
 Regras de trabalho: AGENTS.md. Mapa e limites: docs/ARQUIVOS.md. Montagem e versão: docs/ARCHITECTURE.md. Decisões: docs/DECISIONS.md.
 
 ## Fase atual
-Tudo está VERDE. O MainActivity.java tinha sido salvo cortado (erro "unclosed comment"). Foi refeito inteiro, com M13 e CONTROLLER_ALPHA = 0.25f, e o Actions ficou verde. O dono mudou o pedido do player (M13c, abaixo). Nada em andamento no código.
+Tudo está VERDE. Nada em andamento no código. O M13c (player só com play/pause meio transparente) foi feito em duas rodadas e está verde, mas o dono ainda NÃO disse como ficou no TX9. Foi acrescentado um texto de DIAGNÓSTICO da imagem (temporário) no player.
 
 ## Já feito (uma linha cada; detalhes em ARQUIVOS.md e DECISIONS.md)
-- Base, nova aparência, Rodadas 1 a 6, M6, R4-1, R4-2, páginas de filme e série: testadas no TX9.
-- M9 (menu estreito e degradê), M10 (uma entrada por série), M12 (teto de 5000 itens): testadas, ok.
-- M11 (pesquisa lenta): resolvido no servidor com SearchIndex (índice em arquivo, 2 h). Testado, "ficou bom". Primeira pesquisa de cada tipo ainda demora.
-- Teclado de pesquisa QWERTY brasileiro com Ç e acentos (segurar OK): testado, "ficou bom".
-- M13 (verde, SEM teste): player mostra "Temporada N - Episódio N" no alto à esquerda por 5 s.
-- M13b (verde, SEM teste): todos os botões do player com CONTROLLER_ALPHA = 0.25f. SUBSTITUÍDO pelo M13c.
+- Base, nova aparência, Rodadas 1 a 6, M6, M9, M10, M12, R4-1, R4-2, páginas de filme e série: testadas no TX9.
+- M11 (pesquisa lenta): SearchIndex (índice em arquivo, 2 h). Testado, "ficou bom".
+- Teclado de pesquisa QWERTY brasileiro com Ç e acentos: testado.
+- M13 (texto "Temporada N - Episódio N" no player): verde, SEM teste.
+- M13c (verde, SEM teste): botões do player escondidos (voltar, avançar, anterior, próximo e extras); barra de progresso, números de tempo e texto do episódio CONTINUAM aparecendo; play/pause com alpha 0.5. Feito no activity_main.xml (4 atributos show_*_button="false") e no MainActivity (makeControllerTransparent). O texto do episódio fica na tela enquanto a barra de controles está visível.
+- Diagnóstico da imagem (verde, TEMPORÁRIO): OK em filme/episódio mostra 6 s, no alto à direita: tamanho do vídeo, tipo, decodificador, tela.
+
+## Achado do diagnóstico (queixa: "imagem pixelada em filmes e séries; em outro app é melhor")
+- Vídeo do filme testado: 1280x720, AVC (H264). Decodificador: OMX.amlogic.avc.decoder.awesome (por hardware, é o melhor). Tela do Android: 1280x720.
+- Conclusão: o decodificador não é o problema. O arquivo chega em 720p do servidor e a saída do TX9 está em 720p (o aparelho aceita 1080p).
+- Dica dada ao dono: nas Configurações do TX9, mudar a saída/resolução para 1080p e repetir o OK no filme (a linha "Tela" deve mostrar 1920x1080). RESPOSTA DO DONO: ainda não veio.
+- Ainda não verificado: se o outro app (que o dono acha melhor) pega uma versão melhor do mesmo filme. Perguntar o nome do outro app se a mudança para 1080p não resolver.
 
 ## METAS (pedidos do dono ainda não feitos)
-- M13c (PRIORIDADE, substitui o M13b): no player de filme e episódio, SÓ o botão de play/pause aparece, meio transparente. O resto (voltar, avançar, barra de tempo, números de tempo) NÃO aparece. Palavras do dono: "decide somente o play pause mostrando meio transparente, o resto não apareça".
-  - Os botões vêm da biblioteca media3 (PlayerView), não do activity_main.xml. Ideias: no MainActivity (makeControllerTransparent), esconder exo_rew, exo_ffwd, exo_prev, exo_next, exo_progress, exo_position, exo_duration etc. e deixar só exo_play_pause com alpha perto de 0.5; ou usar atributos do PlayerView no activity_main.xml (show_rewind_button, show_fastforward_button, show_previous_button, show_next_button). Conferir a versão do media3 em docs/ARCHITECTURE.md.
-  - Manter: setas esquerda/direita pulam 10 s sem botões; OK pausa pelo dispatchKeyEvent; foco não pode ficar preso nos botões; texto do M13 continua.
-- Testes pendentes no TX9: M13 (episódio mostra "Temporada N - Episódio N" no alto à esquerda por 5 s; OK mostra de novo) e M13c depois de feito.
+- Imagem pixelada nos filmes e séries: esperar o resultado do teste de 1080p. Se não resolver, investigar com o dono (outro app, versão do arquivo, escala do vídeo). Depois de resolver, REMOVER o diagnóstico do MainActivity (createDiagLabel, showDiag, decoderName, AnalyticsListener, hideDiag, DIAG_HIDE_MS e a chamada showDiag() no OK).
+- Testes pendentes no TX9: M13 (episódio mostra "Temporada N - Episódio N" no alto à esquerda por 5 s e junto com a barra) e M13c (OK em filme/episódio: pausa e aparecem só barra de progresso, números e play/pause meio transparente, sem botões de voltar/avançar).
 - M11 melhorias (só se o dono pedir): montar o índice em segundo plano ao abrir o app; contagem em "Buscando...". Lista M3U não usa o índice (o dono não usa M3U).
 - ADIADOS: fundo com imagem e ícone novo (imagens grandes; reduzir no squoosh.app e enviar pelo GitHub; o agente não envia imagens); otimização geral sem perder funções.
 
@@ -30,10 +34,11 @@ Tudo está VERDE. O MainActivity.java tinha sido salvo cortado (erro "unclosed c
 - Limpeza opcional: tirar lv_seasons e lv_episodes do activity_series.xml.
 
 ## Pontos a conferir
-- SearchIndex: limite de 200000 itens e 60 MB; se passar, a busca cai na antiga.
-- O dono prefere o arquivo INTEIRO num bloco só. Antes de salvar arquivo grande: Ctrl+End e conferir que a última linha é "}". Conferir o nome do arquivo no endereço (já se colou XML dentro de um .java).
+- Se o activity_main.xml reclamar de show_rewind_button etc., a versão do media3 não aceita; o Actions ficou verde, então aceita.
+- O dono prefere o arquivo INTEIRO num bloco só. Antes de salvar arquivo grande: Ctrl+End e conferir que a última linha é "}". Conferir o nome do arquivo no endereço.
 
 ## Próximos passos
-1. Fazer o M13c: pedir o MainActivity.java atual (e o activity_main.xml se precisar), devolver INTEIRO.
-2. Pedir ao dono o teste de M13 e M13c no TX9 (uma pergunta, respostas numeradas).
-3. Perguntar o que mais o incomoda.
+1. Perguntar o resultado do 1080p (respostas numeradas) e do teste de M13/M13c.
+2. Se a imagem melhorou: remover o diagnóstico do MainActivity (pedir o arquivo atual, devolver INTEIRO).
+3. Se não melhorou: investigar a diferença para o outro app.
+4. Perguntar o que mais incomoda o dono.
