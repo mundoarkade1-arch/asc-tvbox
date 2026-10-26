@@ -226,5 +226,16 @@
 - Motivo: pedido do dono. A seta esquerda, vinda da grade, volta para a linha da categoria aberta (com +1 por causa da linha do Pesquisar).
 - Ordem de trabalho: MainActivity primeiro; item_card.xml antes do activity_browse.xml; código antes do layout. O Actions ficou verde em todos os passos.
 - Dependências: nenhuma nova.
+
+- ## 26/10/2026 - Rodada 3 (parte 2): Pesquisar na lista M3U, menu, cartão alto e capa do filme
+
+- Decisão: "Pesquisar" também é a primeira linha da lista de categorias na lista M3U (M3uBrowseActivity). O botão antigo do alto saiu do activity_browse.xml. Motivo: pedido do dono; as duas abas (servidor e lista M3U) ficam iguais. Antes de tirar o botão, conferi que a SearchActivity (que reaproveita o mesmo layout) não usa esse botão.
+- Decisão: ordem de trabalho: código das duas telas primeiro, layout por último, para o Actions não ficar vermelho.
+- Decisão (M3): cada botão do menu da esquerda ganhou nextFocusDown e nextFocusUp, na ordem Tela inicial, Canais, Filmes, Séries, Ajustes, Atualizar. Feito em layout_nav.xml e na cópia dentro de activity_home.xml. Motivo: descendo de Ajustes, o foco ia para Séries e não chegava em Atualizar, porque o Android escolhe sozinho o vizinho mais perto e o Atualizar fica separado, no pé da coluna. Causa provável, ainda a confirmar no TX9.
+- Decisão (M4): a imagem do cartão das abas (item_card.xml) passou de 90dp para 130dp de altura; a largura (150dp) não mudou. Motivo: o dono achou os cartões "amassados". O item_card_small.xml (tela inicial) não mudou. Risco: cabem menos linhas na tela; se ficar alto demais, usar cerca de 110dp.
+- Decisão (M5, filme): a capa da página do filme passou de 240x360dp para 340x510dp (activity_movie.xml), mantendo o formato de pôster. Motivo: o dono achou a capa pequena. Risco: a altura real da tela do TX9 não é conhecida; se cortar, diminuir. A capa da página da série (activity_series.xml) ainda falta.
+- Decisão: novas metas do dono anotadas no STATUS.md (M2 ícone, M6 "Continue assistindo" na tela inicial), para os próximos agentes irem eliminando.
+- Dependências: nenhuma nova.
+- Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
