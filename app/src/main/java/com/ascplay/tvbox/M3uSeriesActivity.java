@@ -1,53 +1,49 @@
 package com.ascplay.tvbox;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.TextUtils;
-import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.GridView;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Tela da série para o login por lista M3U: no alto a capa do item e o título (a lista M3U não
- * tem sinopse: aparece "Sem sinopse nesta lista."); embaixo, à esquerda as temporadas e à
- * direita os episódios da temporada escolhida. Recebe o título da série (HomeActivity.EXTRA_NAME)
- * e, se houver, o endereço da capa (MovieActivity.EXTRA_ICON).
+ * tem sinopse: aparece "Sem sinopse nesta lista."); abaixo os botões "Continuar" e "Assistir",
+ * o botão da temporada (abre uma janelinha com todas as temporadas) e a grade de episódios em
+ * 3 colunas. Recebe o título da série (HomeActivity.EXTRA_NAME) e, se houver, o endereço da
+ * capa (MovieActivity.EXTRA_ICON).
  *
  * Os episódios são achados lendo a lista aos poucos e juntando os itens de série com o mesmo
  * título (M3uApi.episodes), no máximo 500. Só os episódios desta série ficam na memória.
  *
  * Ao escolher um episódio, abre o player (MainActivity) levando o endereço dele e a lista de
  * endereços de TODOS os episódios da série, em ordem (temporadas normais primeiro, "Especiais"
- * no fim), para o player tocar o próximo sozinho, inclusive passando para a temporada seguinte.
- * Se a lista de endereços for grande demais para passar entre telas, vai só o episódio escolhido.
- * Escolher na lista começa do zero. Também manda a capa (MainActivity.EXTRA_ICON) e o nome
- * "Série - ep. N" para a lista "Continue assistindo".
+ * no fim), para o player tocar o próximo sozinho. Se a lista de endereços for grande demais
+ * para passar entre telas, vai só o episódio escolhido. Também manda a capa
+ * (MainActivity.EXTRA_ICON) e o nome "Série - ep. N" para a lista "Continue assistindo".
  *
- * Lembra onde a pessoa parou (SeriesProgress): ao abrir a série, vai para a temporada certa
- * e deixa o último episódio selecionado.
+ * Botão "Continuar" (escondido se não há nada para continuar): vai ao episódio onde a pessoa
+ * parou, no minuto exato (PlaybackProgress, chave = endereço do vídeo). Se esse episódio já
+ * terminou, leva ao próximo, do começo. Botão "Assistir": toca o episódio atual (o mesmo do
+ * "Continuar") do começo; se a série nunca foi vista, toca o primeiro episódio.
  *
- * Botão "Continuar de onde parei" (escondido se não há nada para continuar): vai direto ao
- * episódio onde a pessoa parou, no minuto exato (PlaybackProgress, chave = endereço do vídeo).
- * Se esse episódio já terminou, leva ao próximo, do começo. O foco abre nele.
+ * Cores dos episódios: visto = vermelho; atual (o do "Continuar") = verde; resto = branco.
+ * As cores e os botões são refeitos ao voltar do player.
  *
- * Cores: o título do episódio visto fica verde; no visto pela metade só a parte
- * correspondente do título fica verde. As cores e o botão são refeitos ao voltar do player.
+ * As listas antigas (lv_seasons e lv_episodes) continuam no layout, mas ficam escondidas.
  *
  * Esta tela só é aberta a partir de itens que já passaram pelo controle parental
  * (página inicial e "Ver mais"), por isso não repete a conferência da senha.
@@ -57,8 +53,10 @@ public class M3uSeriesActivity extends Activity {
 
     private static final int COLOR_NEUTRAL = 0xFFA39A9D;
     private static final int COLOR_ERROR = 0xFFFF6B78;
-    // Cor do título do episódio já visto (ou da parte vista)
-    private static final int COLOR_SEEN = 0xFF4ADE80;
+    // Cores dos episódios na grade
+    private static final int COLOR_WATCHED = 0xFFFF4D5E;
+    private static final int COLOR_CURRENT = 0xFF4ADE80;
+    private static final int COLOR_TODO = 0xFFFFFFFF;
     // Limite de texto (em letras) dos endereços mandados ao player de uma vez
     private static final int MAX_LIST_CHARS = 100000;
 
@@ -73,19 +71,21 @@ public class M3uSeriesActivity extends Activity {
     private TextView tvPlot;
     private ImageView ivCover;
     private Button btnContinue;
-    private ListView lvSeasons;
-    private ListView lvEpisodes;
+    private Button btnWatch;
+    private Button btnSeason;
+    private GridView gvEpisodes;
+    // Caixa do aviso (a que guarda o tv_status)
+    private View statusBox;
 
     // Todos os episódios (já em ordem), as temporadas que existem e os episódios mostrados agora
     private final List<M3uApi.Episode> allEpisodes = new ArrayList<>();
     private final List<Integer> seasons = new ArrayList<>();
     private final List<M3uApi.Episode> shown = new ArrayList<>();
 
-    private SeasonAdapter seasonAdapter;
     private EpisodeAdapter episodeAdapter;
     private int currentSeason = -1;
 
-    // Episódio e minuto do botão "Continuar de onde parei" (null = nada para continuar)
+    // Episódio e minuto do botão "Continuar" (null = nada para continuar)
     private M3uApi.Episode continueEpisode = null;
     private long continueMs = 0L;
 
@@ -115,8 +115,14 @@ public class M3uSeriesActivity extends Activity {
         tvPlot = findViewById(R.id.tv_plot);
         ivCover = findViewById(R.id.iv_cover);
         btnContinue = findViewById(R.id.btn_continue);
-        lvSeasons = findViewById(R.id.lv_seasons);
-        lvEpisodes = findViewById(R.id.lv_episodes);
+        btnWatch = findViewById(R.id.btn_watch);
+        btnSeason = findViewById(R.id.btn_season);
+        gvEpisodes = findViewById(R.id.gv_episodes);
+        statusBox = (View) tvStatus.getParent().getParent();
+
+        // As listas antigas ficam escondidas (o layout ainda as tem)
+        findViewById(R.id.lv_seasons).setVisibility(View.GONE);
+        findViewById(R.id.lv_episodes).setVisibility(View.GONE);
 
         tvTitle.setText(seriesName);
         // A lista M3U não traz sinopse
@@ -125,43 +131,18 @@ public class M3uSeriesActivity extends Activity {
         if (icon != null && !icon.isEmpty()) {
             ImageLoader.load(ivCover, icon);
         }
-        lvSeasons.setDividerHeight(dp(6));
-        lvEpisodes.setDividerHeight(dp(6));
 
-        seasonAdapter = new SeasonAdapter();
         episodeAdapter = new EpisodeAdapter();
-        lvSeasons.setAdapter(seasonAdapter);
-        lvEpisodes.setAdapter(episodeAdapter);
+        gvEpisodes.setAdapter(episodeAdapter);
 
-        // Mexer nas temporadas com as setas já troca a lista de episódios
-        lvSeasons.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long rowId) {
-                showSeason(position);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                // nada a fazer
-            }
-        });
-        // OK numa temporada leva o foco para os episódios
-        lvSeasons.setOnItemClickListener((parent, view, position, rowId) -> {
-            showSeason(position);
-            if (!shown.isEmpty()) {
-                lvEpisodes.requestFocus();
-            }
-        });
-        lvEpisodes.setOnItemClickListener((parent, view, position, rowId) -> {
-            if (position >= 0 && position < shown.size()) {
-                playEpisode(shown.get(position), 0L);
-            }
-        });
+        btnContinue.setText("Continuar");
         btnContinue.setOnClickListener(v -> {
             if (continueEpisode != null) {
                 playEpisode(continueEpisode, continueMs);
             }
         });
+        btnWatch.setOnClickListener(v -> watchFromStart());
+        btnSeason.setOnClickListener(v -> chooseSeason());
 
         showStatus("Carregando...", COLOR_NEUTRAL);
         loadEpisodes();
@@ -237,47 +218,38 @@ public class M3uSeriesActivity extends Activity {
                 last = e.season;
             }
         }
-        seasonAdapter.notifyDataSetChanged();
 
-        tvStatus.setVisibility(View.GONE);
+        // Some o aviso e aparece a grade
+        statusBox.setVisibility(View.GONE);
+        gvEpisodes.setVisibility(View.VISIBLE);
+        btnWatch.setVisibility(View.VISIBLE);
+        btnSeason.setVisibility(seasons.size() > 1 ? View.VISIBLE : View.GONE);
         currentSeason = -1;
 
-        // Botão "Continuar de onde parei" (aparece só se já assistiu alguma coisa)
+        // Botão "Continuar" (aparece só se já assistiu alguma coisa)
         boolean hasContinue = refreshContinue();
 
-        // Se a pessoa já assistiu esta série, abre no episódio onde parou
-        M3uApi.Episode resume = null;
-        int saved = SeriesProgress.load(this, seriesKey);
-        if (saved >= 0) {
-            List<M3uApi.Episode> queue = buildQueue();
-            if (saved < queue.size()) {
-                resume = queue.get(saved);
+        // Abre na temporada do episódio atual (ou na primeira)
+        int seasonPos = 0;
+        M3uApi.Episode focusEp = continueEpisode;
+        if (focusEp != null) {
+            int p = seasons.indexOf(focusEp.season);
+            if (p >= 0) {
+                seasonPos = p;
             }
         }
-        if (resume != null) {
-            int seasonPos = seasons.indexOf(resume.season);
-            if (seasonPos < 0) {
-                seasonPos = 0;
-            }
-            showSeason(seasonPos);
-            lvSeasons.setSelection(seasonPos);
-            int epPos = shown.indexOf(resume);
+        showSeason(seasonPos);
+        if (focusEp != null) {
+            int epPos = shown.indexOf(focusEp);
             if (epPos >= 0) {
-                lvEpisodes.setSelection(epPos);
+                gvEpisodes.setSelection(epPos);
             }
-            if (hasContinue) {
-                btnContinue.requestFocus();
-            } else {
-                lvEpisodes.requestFocus();
-            }
-            return;
         }
 
-        showSeason(0);
-        if (seasons.size() == 1) {
-            lvEpisodes.requestFocus();
+        if (hasContinue) {
+            btnContinue.requestFocus();
         } else {
-            lvSeasons.requestFocus();
+            btnWatch.requestFocus();
         }
     }
 
@@ -315,14 +287,21 @@ public class M3uSeriesActivity extends Activity {
             btnContinue.setVisibility(View.GONE);
             return false;
         }
-        String text = "Continuar de onde parei (" + shortLabel(continueEpisode);
-        if (continueMs > 0L) {
-            text += ", " + clock(continueMs);
-        }
-        text += ")";
-        btnContinue.setText(text);
         btnContinue.setVisibility(View.VISIBLE);
         return true;
+    }
+
+    /** "Assistir": toca o episódio atual do começo (ou o primeiro, se nunca viu a série). */
+    private void watchFromStart() {
+        M3uApi.Episode target = continueEpisode;
+        if (target == null) {
+            List<M3uApi.Episode> queue = buildQueue();
+            if (queue.isEmpty()) {
+                return;
+            }
+            target = queue.get(0);
+        }
+        playEpisode(target, 0L);
     }
 
     /** O que foi anotado para este episódio (null se nada). A chave é o endereço do vídeo. */
@@ -333,28 +312,31 @@ public class M3uSeriesActivity extends Activity {
         return PlaybackProgress.load(this, PlaybackProgress.urlKey(ep.url));
     }
 
-    /** Texto curto do episódio: "T2 E3" (ou "Especiais E3"). */
-    private static String shortLabel(M3uApi.Episode e) {
-        String s = e.season == 0 ? "Especiais" : "T" + e.season;
-        if (e.number > 0) {
-            s += " E" + e.number;
-        }
-        return s;
-    }
-
-    /** Minuto em texto: 5:07 ou 1:23:45. */
-    private static String clock(long ms) {
-        long total = ms / 1000L;
-        long h = total / 3600L;
-        long m = (total % 3600L) / 60L;
-        long s = total % 60L;
-        if (h > 0) {
-            return String.format(Locale.US, "%d:%02d:%02d", h, m, s);
-        }
-        return String.format(Locale.US, "%d:%02d", m, s);
-    }
-
     // ---------- Temporadas e episódios ----------
+
+    /** Abre a janelinha com todas as temporadas. */
+    private void chooseSeason() {
+        if (seasons.isEmpty()) {
+            return;
+        }
+        CharSequence[] labels = new CharSequence[seasons.size()];
+        for (int n = 0; n < seasons.size(); n++) {
+            labels[n] = seasonLabel(seasons.get(n));
+        }
+        new AlertDialog.Builder(this)
+                .setTitle("Escolha a temporada")
+                .setItems(labels, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        showSeason(which);
+                        if (!shown.isEmpty()) {
+                            gvEpisodes.requestFocus();
+                        }
+                    }
+                })
+                .show();
+    }
+
     private void showSeason(int position) {
         if (position < 0 || position >= seasons.size() || position == currentSeason) {
             return;
@@ -368,13 +350,8 @@ public class M3uSeriesActivity extends Activity {
             }
         }
         episodeAdapter.notifyDataSetChanged();
-        lvEpisodes.setSelection(0);
-
-        if (seasons.size() > 1) {
-            tvTitle.setText(seriesName + " - " + seasonLabel(season));
-        } else {
-            tvTitle.setText(seriesName);
-        }
+        gvEpisodes.setSelection(0);
+        btnSeason.setText(seasonLabel(season));
     }
 
     /** Fila de reprodução: temporadas normais em ordem, e os "Especiais" (temporada 0) no fim. */
@@ -438,7 +415,7 @@ public class M3uSeriesActivity extends Activity {
         startActivity(i);
     }
 
-    // ---------- Textos ----------
+    // ---------- Textos e cores ----------
 
     private static String seasonLabel(int season) {
         return season == 0 ? "Especiais" : "Temporada " + season;
@@ -452,77 +429,27 @@ public class M3uSeriesActivity extends Activity {
         return e.number > 0 ? "Episódio " + e.number : "Episódio";
     }
 
-    /**
-     * Pinta o título do episódio: visto = tudo verde; visto pela metade = só a parte
-     * correspondente do título fica verde; não visto = como era.
-     */
-    private static CharSequence paint(String label, PlaybackProgress.Mark mark) {
-        if (mark == null || label.isEmpty()) {
-            return label;
+    /** Cor do episódio: atual = verde; visto = vermelho; resto = branco. */
+    private int colorOf(M3uApi.Episode ep) {
+        if (ep == continueEpisode) {
+            return COLOR_CURRENT;
         }
-        int count;
-        if (mark.isFinished()) {
-            count = label.length();
-        } else if (mark.isPartial()) {
-            count = (int) Math.round(label.length() * mark.fraction());
-            if (count < 1) {
-                count = 1;
-            }
-        } else {
-            return label;
+        PlaybackProgress.Mark mark = markOf(ep);
+        if (mark != null && mark.isFinished()) {
+            return COLOR_WATCHED;
         }
-        SpannableString sp = new SpannableString(label);
-        sp.setSpan(new ForegroundColorSpan(COLOR_SEEN), 0, count,
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        return sp;
+        return COLOR_TODO;
     }
 
     private void showStatus(String text, int color) {
         tvStatus.setTextColor(color);
         tvStatus.setText(text);
         tvStatus.setVisibility(View.VISIBLE);
+        statusBox.setVisibility(View.VISIBLE);
+        gvEpisodes.setVisibility(View.GONE);
     }
 
-    private int dp(int value) {
-        return Math.round(value * getResources().getDisplayMetrics().density);
-    }
-
-    // ---------- Adaptadores (reaproveitam as linhas ao rolar) ----------
-
-    private final class SeasonAdapter extends BaseAdapter {
-        @Override
-        public int getCount() {
-            return seasons.size();
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return seasons.get(position);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            TextView tv;
-            if (convertView == null) {
-                tv = (TextView) LayoutInflater.from(M3uSeriesActivity.this)
-                        .inflate(R.layout.item_category, parent, false);
-                // Quem controla a seleção e o clique é a própria lista.
-                tv.setFocusable(false);
-                tv.setClickable(false);
-                tv.setMaxLines(1);
-                tv.setEllipsize(TextUtils.TruncateAt.END);
-            } else {
-                tv = (TextView) convertView;
-            }
-            tv.setText(seasonLabel(seasons.get(position)));
-            return tv;
-        }
-    }
+    // ---------- Adaptador da grade (reaproveita os quadradinhos ao rolar) ----------
 
     private final class EpisodeAdapter extends BaseAdapter {
         @Override
@@ -545,16 +472,14 @@ public class M3uSeriesActivity extends Activity {
             TextView tv;
             if (convertView == null) {
                 tv = (TextView) LayoutInflater.from(M3uSeriesActivity.this)
-                        .inflate(R.layout.item_category, parent, false);
-                tv.setFocusable(false);
-                tv.setClickable(false);
-                tv.setMaxLines(1);
-                tv.setEllipsize(TextUtils.TruncateAt.END);
+                        .inflate(R.layout.item_episode, parent, false);
             } else {
                 tv = (TextView) convertView;
             }
-            M3uApi.Episode ep = shown.get(position);
-            tv.setText(paint(episodeLabel(ep), markOf(ep)));
+            final M3uApi.Episode ep = shown.get(position);
+            tv.setText(episodeLabel(ep));
+            tv.setTextColor(colorOf(ep));
+            tv.setOnClickListener(v -> playEpisode(ep, 0L));
             return tv;
         }
     }
