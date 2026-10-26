@@ -11,6 +11,7 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,8 +20,10 @@ import java.util.List;
  * Resultados da busca por nome. Recebe o tipo (EXTRA_KIND: LIVE, MOVIE ou SERIES) e o texto
  * digitado (EXTRA_QUERY). Reaproveita o layout do "Ver mais" e esconde a lista de categorias.
  *
- * Servidor (Xtream): XtreamApi.search lê a lista aos poucos e guarda só o que combina.
- * Lista M3U: M3uApi.search faz o mesmo, linha por linha. No máximo 100 resultados.
+ * Servidor (Xtream): XtreamApi.searchStream lê a lista aos poucos e avisa cada resultado.
+ * Lista M3U: M3uApi.searchStream faz o mesmo, linha por linha. No máximo 100 resultados.
+ * M11b: os resultados aparecem na grade um a um, assim que são achados. Enquanto a busca
+ * continua, o título mostra "(buscando...)". Voltar para a tela cancela a busca.
  * Controle parental ligado: itens adultos não aparecem.
  *
  * Ao escolher um resultado: canal toca direto; filme abre a página do filme (MovieActivity);
@@ -48,6 +51,10 @@ public class SearchActivity extends Activity {
 
     private final List<XtreamApi.Item> items = new ArrayList<>();
     private ItemAdapter itemAdapter;
+
+    // Cancela a busca ao fechar a tela (lido pela thread da busca)
+    private volatile boolean cancelled = false;
+    private boolean focusGridWhenReady = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,9 +95,15 @@ public class SearchActivity extends Activity {
             }
         });
 
-        tvTitle.setText(kindLabel() + ": " + query);
+        tvTitle.setText(titleText(true));
         showStatus("Buscando... pode levar alguns segundos.", COLOR_NEUTRAL);
         startSearch();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        cancelled = true;
     }
 
     @Override
@@ -111,39 +124,62 @@ public class SearchActivity extends Activity {
         final XtreamApi.Kind k = kind;
         final String q = query;
         new Thread(() -> {
-            List<XtreamApi.Item> result = null;
+            boolean failed = false;
+            XtreamApi.ResultListener listener = item -> {
+                if (cancelled) {
+                    return false; // tela fechada: para de procurar
+                }
+                runOnUiThread(() -> onResult(item));
+                return true;
+            };
             try {
                 if (xtream) {
-                    result = XtreamApi.search(server, user, pass, k, q, skipAdult, LIMIT);
+                    XtreamApi.searchStream(server, user, pass, k, q, skipAdult, LIMIT, listener);
                 } else {
-                    result = M3uApi.search(m3uUrl, k, q, skipAdult, LIMIT);
+                    M3uApi.searchStream(m3uUrl, k, q, skipAdult, LIMIT, listener);
                 }
             } catch (Exception e) {
-                // sem rede, servidor fora do ar ou resposta estranha: mostra aviso abaixo
+                // sem rede, servidor fora do ar ou resposta estranha: avisa abaixo
+                failed = true;
             }
-            final List<XtreamApi.Item> res = result;
-            runOnUiThread(() -> onResults(res));
+            final boolean fail = failed;
+            runOnUiThread(() -> onDone(fail));
         }).start();
     }
 
-    private void onResults(List<XtreamApi.Item> res) {
+    /** Chega um resultado: entra na grade na hora (sempre na thread principal). */
+    private void onResult(XtreamApi.Item item) {
         if (isFinishing() || isDestroyed()) {
             return;
         }
-        if (res == null) {
-            showStatus("Não foi possível buscar. Confira a internet e o login.", COLOR_ERROR);
-            return;
-        }
-        if (res.isEmpty()) {
-            showStatus("Nada encontrado com esse nome.", COLOR_NEUTRAL);
-            return;
-        }
-        items.clear();
-        items.addAll(res);
+        items.add(item);
         itemAdapter.notifyDataSetChanged();
+        if (focusGridWhenReady) {
+            focusGridWhenReady = false;
+            tvStatus.setVisibility(View.GONE);
+            gvItems.setSelection(0);
+            gvItems.requestFocus();
+        }
+    }
+
+    /** A busca terminou (ou falhou). */
+    private void onDone(boolean failed) {
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
+        tvTitle.setText(titleText(false));
+        if (items.isEmpty()) {
+            if (failed) {
+                showStatus("Não foi possível buscar. Confira a internet e o login.", COLOR_ERROR);
+            } else {
+                showStatus("Nada encontrado com esse nome.", COLOR_NEUTRAL);
+            }
+            return;
+        }
         tvStatus.setVisibility(View.GONE);
-        gvItems.setSelection(0);
-        gvItems.requestFocus();
+        if (failed) {
+            Toast.makeText(this, "A busca parou antes do fim.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void openItem(XtreamApi.Item item) {
@@ -187,6 +223,10 @@ public class SearchActivity extends Activity {
             default:
                 return "Canais";
         }
+    }
+
+    private String titleText(boolean searching) {
+        return kindLabel() + ": " + query + (searching ? " (buscando...)" : "");
     }
 
     private void showStatus(String text, int color) {
