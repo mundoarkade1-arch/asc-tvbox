@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="170dp"
+    android:layout_width="150dp"
     android:layout_height="wrap_content"
-    android:layout_margin="6dp"
+    android:layout_margin="4dp"
     android:background="@drawable/bg_card"
     android:clickable="true"
     android:focusable="true"
     android:orientation="vertical"
-    android:padding="8dp">
+    android:padding="6dp">
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="110dp"
+        android:layout_height="90dp"
         android:background="#241D20">
 
         <TextView
@@ -20,7 +20,7 @@
             android:layout_height="match_parent"
             android:gravity="center"
             android:textColor="#5A4D52"
-            android:textSize="44sp"
+            android:textSize="36sp"
             android:textStyle="bold" />
 
         <ImageView
@@ -28,7 +28,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:contentDescription="@null"
-            android:padding="6dp"
+            android:padding="4dp"
             android:scaleType="fitCenter" />
     </FrameLayout>
 
@@ -36,12 +36,12 @@
         android:id="@+id/tv_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="6dp"
         android:ellipsize="end"
         android:maxLines="2"
         android:minLines="2"
         android:textColor="#F6F2F3"
-        android:textSize="16sp"
+        android:textSize="14sp"
         android:textStyle="bold" />
 
     <TextView
@@ -52,7 +52,7 @@
         android:ellipsize="end"
         android:maxLines="1"
         android:textColor="#A39A9D"
-        android:textSize="14sp"
+        android:textSize="12sp"
         android:visibility="gone" />
 
 </LinearLayout>
