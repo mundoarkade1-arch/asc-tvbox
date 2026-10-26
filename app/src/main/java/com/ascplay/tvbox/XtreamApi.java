@@ -18,6 +18,7 @@ import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 /**
  * Busca categorias e itens (canais, filmes, séries) no servidor Xtream.
@@ -174,6 +175,9 @@ public final class XtreamApi {
     private static final int MAX_PLOT = 1200;
     private static final int MAX_META_PART = 60;
     private static final String USER_AGENT = "ASC-TVBox/1.0 (Android)";
+
+    // M11: regra preparada uma vez só (antes era recriada a cada item na busca).
+    private static final Pattern MARKS = Pattern.compile("\\p{M}+");
 
     private XtreamApi() {
     }
@@ -356,12 +360,26 @@ public final class XtreamApi {
         return true;
     }
 
+    /**
+     * Tira acentos e passa para minúsculas. M11: se o texto só tem letras simples (ASCII),
+     * pula a conta pesada do Normalizer. O resultado é o mesmo de antes.
+     */
     private static String normalizeText(String s) {
         if (s == null) {
             return "";
         }
+        boolean ascii = true;
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) > 127) {
+                ascii = false;
+                break;
+            }
+        }
+        if (ascii) {
+            return s.toLowerCase(Locale.ROOT).trim();
+        }
         String d = Normalizer.normalize(s, Normalizer.Form.NFD);
-        return d.replaceAll("\\p{M}+", "").toLowerCase(Locale.ROOT).trim();
+        return MARKS.matcher(d).replaceAll("").toLowerCase(Locale.ROOT).trim();
     }
 
     /**
