@@ -60,6 +60,11 @@ import java.util.Locale;
  * Faltando 2 minutos para acabar o episódio, aparece o botão "Pular para o próximo episódio"
  * (embaixo, à direita). OK nele pula para o próximo e marca este como visto.
  *
+ * M13: em episódio, um texto no alto à esquerda mostra "Temporada N - Episódio N". A tela da
+ * série pode mandar, em EXTRA_LIST_LABELS, um texto pronto para cada episódio da fila (mesma
+ * ordem). Sem isso, mostra "Episódio N" (posição na fila). O texto aparece ao começar o
+ * episódio e ao apertar OK ou as setas, e some em 5 segundos.
+ *
  * Quando um episódio começa a tocar, anota a posição dele na fila (SeriesProgress), para a
  * tela da série abrir no episódio certo da próxima vez. A chave da série vem em EXTRA_SERIES_KEY.
  *
@@ -94,10 +99,13 @@ public class MainActivity extends Activity {
     public static final String EXTRA_QUEUE_CAT = "channel_queue_cat";
     /** Endereço da capa, só para a lista "Continue assistindo". Opcional. */
     public static final String EXTRA_ICON = "continue_icon";
+    /** Texto de cada episódio da fila, ex.: "Temporada 2 - Episódio 5" (mesma ordem da fila). Opcional. */
+    public static final String EXTRA_LIST_LABELS = "list_labels";
 
     private static final String USER_AGENT = "ASC-TVBox/1.0 (Android)";
     private static final int TIMEOUT_MS = 15000;
     private static final long NOWBAR_HIDE_MS = 6000L;
+    private static final long LABEL_HIDE_MS = 5000L;
     private static final long SAVE_EVERY_MS = 10000L;
     private static final long MIN_START_MS = 5000L;
     private static final long MAX_START_MS = 100L * 3600L * 1000L;
@@ -118,6 +126,7 @@ public class MainActivity extends Activity {
     private static final int MAX_LIST = 500;
     private static final int MAX_URL = 4096;
     private static final int MAX_KEY = 8192;
+    private static final int MAX_LABEL = 60;
 
     private PlayerView playerView;
     private TextView status;
@@ -133,6 +142,8 @@ public class MainActivity extends Activity {
     private ArrayList<String> listExts = null;
     // Lista M3U: endereços diretos dos episódios da série
     private ArrayList<String> listUrls = null;
+    // Texto "Temporada N - Episódio N" de cada episódio da fila (opcional)
+    private ArrayList<String> listLabels = null;
     private int listIndex = -1;
 
     // Troca de canal com as setas (só canal ao vivo)
@@ -157,6 +168,9 @@ public class MainActivity extends Activity {
     // Botão "Pular para o próximo episódio" (criado no código, começa escondido)
     private TextView skipButton;
 
+    // Texto "Temporada N - Episódio N" (criado no código, começa escondido)
+    private TextView episodeLabel;
+
     // Barra Agora / A seguir
     private View groupNowbar;
     private TextView tvNbChannel;
@@ -170,6 +184,12 @@ public class MainActivity extends Activity {
         @Override
         public void run() {
             groupNowbar.setVisibility(View.GONE);
+        }
+    };
+    private final Runnable hideLabel = new Runnable() {
+        @Override
+        public void run() {
+            episodeLabel.setVisibility(View.GONE);
         }
     };
     // De tempos em tempos anota o minuto do filme ou episódio
@@ -202,6 +222,7 @@ public class MainActivity extends Activity {
 
         makeControllerTransparent();
         createSkipButton();
+        createEpisodeLabel();
 
         groupNowbar = findViewById(R.id.group_nowbar);
         tvNbChannel = findViewById(R.id.tv_nb_channel);
@@ -273,6 +294,7 @@ public class MainActivity extends Activity {
             } else {
                 readM3uEpisodeList();
             }
+            readEpisodeLabels();
             String key = getIntent().getStringExtra(EXTRA_SERIES_KEY);
             if (key != null && !key.isEmpty() && key.length() <= MAX_KEY) {
                 seriesKey = key;
@@ -348,6 +370,54 @@ public class MainActivity extends Activity {
         addContentView(skipButton, lp);
     }
 
+    /**
+     * Cria o texto "Temporada N - Episódio N" (no alto, à esquerda, escondido).
+     * Sem caixa: só o texto branco com sombra, para ler sobre qualquer imagem.
+     * Não recebe foco.
+     */
+    private void createEpisodeLabel() {
+        episodeLabel = new TextView(this);
+        episodeLabel.setTextColor(Color.WHITE);
+        episodeLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+        episodeLabel.setShadowLayer(6f, 0f, 0f, Color.BLACK);
+        episodeLabel.setSingleLine(true);
+        episodeLabel.setFocusable(false);
+        episodeLabel.setVisibility(View.GONE);
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.TOP | Gravity.START);
+        lp.setMargins(dp(32), dp(24), 0, 0);
+        addContentView(episodeLabel, lp);
+    }
+
+    /** Texto do episódio que toca agora. Vazio se não for episódio. */
+    private String episodeLabelText() {
+        if (item == null || item.kind != XtreamApi.Kind.EPISODE || listIndex < 0) {
+            return "";
+        }
+        if (listLabels != null && listIndex < listLabels.size()) {
+            String t = listLabels.get(listIndex);
+            if (t != null && !t.isEmpty()) {
+                return t;
+            }
+        }
+        return "Episódio " + (listIndex + 1);
+    }
+
+    /** Mostra o texto do episódio por alguns segundos. */
+    private void showEpisodeLabel() {
+        String text = episodeLabelText();
+        handler.removeCallbacks(hideLabel);
+        if (text.isEmpty()) {
+            episodeLabel.setVisibility(View.GONE);
+            return;
+        }
+        episodeLabel.setText(text);
+        episodeLabel.setVisibility(View.VISIBLE);
+        handler.postDelayed(hideLabel, LABEL_HIDE_MS);
+    }
+
     private static boolean isHttp(String s) {
         return s != null && (s.regionMatches(true, 0, "http://", 0, 7)
                 || s.regionMatches(true, 0, "https://", 0, 8));
@@ -402,6 +472,28 @@ public class MainActivity extends Activity {
         listIndex = index;
     }
 
+    /**
+     * Lê os textos "Temporada N - Episódio N" (opcional). Só vale se a fila existe e se a lista
+     * de textos tem o mesmo tamanho dela. Se algo vier errado, ignora e usa "Episódio N".
+     */
+    private void readEpisodeLabels() {
+        int size = listUrls != null ? listUrls.size() : (listIds != null ? listIds.size() : 0);
+        if (size <= 0) {
+            return;
+        }
+        ArrayList<String> labels = getIntent().getStringArrayListExtra(EXTRA_LIST_LABELS);
+        if (labels == null || labels.size() != size) {
+            return;
+        }
+        for (int i = 0; i < labels.size(); i++) {
+            String t = labels.get(i);
+            if (t == null || t.length() > MAX_LABEL) {
+                return;
+            }
+        }
+        listLabels = labels;
+    }
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -412,9 +504,11 @@ public class MainActivity extends Activity {
     protected void onStop() {
         super.onStop();
         handler.removeCallbacks(hideNowbar);
+        handler.removeCallbacks(hideLabel);
         handler.removeCallbacks(saveTick);
         handler.removeCallbacks(skipTick);
         skipButton.setVisibility(View.GONE);
+        episodeLabel.setVisibility(View.GONE);
         nowbarToken++;
         // Anota o minuto e, se a pessoa voltar a esta tela, continua dali
         saveMark();
@@ -426,6 +520,7 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         handler.removeCallbacks(hideNowbar);
+        handler.removeCallbacks(hideLabel);
         handler.removeCallbacks(saveTick);
         handler.removeCallbacks(skipTick);
         nowbarToken++;
@@ -598,6 +693,7 @@ public class MainActivity extends Activity {
         }
         player.seekTo(target);
         playerView.showController();
+        showEpisodeLabel();
     }
 
     /** OK em filme e episódio: pausa se está tocando e continua se está pausado. */
@@ -608,6 +704,7 @@ public class MainActivity extends Activity {
             player.setPlayWhenReady(true);
         }
         playerView.showController();
+        showEpisodeLabel();
     }
 
     /** Existe um próximo episódio na fila? */
@@ -714,6 +811,7 @@ public class MainActivity extends Activity {
             return;
         }
         skipButton.setVisibility(View.GONE);
+        showEpisodeLabel();
         showStatus("Carregando...");
         MediaItem media = MediaItem.fromUri(Uri.parse(streamUrl));
         if (pendingStartMs > 0) {
