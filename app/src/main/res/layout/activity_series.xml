@@ -129,7 +129,7 @@
         android:clipToPadding="false"
         android:horizontalSpacing="0dp"
         android:listSelector="@android:color/transparent"
-        android:numColumns="3"
+        android:numColumns="15"
         android:scrollbars="none"
         android:stretchMode="columnWidth"
         android:verticalSpacing="0dp"
