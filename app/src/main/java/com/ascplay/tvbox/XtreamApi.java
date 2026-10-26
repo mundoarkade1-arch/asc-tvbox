@@ -364,6 +364,45 @@ public final class XtreamApi {
         }
     }
 
+    /**
+     * M11c: lê a lista INTEIRA do tipo pedido (sem filtro) aos poucos e avisa cada item
+     * pelo listener. Serve para montar o índice da busca em arquivo (SearchIndex).
+     * Nada fica na memória: cada item é entregue e esquecido. Para quando o listener
+     * devolver false. NUNCA chamar na thread principal.
+     */
+    public static void streamAll(String server, String user, String pass, Kind kind,
+                                 ResultListener listener) throws IOException {
+        String url = apiUrl(server, user, pass, itemsAction(kind));
+        HttpURLConnection conn = open(url);
+        try {
+            checkOk(conn);
+            JsonReader r = reader(conn);
+            try {
+                if (r.peek() != JsonToken.BEGIN_ARRAY) {
+                    throw new IOException("resposta invalida");
+                }
+                r.beginArray();
+                while (r.hasNext()) {
+                    if (r.peek() != JsonToken.BEGIN_OBJECT) {
+                        r.skipValue();
+                        continue;
+                    }
+                    Item item = readItem(r, kind);
+                    if (item == null) {
+                        continue;
+                    }
+                    if (!listener.onItem(item)) {
+                        return;
+                    }
+                }
+            } finally {
+                closeQuietly(r);
+            }
+        } finally {
+            conn.disconnect();
+        }
+    }
+
     /** Separa o texto da busca em palavras (sem acento e em minúsculas). */
     static String[] searchWords(String query) {
         String n = normalizeText(query);
@@ -390,8 +429,9 @@ public final class XtreamApi {
     /**
      * Tira acentos e passa para minúsculas. M11: se o texto só tem letras simples (ASCII),
      * pula a conta pesada do Normalizer. O resultado é o mesmo de antes.
+     * M11c: deixou de ser private para o SearchIndex usar.
      */
-    private static String normalizeText(String s) {
+    static String normalizeText(String s) {
         if (s == null) {
             return "";
         }
