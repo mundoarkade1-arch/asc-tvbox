@@ -368,5 +368,14 @@
 - Ordem de trabalho: bg_gradient.xml (arquivo novo, nada usava), layout_nav.xml, activity_home.xml, depois os layouts das outras telas. O Actions ficou verde em todos os passos.
 - Dependências: nenhuma nova.
 - Ainda NÃO visto no TX9: menu estreito com botões de 62dp e o degradê.
+
+- ## 26/10/2026 - Três problemas achados pelo dono no uso (ainda não corrigidos)
+
+- Fato: o dono usou o app e relatou três problemas. Nenhum código foi mudado nesta etapa.
+- M10: o "Continue assistindo" mostra a mesma série duas vezes (episódios diferentes). Decisão do dono: sempre UMA entrada por série, com o ÚLTIMO episódio. Causa provável: a ContinueStore tira repetido pelo endereço do vídeo, e cada episódio tem um. A conferir ao ler o ContinueStore.java.
+- M11: a pesquisa (canais, filmes, séries) está muito lenta. Causa provável (suposição): leitura da lista inteira a cada busca. Conferir antes de mudar; medir onde está o tempo.
+- M12: categoria com mais de 400 itens só mostra os 400 primeiros. O limite de 400 foi escolhido por causa da memória (1 GB). Decisão do dono: carregar tudo. Direção: carregar por páginas ao chegar perto do fim da grade, sem guardar tudo de uma vez.
+- Ordem sugerida: M10 primeiro (um arquivo), depois M12, depois M11.
+- Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
