@@ -1,14 +1,19 @@
 package com.ascplay.tvbox;
 
 import android.app.Activity;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -52,6 +57,8 @@ import java.util.Locale;
  * - lista M3U: lista de endereços diretos (EXTRA_LIST_URLS).
  * Quando um episódio termina, o player toca sozinho o próximo da fila, inclusive passando
  * para a temporada seguinte. No último episódio da série mostra "Fim da série." e para.
+ * Faltando 2 minutos para acabar o episódio, aparece o botão "Pular para o próximo episódio"
+ * (embaixo, à direita). OK nele pula para o próximo e marca este como visto.
  *
  * Quando um episódio começa a tocar, anota a posição dele na fila (SeriesProgress), para a
  * tela da série abrir no episódio certo da próxima vez. A chave da série vem em EXTRA_SERIES_KEY.
@@ -60,8 +67,11 @@ import java.util.Locale;
  * e ao terminar (marca como visto). Canal ao vivo não anota nada. O recado EXTRA_START_MS faz o
  * primeiro vídeo começar naquele minuto ("Continuar de onde parei").
  *
- * Controles: em filme e episódio, as setas esquerda e direita voltam e avançam 10 segundos
- * direto (o foco não fica preso nos botões). A barra de controles fica semi-transparente.
+ * Controles de filme e episódio (o foco não fica preso nos botões):
+ * - OK pausa e continua, mesmo com a barra de controles escondida;
+ * - seta direita/esquerda, um toque: avança/volta 10 segundos;
+ * - seta direita/esquerda segurada: vai avançando/voltando enquanto segura, cada vez mais rápido.
+ * A barra de controles fica semi-transparente.
  */
 @OptIn(markerClass = UnstableApi.class)
 public class MainActivity extends Activity {
@@ -85,9 +95,18 @@ public class MainActivity extends Activity {
     private static final long SAVE_EVERY_MS = 10000L;
     private static final long MIN_START_MS = 5000L;
     private static final long MAX_START_MS = 100L * 3600L * 1000L;
-    // Setas esquerda e direita: quanto pular, e o intervalo mínimo entre dois pulos
+    // Setas esquerda e direita: um toque pula 10 s. Segurando, pula a cada HOLD_GAP_MS,
+    // com passos maiores quanto mais tempo a tecla fica apertada.
     private static final long SEEK_MS = 10000L;
-    private static final long SEEK_MIN_GAP_MS = 120L;
+    private static final long HOLD_GAP_MS = 250L;
+    private static final long HOLD_STEP1_MS = 10000L;   // primeiros 2 segundos segurando
+    private static final long HOLD_STEP2_MS = 30000L;   // de 2 a 5 segundos segurando
+    private static final long HOLD_STEP3_MS = 60000L;   // depois de 5 segundos segurando
+    private static final long HOLD_PHASE1_MS = 2000L;
+    private static final long HOLD_PHASE2_MS = 5000L;
+    // Botão "Pular para o próximo episódio": aparece quando faltam 2 minutos
+    private static final long SKIP_BEFORE_END_MS = 120000L;
+    private static final long SKIP_CHECK_MS = 1000L;
     // Quanto a barra de controles fica visível (1.0 = nada transparente)
     private static final float CONTROLLER_ALPHA = 0.65f;
     private static final int MAX_LIST = 500;
@@ -120,8 +139,12 @@ public class MainActivity extends Activity {
     // Minuto onde o próximo vídeo deve começar (0 = do começo). Usado uma vez.
     private long pendingStartMs = 0L;
 
-    // Hora do último pulo com as setas (para não pular rápido demais ao segurar a tecla)
+    // Pulos com as setas: hora do último pulo e hora em que a tecla começou a ser segurada
     private long lastSeekAt = 0L;
+    private long holdStartAt = 0L;
+
+    // Botão "Pular para o próximo episódio" (criado no código, começa escondido)
+    private TextView skipButton;
 
     // Barra Agora / A seguir
     private View groupNowbar;
@@ -146,6 +169,14 @@ public class MainActivity extends Activity {
             handler.postDelayed(this, SAVE_EVERY_MS);
         }
     };
+    // De tempos em tempos confere se já é hora de mostrar o botão de pular episódio
+    private final Runnable skipTick = new Runnable() {
+        @Override
+        public void run() {
+            updateSkipButton();
+            handler.postDelayed(this, SKIP_CHECK_MS);
+        }
+    };
     private boolean nowbarShownOnce = false;
     private int nowbarToken = 0;
 
@@ -159,6 +190,7 @@ public class MainActivity extends Activity {
         status = findViewById(R.id.status);
 
         makeControllerTransparent();
+        createSkipButton();
 
         groupNowbar = findViewById(R.id.group_nowbar);
         tvNbChannel = findViewById(R.id.tv_nb_channel);
@@ -268,6 +300,35 @@ public class MainActivity extends Activity {
         }
     }
 
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
+    }
+
+    /**
+     * Cria o botão pequeno "Pular para o próximo episódio" (embaixo, à direita, escondido).
+     * Ele não recebe foco: o OK é tratado no dispatchKeyEvent.
+     */
+    private void createSkipButton() {
+        skipButton = new TextView(this);
+        skipButton.setText("Pular para o próximo episódio");
+        skipButton.setTextColor(Color.WHITE);
+        skipButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        skipButton.setPadding(dp(14), dp(8), dp(14), dp(8));
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xCC000000);
+        bg.setCornerRadius(dp(6));
+        bg.setStroke(dp(1), 0x99FFFFFF);
+        skipButton.setBackground(bg);
+        skipButton.setFocusable(false);
+        skipButton.setVisibility(View.GONE);
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.BOTTOM | Gravity.END);
+        lp.setMargins(0, 0, dp(24), dp(96));
+        addContentView(skipButton, lp);
+    }
+
     private static boolean isHttp(String s) {
         return s != null && (s.regionMatches(true, 0, "http://", 0, 7)
                 || s.regionMatches(true, 0, "https://", 0, 8));
@@ -333,6 +394,8 @@ public class MainActivity extends Activity {
         super.onStop();
         handler.removeCallbacks(hideNowbar);
         handler.removeCallbacks(saveTick);
+        handler.removeCallbacks(skipTick);
+        skipButton.setVisibility(View.GONE);
         nowbarToken++;
         // Anota o minuto e, se a pessoa voltar a esta tela, continua dali
         saveMark();
@@ -345,6 +408,7 @@ public class MainActivity extends Activity {
         super.onDestroy();
         handler.removeCallbacks(hideNowbar);
         handler.removeCallbacks(saveTick);
+        handler.removeCallbacks(skipTick);
         nowbarToken++;
         if (channelQueue != null) {
             channelQueue.close();
@@ -354,8 +418,10 @@ public class MainActivity extends Activity {
 
     /**
      * Teclas do player.
-     * - Filme e episódio: seta esquerda volta 10 segundos e seta direita avança 10 segundos,
-     *   direto (o foco não fica preso nos botões).
+     * - Filme e episódio: OK pausa e continua (ou, com o botão de pular episódio na tela,
+     *   OK pula para o próximo episódio).
+     * - Filme e episódio: seta direita/esquerda, um toque, avança/volta 10 segundos; segurando,
+     *   vai avançando/voltando enquanto segura, cada vez mais rápido.
      * - Canal ao vivo: seta para baixo = próximo canal, seta para cima = canal anterior.
      * - Canal ao vivo: ao apertar OK, mostra a barra Agora / A seguir.
      * - Canal ao vivo do servidor: a tecla das três listras (menu), ou segurar o OK,
@@ -364,6 +430,9 @@ public class MainActivity extends Activity {
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         int code = event.getKeyCode();
+        boolean isOk = code == KeyEvent.KEYCODE_DPAD_CENTER
+                || code == KeyEvent.KEYCODE_ENTER
+                || code == KeyEvent.KEYCODE_NUMPAD_ENTER;
 
         // Tecla das três listras: programação do canal (só canal ao vivo do servidor)
         if (code == KeyEvent.KEYCODE_MENU && canShowSchedule()) {
@@ -386,18 +455,48 @@ public class MainActivity extends Activity {
             return true;
         }
 
+        // Filme e episódio: setas esquerda e direita
         if ((code == KeyEvent.KEYCODE_DPAD_LEFT || code == KeyEvent.KEYCODE_DPAD_RIGHT)
                 && canSeekWithArrows()) {
             if (event.getAction() == KeyEvent.ACTION_DOWN) {
-                seekBy(code == KeyEvent.KEYCODE_DPAD_RIGHT ? SEEK_MS : -SEEK_MS);
+                long direction = code == KeyEvent.KEYCODE_DPAD_RIGHT ? 1L : -1L;
+                long now = SystemClock.elapsedRealtime();
+                if (event.getRepeatCount() == 0) {
+                    // Um toque: sempre pula 10 segundos
+                    holdStartAt = now;
+                    lastSeekAt = now;
+                    seekBy(direction * SEEK_MS);
+                } else if (now - lastSeekAt >= HOLD_GAP_MS) {
+                    // Segurando: passos maiores quanto mais tempo segura
+                    long held = now - holdStartAt;
+                    long step;
+                    if (held < HOLD_PHASE1_MS) {
+                        step = HOLD_STEP1_MS;
+                    } else if (held < HOLD_PHASE2_MS) {
+                        step = HOLD_STEP2_MS;
+                    } else {
+                        step = HOLD_STEP3_MS;
+                    }
+                    lastSeekAt = now;
+                    seekBy(direction * step);
+                }
             }
             return true;
         }
 
-        if (event.getAction() == KeyEvent.ACTION_DOWN
-                && (code == KeyEvent.KEYCODE_DPAD_CENTER
-                || code == KeyEvent.KEYCODE_ENTER
-                || code == KeyEvent.KEYCODE_NUMPAD_ENTER)) {
+        // Filme e episódio: OK pausa e continua (ou pula o episódio, se o botão está na tela)
+        if (isOk && canSeekWithArrows()) {
+            if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
+                if (skipButton.getVisibility() == View.VISIBLE) {
+                    skipToNextEpisode();
+                } else {
+                    togglePause();
+                }
+            }
+            return true;
+        }
+
+        if (event.getAction() == KeyEvent.ACTION_DOWN && isOk) {
             if (event.getRepeatCount() == 0) {
                 showNowbar();
             } else if (event.getRepeatCount() == 1) {
@@ -456,7 +555,7 @@ public class MainActivity extends Activity {
         EpgDialog.show(this, creds.server, creds.user, creds.pass, item.id, item.name);
     }
 
-    /** As setas só pulam o vídeo em filme e episódio que já estão carregando ou tocando. */
+    /** As setas e o OK só agem em filme e episódio que já estão carregando ou tocando. */
     private boolean canSeekWithArrows() {
         if (player == null || item == null) {
             return false;
@@ -470,12 +569,6 @@ public class MainActivity extends Activity {
 
     /** Pula para frente (valor positivo) ou para trás (valor negativo) e mostra a barra. */
     private void seekBy(long deltaMs) {
-        long now = SystemClock.elapsedRealtime();
-        if (now - lastSeekAt < SEEK_MIN_GAP_MS) {
-            return;
-        }
-        lastSeekAt = now;
-
         long target = player.getCurrentPosition() + deltaMs;
         if (target < 0) {
             target = 0;
@@ -486,6 +579,49 @@ public class MainActivity extends Activity {
         }
         player.seekTo(target);
         playerView.showController();
+    }
+
+    /** OK em filme e episódio: pausa se está tocando e continua se está pausado. */
+    private void togglePause() {
+        if (player.getPlayWhenReady()) {
+            player.setPlayWhenReady(false);
+        } else {
+            player.setPlayWhenReady(true);
+        }
+        playerView.showController();
+    }
+
+    /** Existe um próximo episódio na fila? */
+    private boolean hasNextEpisode() {
+        int next = listIndex + 1;
+        if (listUrls != null) {
+            return next < listUrls.size();
+        }
+        return listIds != null && listExts != null && next < listIds.size();
+    }
+
+    /** Mostra o botão de pular quando faltam 2 minutos (ou menos) para acabar o episódio. */
+    private void updateSkipButton() {
+        boolean show = false;
+        if (player != null && item != null && item.kind == XtreamApi.Kind.EPISODE
+                && hasNextEpisode() && player.getPlaybackState() == Player.STATE_READY) {
+            long duration = player.getDuration();
+            if (duration != C.TIME_UNSET && duration > 0) {
+                long left = duration - player.getCurrentPosition();
+                show = left > 0 && left <= SKIP_BEFORE_END_MS;
+            }
+        }
+        skipButton.setVisibility(show ? View.VISIBLE : View.GONE);
+    }
+
+    /** OK no botão: marca este episódio como visto e toca o próximo. */
+    private void skipToNextEpisode() {
+        skipButton.setVisibility(View.GONE);
+        if (item == null || item.kind != XtreamApi.Kind.EPISODE || !hasNextEpisode()) {
+            return;
+        }
+        saveFinished();
+        playNextEpisode();
     }
 
     private void startPlayer() {
@@ -517,6 +653,7 @@ public class MainActivity extends Activity {
                         showNowbar();
                     }
                 } else if (state == Player.STATE_ENDED) {
+                    skipButton.setVisibility(View.GONE);
                     // Terminou um filme ou episódio: marca como visto
                     saveFinished();
                     // Terminou um episódio: toca o próximo da fila
@@ -547,12 +684,17 @@ public class MainActivity extends Activity {
         // Filme e episódio: anota o minuto de tempos em tempos
         handler.removeCallbacks(saveTick);
         handler.postDelayed(saveTick, SAVE_EVERY_MS);
+
+        // Episódio: confere de tempos em tempos se já é hora do botão de pular
+        handler.removeCallbacks(skipTick);
+        handler.postDelayed(skipTick, SKIP_CHECK_MS);
     }
 
     private void playCurrent() {
         if (player == null || streamUrl == null) {
             return;
         }
+        skipButton.setVisibility(View.GONE);
         showStatus("Carregando...");
         MediaItem media = MediaItem.fromUri(Uri.parse(streamUrl));
         if (pendingStartMs > 0) {
