@@ -11,6 +11,10 @@
         android:layout_height="match_parent"
         app:show_buffering="when_playing"
         app:show_timeout="3000"
+        app:show_rewind_button="false"
+        app:show_fastforward_button="false"
+        app:show_previous_button="false"
+        app:show_next_button="false"
         app:use_controller="true" />
 
     <TextView
