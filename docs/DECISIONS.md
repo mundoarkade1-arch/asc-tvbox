@@ -390,5 +390,34 @@
 - Ordem de trabalho: código novo primeiro (XtreamApi, M3uApi), depois quem usa (SearchActivity). O Actions ficou verde em todos os passos.
 - Dependências: nenhuma nova.
 - Ainda NÃO testados no TX9: M10, M12 e M9.
+
+- 
+- ## 26/10/2026 - M11 resolvido no servidor: índice de busca em arquivo
+
+- Fato: o dono mediu a pesquisa em Filmes (servidor): de 30 s a mais de 1 min. Não usa a lista M3U agora (não medida).
+- Decisão (do dono, "não tem problema demorar 10 a 20 s"): opção C, índice em arquivo. Nova função XtreamApi.streamAll (lê a lista inteira aos poucos, item por item), nova classe SearchIndex (grava uma linha por item em arquivo de texto no cache do app e busca nele) e SearchActivity passa a usar o índice no login por servidor.
+- Detalhes: arquivo = SHA-1 de servidor|usuário|tipo (a senha NÃO entra). Linha: id, capa, categoria, epgId, extensão, nome (separados por tabulação). Validade 2 h. Teto de 200000 itens ou 60 MB; se passar, falha e a busca cai na antiga. Escrita em .tmp e depois renomeia (nunca fica índice pela metade). Trava (BUILD_LOCK) para duas buscas não montarem juntas. Nada fica na RAM.
+- Motivo: a lentidão era LER a lista inteira pela internet a cada busca. O índice paga isso uma vez a cada 2 h.
+- Resultado no teste: segunda pesquisa rápida. A primeira demora um pouco mais que antes (baixa e grava).
+- Lista M3U NÃO usa o índice (decisão: o dono não usa M3U; busca antiga continua).
+- XtreamApi.normalizeText deixou de ser private (o SearchIndex usa).
+- Ordem de trabalho: XtreamApi (função nova), SearchIndex (arquivo novo), SearchActivity. Actions verde nos três.
+- Dependências: nenhuma nova.
+
+## 26/10/2026 - Teclado de pesquisa QWERTY brasileiro com acentos
+
+- Decisão (do dono): teclado como o do Android TV: fileira de números, Q a P, A a Ç, Z a M, e embaixo Apagar, Espaço (barra grande, 300dp), Buscar e Sair. Foco começa no Q.
+- Decisão (do dono): acentos como no Android: segurar o OK numa vogal ou no N abre janelinha com as variantes (A: Á À Ã Â Ä; E; I; O; U; N: Ñ). OK escolhe, Voltar fecha só a janelinha. Implementado com setOnLongClickListener e um Dialog.
+- Motivo: a busca já ignora acentos, então o acento é só estético; teclas prontas seriam mais fáceis, mas o dono preferiu o jeito Android.
+- Dependências: nenhuma nova.
+
+## 26/10/2026 - M13 temporada e episódio no player; M13b botões quase invisíveis
+
+- Decisão (do dono): o player mostra "Temporada N - Episódio N" (texto branco com sombra, no alto à esquerda, 5 s ao começar e ao apertar OK ou setas). Criado no código (addContentView), sem mexer em layout.
+- Decisão: SeriesActivity e M3uSeriesActivity mandam EXTRA_LIST_LABELS (um texto por episódio da fila, mesma ordem). O número é o do servidor; sem número, a posição na temporada (igual à grade). Especiais = "Especiais - Episódio N". O player valida (mesmo tamanho da fila, até 60 letras cada); se algo vier errado, mostra "Episódio N" (posição na fila).
+- Decisão (do dono): botões do player (pausa, voltar e avançar) quase invisíveis: CONTROLLER_ALPHA de 0.65 para 0.25 em MainActivity.
+- Fato: o último salvamento do MainActivity.java foi CORTADO (Actions vermelho, "unclosed comment" linha 426). A correção é a primeira tarefa do próximo agente.
+- Ordem de trabalho do M13: MainActivity, SeriesActivity, M3uSeriesActivity. Verde nos três. M13b ficou vermelho.
+- Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
