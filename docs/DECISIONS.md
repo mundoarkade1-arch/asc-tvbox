@@ -196,5 +196,19 @@
 - Ordem de trabalho: ChannelQueue e MainActivity primeiro (nada usava), depois as quatro telas, uma por vez. O Actions ficou verde em todos os passos.
 - Sem dependências novas.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para o fim da rodada.
+
+- ## 25/10/2026 - Rodada 2, R5 (tela inicial sem rolagem) e R6 ("Ver mais" trava a direita)
+
+- Decisão (R5): criar um cartão menor só para a tela inicial, o item_card_small.xml (130dp de largura, imagem de 68dp, nome em 13sp). O item_card.xml (170dp) NÃO foi mudado e continua nas abas, na busca e nas telas de "Ver mais".
+- Motivo: o item_card.xml é usado em várias telas. Encolher ele estragaria as abas, que têm espaço de sobra. Um arquivo novo é mais seguro e não afeta nada que já funciona.
+- Decisão (R5): a HomeActivity passou a usar item_card_small nos cartões das faixas e no cartão "Ver mais". Os ids internos (tv_initial, iv_logo, tv_name, tv_now) são os mesmos, então o resto do código não mudou.
+- Decisão (R5): no activity_home.xml, a ScrollView vertical foi tirada. O título "ASC TV Box" ficou com 24sp, os títulos das faixas com 20sp, os avisos com 16sp, e os espaços entre as faixas ficaram menores (8dp).
+- Motivo: o pedido do dono é ver as três faixas inteiras, sem rolagem. As faixas continuam rolando para o lado, porque cada uma tem 11 cartões.
+- Risco aceito: a altura real da tela do TX9 não é conhecida. O dono confere no teste. Se sobrar corte, diminuir mais o cartão pequeno e os espaços. Com o aviso de atualização aberto, a tela pode apertar um pouco.
+- Decisão (R6): no cartão "Ver mais" da tela inicial, a seta para a direita não faz nada. O código dá ao cartão um id próprio (View.generateViewId) e manda o foco da direita para ele mesmo (setNextFocusRightId). Mudar de faixa é só com cima e baixo.
+- Motivo: pedido do dono. Sem essa regra, a direita pulava para a faixa de baixo.
+- Ordem de trabalho: item_card_small.xml (arquivo novo, nada usava), depois HomeActivity.java, depois activity_home.xml, depois a regra da R6 na HomeActivity. O Actions ficou verde em todos os passos.
+- Sem dependências novas.
+- Ainda NÃO testado no TX9, por decisão do dono: os testes são o próximo passo.
 - Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
