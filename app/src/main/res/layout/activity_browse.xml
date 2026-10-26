@@ -36,22 +36,6 @@
                 android:textColor="#FF2A3D"
                 android:textSize="30sp"
                 android:textStyle="bold" />
-
-            <Button
-                android:id="@+id/btn_search_bar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_button"
-                android:focusable="true"
-                android:minHeight="48dp"
-                android:minWidth="260dp"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:text="Pesquisar"
-                android:textAllCaps="false"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:visibility="gone" />
         </LinearLayout>
 
         <LinearLayout
