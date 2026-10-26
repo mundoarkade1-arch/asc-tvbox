@@ -22,11 +22,12 @@ import java.util.List;
  * "Ver mais" para o login por lista M3U (também as abas Canais, Filmes e Séries do menu
  * à esquerda).
  * Esquerda: botão "Pesquisar" fixo e, abaixo, as categorias (group-title da lista).
- * Direita: itens, por páginas de 40 (máximo 400).
+ * Direita: itens, por páginas de 40, só quando a seleção chega perto do fim da grade
+ * (M12: teto de segurança de 5000 por categoria; antes era 400).
  *
  * A lista é lida aos poucos e de novo a cada página (a lista M3U não tem como pedir "só a página
- * 2"). Só uma página fica na memória. As categorias são achadas lendo a lista uma vez, depois que
- * a primeira página aparece, e só os nomes são guardados.
+ * 2"). Só uma página nova é lida por vez. As categorias são achadas lendo a lista uma vez, depois
+ * que a primeira página aparece, e só os nomes são guardados.
  *
  * Ordem do foco: menu, Pesquisar, categorias, itens. Esquerda na primeira coluna dos itens
  * leva o foco às categorias (Rodada 1, R3).
@@ -54,7 +55,7 @@ import java.util.List;
 public class M3uBrowseActivity extends Activity {
 
     private static final int PAGE = 40;
-    private static final int MAX_ITEMS = 400;
+    private static final int MAX_ITEMS = 5000;
     private static final int LOAD_AHEAD = 12;
     private static final int COLOR_NEUTRAL = 0xFFA39A9D;
     private static final int COLOR_ERROR = 0xFFFF6B78;
@@ -445,8 +446,9 @@ public class M3uBrowseActivity extends Activity {
             ended = true;
         } else if (items.size() >= MAX_ITEMS) {
             ended = true;
-            Toast.makeText(this, "Mostrando os primeiros " + MAX_ITEMS
-                    + ". Escolha uma categoria para ver mais.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Limite de " + MAX_ITEMS
+                    + " itens atingido. Use o Pesquisar para achar o resto.",
+                    Toast.LENGTH_LONG).show();
         }
         itemAdapter.notifyDataSetChanged();
 
