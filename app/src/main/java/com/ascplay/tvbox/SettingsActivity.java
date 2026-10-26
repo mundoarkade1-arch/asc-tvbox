@@ -28,7 +28,7 @@ import java.util.Locale;
  * Opções:
  * - Controle parental: ativar, trocar a senha ou desativar (igual ao botão que ficava na
  *   página inicial).
- * - Trocar de lista: volta para a tela de login.
+ * - Trocar de lista: apaga a lista do "Continue assistindo" (M6) e volta para a tela de login.
  * - Sobre o dispositivo: modelo, Android, memória, espaço livre e tela.
  * - Sobre o aplicativo: versão instalada.
  * - Verificar atualização: procura uma versão nova. Se achar, a mesma linha passa a
@@ -138,8 +138,12 @@ public class SettingsActivity extends Activity {
 
     // ---------- Trocar de lista ----------
 
-    /** Abre a tela de login e fecha as telas de antes (a página inicial, as abas e esta). */
+    /**
+     * Apaga a lista do "Continue assistindo" (era da lista antiga), abre a tela de login e
+     * fecha as telas de antes (a página inicial, as abas e esta).
+     */
     private void changeLogin() {
+        ContinueStore.clear(this);
         Intent i = new Intent(this, LoginActivity.class);
         i.putExtra(HomeActivity.EXTRA_SHOW_LOGIN, true);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
