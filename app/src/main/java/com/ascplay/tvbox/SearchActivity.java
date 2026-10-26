@@ -13,6 +13,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,9 +21,11 @@ import java.util.List;
  * Resultados da busca por nome. Recebe o tipo (EXTRA_KIND: LIVE, MOVIE ou SERIES) e o texto
  * digitado (EXTRA_QUERY). Reaproveita o layout do "Ver mais" e esconde a lista de categorias.
  *
- * Servidor (Xtream): XtreamApi.searchStream lê a lista aos poucos e avisa cada resultado.
- * Lista M3U: M3uApi.searchStream faz o mesmo, linha por linha. No máximo 100 resultados.
- * M11c: os resultados são juntados em segundo plano e aparecem TODOS DE UMA VEZ quando a
+ * Servidor (Xtream): M11c usa o SearchIndex (arquivo no aparelho). A primeira busca de cada
+ * tipo monta o arquivo (demora mais); as seguintes leem só o arquivo. Se o índice falhar e
+ * ainda não há resultado, volta para XtreamApi.searchStream (busca antiga).
+ * Lista M3U: M3uApi.searchStream, linha por linha. No máximo 100 resultados.
+ * Os resultados são juntados em segundo plano e aparecem TODOS DE UMA VEZ quando a
  * busca termina (mostrar um a um fazia as capas piscarem). Voltar para a tela cancela a busca.
  * Controle parental ligado: itens adultos não aparecem.
  *
@@ -95,7 +98,7 @@ public class SearchActivity extends Activity {
         });
 
         tvTitle.setText(kindLabel() + ": " + query);
-        showStatus("Buscando... pode levar alguns segundos.", COLOR_NEUTRAL);
+        showStatus("Buscando... na primeira vez pode demorar um pouco mais.", COLOR_NEUTRAL);
         startSearch();
     }
 
@@ -135,7 +138,18 @@ public class SearchActivity extends Activity {
             };
             try {
                 if (xtream) {
-                    XtreamApi.searchStream(server, user, pass, k, q, skipAdult, LIMIT, listener);
+                    try {
+                        SearchIndex.search(getApplicationContext(), server, user, pass, k, q,
+                                skipAdult, LIMIT, () -> cancelled, listener);
+                    } catch (IOException indexError) {
+                        // Índice falhou: se nada foi achado ainda, usa a busca antiga
+                        if (!cancelled && found.isEmpty()) {
+                            XtreamApi.searchStream(server, user, pass, k, q, skipAdult, LIMIT,
+                                    listener);
+                        } else {
+                            throw indexError;
+                        }
+                    }
                 } else {
                     M3uApi.searchStream(m3uUrl, k, q, skipAdult, LIMIT, listener);
                 }
