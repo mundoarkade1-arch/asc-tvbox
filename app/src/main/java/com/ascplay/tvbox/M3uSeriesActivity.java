@@ -36,7 +36,8 @@ import java.util.Locale;
  * endereços de TODOS os episódios da série, em ordem (temporadas normais primeiro, "Especiais"
  * no fim), para o player tocar o próximo sozinho, inclusive passando para a temporada seguinte.
  * Se a lista de endereços for grande demais para passar entre telas, vai só o episódio escolhido.
- * Escolher na lista começa do zero.
+ * Escolher na lista começa do zero. Também manda a capa (MainActivity.EXTRA_ICON) e o nome
+ * "Série - ep. N" para a lista "Continue assistindo".
  *
  * Lembra onde a pessoa parou (SeriesProgress): ao abrir a série, vai para a temporada certa
  * e deixa o último episódio selecionado.
@@ -64,6 +65,8 @@ public class M3uSeriesActivity extends Activity {
     private CredentialStore.Credentials creds;
     private String seriesName = "";
     private String seriesKey = "";
+    // Capa da série (a do item, se veio)
+    private String seriesIcon = "";
 
     private TextView tvTitle;
     private TextView tvStatus;
@@ -99,6 +102,9 @@ public class M3uSeriesActivity extends Activity {
             return;
         }
         seriesName = name.trim();
+        if (icon != null) {
+            seriesIcon = icon;
+        }
         // Chave da série para lembrar onde parou (só um resumo embaralhado dela é guardado,
         // porque o endereço da lista pode conter usuário e senha)
         seriesKey = "m3u|" + creds.m3uUrl + "|" + seriesName;
@@ -398,14 +404,20 @@ public class M3uSeriesActivity extends Activity {
             }
         }
 
+        // Nome para a lista "Continue assistindo": "Série - ep. N" (igual ao do player)
+        String continueName = (seriesName.isEmpty() ? "" : seriesName + " - ") + "ep. " + (index + 1);
+
         Intent i = new Intent(this, MainActivity.class);
         i.putExtra(HomeActivity.EXTRA_KIND, XtreamApi.Kind.EPISODE.name());
         // O player pede um número de identificação: usamos a posição do episódio na fila
         i.putExtra(HomeActivity.EXTRA_ID, String.valueOf(index + 1));
         i.putExtra(HomeActivity.EXTRA_EXT, "");
-        i.putExtra(HomeActivity.EXTRA_NAME, episodeLabel(chosen));
+        i.putExtra(HomeActivity.EXTRA_NAME, continueName);
         i.putExtra(MainActivity.EXTRA_URL, chosen.url);
         i.putExtra(MainActivity.EXTRA_SERIES_KEY, seriesKey);
+        if (seriesIcon != null && !seriesIcon.isEmpty()) {
+            i.putExtra(MainActivity.EXTRA_ICON, seriesIcon);
+        }
         if (startMs > 0L) {
             i.putExtra(MainActivity.EXTRA_START_MS, startMs);
         }
