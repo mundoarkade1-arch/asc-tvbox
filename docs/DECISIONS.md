@@ -448,5 +448,16 @@
 - Conclusão: não é o decodificador. O arquivo vem em 720p do servidor (o app toca o arquivo como vem, filme e episódio são um arquivo só) e a saída do TX9 está em 720p. Sugestão ao dono: colocar a saída do TX9 em 1080p nas Configurações. Resultado ainda não informado.
 - Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9: M13 e M13c.
+
+- ## 26/10/2026 - Testes de M13 e M13c, imagem e ícone novo
+
+- Fato: o dono testou M13 (texto "Temporada N - Episódio N") e M13c (player só com play/pause meio transparente, barra e tempos visíveis) no TX9 e disse que funcionou tudo.
+- Fato: o dono olhou as Configurações do TX9 e a saída já estava em 1080p 60 Hz. Ele não mudou nada. Conclusão: mudar para 1080p não resolve a imagem "pixelada" de filmes e séries. O arquivo chega em 720p do servidor e é esticado. A causa ainda não está fechada; falta saber o nome do outro app que parece melhor. O texto de diagnóstico continua no MainActivity (temporário).
+- Decisão (do dono): o ícone do app passou a ser só o nome ASC, com degradê nas letras e fundo branco ("a letra com degradê e o fundo branco"). Antes era um quadrado vermelho com triângulo de play.
+- Motivo: pedido do dono. As letras com degradê vermelho aparecem bem sobre o branco; sobre fundo escuro o vermelho escuro sumiria.
+- Detalhes: res/drawable/ic_app_icon.xml continua sendo um vetor (texto, sem imagem). Quadrado branco de cantos redondos, mesmo tamanho de antes (96dp). As letras A, S e C foram desenhadas como formas simples, em um só caminho, preenchidas com degradê vertical (#E0192F em cima, #3A0A12 embaixo). O degradê usa aapt:attr (aceito em vetor no Android 7.1). O AndroidManifest.xml não mudou.
+- Risco aceito: o S e o C são formas de ângulos retos (estilo "bloco"), não curvas. Se o dono quiser letras mais redondas, refazer o desenho. Se o Actions reclamar do degradê, trocar por uma cor só.
+- Ainda NÃO visto no TX9: o ícone novo.
+- Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
