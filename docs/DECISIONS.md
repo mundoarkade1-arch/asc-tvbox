@@ -480,3 +480,4 @@
 - Decisão: o diagnóstico temporário passou a mostrar o FPS informado no formato do vídeo e também pode ser aberto com OK em canal ao vivo.
 - Limite: o app não cria quadros para converter fonte de 25/30 fps em 60 fps. Um canal sem FPS no manifesto pode mostrar "?"/não informar a taxa; a sensação de movimento pode depender da fonte e da frequência da TV.
 - Nenhuma dependência nova. O ajuste se aplica também a filmes e séries; confirmar no TX9 que não piora a reprodução.
+- O commit dd7b6e7 compilou e ficou VERDE no GitHub Actions. O efeito de imagem e fluidez ainda não foi conferido no TX9.
