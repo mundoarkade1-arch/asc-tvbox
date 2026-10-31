@@ -481,3 +481,4 @@
 - Limite: o app não cria quadros para converter fonte de 25/30 fps em 60 fps. Um canal sem FPS no manifesto pode mostrar "?"/não informar a taxa; a sensação de movimento pode depender da fonte e da frequência da TV.
 - Nenhuma dependência nova. O ajuste se aplica também a filmes e séries; confirmar no TX9 que não piora a reprodução.
 - O commit dd7b6e7 compilou e ficou VERDE no GitHub Actions. O efeito de imagem e fluidez ainda não foi conferido no TX9.
+- Correção após o teste do dono: o FPS do manifesto pode não existir. O diagnóstico agora mede os quadros processados pelo decoder via AnalyticsListener e, enquanto não há medição, mostra o FPS do formato ou informa que está medindo/indisponível.

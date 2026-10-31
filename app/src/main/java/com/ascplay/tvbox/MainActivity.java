@@ -197,6 +197,9 @@ public class MainActivity extends Activity {
     // Texto de diagnóstico da imagem (temporário) e nome do decodificador de vídeo
     private TextView diagLabel;
     private String decoderName = "";
+    private long frameSampleStartMs = C.TIME_UNSET;
+    private int frameSampleCount;
+    private int renderedFrameRate = -1;
 
     // Barra Agora / A seguir
     private View groupNowbar;
@@ -494,17 +497,23 @@ public class MainActivity extends Activity {
         } else {
             String mime = f.sampleMimeType == null ? "?" : f.sampleMimeType.replace("video/", "");
             video = "Vídeo: " + f.width + "x" + f.height + " - " + mime;
-            if (f.frameRate > 0) {
-                video = video + " - " + Math.round(f.frameRate) + " fps";
-            }
             if (f.bitrate > 0) {
                 video = video + " - " + (f.bitrate / 1000) + " kbps";
             }
         }
+        String fps;
+        if (renderedFrameRate > 0) {
+            fps = "FPS medidos: ~" + renderedFrameRate;
+        } else if (f != null && f.frameRate > 0) {
+            fps = "FPS do formato: " + Math.round(f.frameRate);
+        } else {
+            fps = "FPS: medindo ou não informado";
+        }
         String dec = decoderName.isEmpty() ? "?" : decoderName;
         int sw = getResources().getDisplayMetrics().widthPixels;
         int sh = getResources().getDisplayMetrics().heightPixels;
-        diagLabel.setText(video + "\nDecodificador: " + dec + "\nTela: " + sw + "x" + sh);
+        diagLabel.setText(video + "\n" + fps + "\nDecodificador: " + dec
+                + "\nTela: " + sw + "x" + sh);
         diagLabel.setVisibility(View.VISIBLE);
         handler.removeCallbacks(hideDiag);
         handler.postDelayed(hideDiag, DIAG_HIDE_MS);
@@ -905,6 +914,25 @@ public class MainActivity extends Activity {
                     String name, long initializedTimestampMs, long initializationDurationMs) {
                 decoderName = name == null ? "" : name;
             }
+
+            @Override
+            public void onVideoFrameProcessingOffset(AnalyticsListener.EventTime eventTime,
+                    long totalProcessingOffsetUs, int frameCount) {
+                if (frameCount <= 0) {
+                    return;
+                }
+                long now = SystemClock.elapsedRealtime();
+                if (frameSampleStartMs == C.TIME_UNSET) {
+                    frameSampleStartMs = now;
+                }
+                frameSampleCount += frameCount;
+                long elapsed = now - frameSampleStartMs;
+                if (elapsed >= 1000) {
+                    renderedFrameRate = Math.round(frameSampleCount * 1000f / elapsed);
+                    frameSampleStartMs = now;
+                    frameSampleCount = 0;
+                }
+            }
         });
 
         player.addListener(new Player.Listener() {
@@ -961,6 +989,9 @@ public class MainActivity extends Activity {
         if (player == null || streamUrl == null) {
             return;
         }
+        frameSampleStartMs = C.TIME_UNSET;
+        frameSampleCount = 0;
+        renderedFrameRate = -1;
         skipButton.setVisibility(View.GONE);
         showEpisodeLabel();
         showStatus("Carregando...");
