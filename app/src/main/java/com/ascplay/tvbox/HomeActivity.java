@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,8 +24,8 @@ import java.util.Locale;
  * Nesse cartão, a seta para a direita não faz nada (R6): para mudar de faixa, só cima e baixo.
  * Nos canais ao vivo, cada cartão mostra o programa que passa agora (EPG por canal).
  * Não há caixinha de prévia nesta tela (pedido do dono, Rodada 1, R2).
- * Os cartões desta tela usam o layout menor item_card_small (R5), para as faixas
- * caberem na tela sem rolagem. As abas continuam com o item_card normal.
+ * A tela inicial usa cartões de pôster para filmes, séries e continuar assistindo, e
+ * cartões largos para canais ao vivo. As abas continuam com o item_card normal.
  * Sobre um canal ao vivo (servidor), a tecla das três listras ou segurar o OK abre a janela
  * com a programação do canal (o que passa agora e os próximos programas).
  * Ao escolher uma série, abre a tela da série (temporadas e episódios), levando a capa do item.
@@ -322,21 +323,26 @@ public class HomeActivity extends Activity {
         View first = null;
         View last = null;
         for (final ContinueStore.Saved s : shown) {
-            View card = inflater.inflate(R.layout.item_card_small, railContinue, false);
+            View card = inflater.inflate(R.layout.item_home_poster, railContinue, false);
             TextView initial = card.findViewById(R.id.tv_initial);
             TextView name = card.findViewById(R.id.tv_name);
             ImageView logo = card.findViewById(R.id.iv_logo);
             TextView now = card.findViewById(R.id.tv_now);
+            ProgressBar progress = card.findViewById(R.id.pb_progress);
 
             name.setText(s.name);
             initial.setText(firstLetter(s.name));
-            if (!s.icon.isEmpty()) {
-                ImageLoader.load(logo, s.icon);
+            ImageLoader.load(logo, s.icon);
+            if (s.durMs > 0 && s.posMs > 0) {
+                int progressValue = (int) Math.max(0, Math.min(1000,
+                        Math.round((double) s.posMs * 1000d / s.durMs)));
+                progress.setProgress(progressValue);
+                progress.setVisibility(View.VISIBLE);
             }
             now.setText("Parou em " + clock(s.posMs));
             now.setVisibility(View.VISIBLE);
 
-            card.setOnFocusChangeListener(clearLiveOnFocus);
+            setHomeCardFocus(card, clearLiveOnFocus);
             card.setOnClickListener(v -> openContinue(s));
             railContinue.addView(card);
             if (first == null) {
@@ -347,12 +353,12 @@ public class HomeActivity extends Activity {
 
         // Cartão "Ver mais ›" só se há mais itens do que cabem na faixa
         if (total > LIMIT) {
-            View more = inflater.inflate(R.layout.item_card_small, railContinue, false);
+            View more = inflater.inflate(R.layout.item_home_poster, railContinue, false);
             TextView moreInitial = more.findViewById(R.id.tv_initial);
             TextView moreName = more.findViewById(R.id.tv_name);
             moreName.setText("Ver mais ›");
             moreInitial.setText("›");
-            more.setOnFocusChangeListener(clearLiveOnFocus);
+            setHomeCardFocus(more, clearLiveOnFocus);
             more.setOnClickListener(v -> startActivity(new Intent(this, ContinueActivity.class)));
             railContinue.addView(more);
             last = more;
@@ -571,7 +577,8 @@ public class HomeActivity extends Activity {
         LayoutInflater inflater = LayoutInflater.from(this);
         View first = null;
         for (final XtreamApi.Item item : items) {
-            View card = inflater.inflate(R.layout.item_card_small, rail, false);
+            View card = inflater.inflate(item.kind == XtreamApi.Kind.LIVE
+                    ? R.layout.item_home_channel : R.layout.item_home_poster, rail, false);
             TextView initial = card.findViewById(R.id.tv_initial);
             TextView name = card.findViewById(R.id.tv_name);
             ImageView logo = card.findViewById(R.id.iv_logo);
@@ -585,7 +592,7 @@ public class HomeActivity extends Activity {
                 now.setText("");
                 now.setVisibility(View.VISIBLE);
                 loadNow(item, now);
-                card.setOnFocusChangeListener((v, hasFocus) -> {
+                setHomeCardFocus(card, (v, hasFocus) -> {
                     if (hasFocus) {
                         focusedLive = item;
                     }
@@ -602,7 +609,7 @@ public class HomeActivity extends Activity {
                     now.setText("");
                     now.setVisibility(View.GONE);
                 }
-                card.setOnFocusChangeListener(clearLiveOnFocus);
+                setHomeCardFocus(card, clearLiveOnFocus);
             }
 
             card.setOnClickListener(v -> openItem(item));
@@ -614,12 +621,13 @@ public class HomeActivity extends Activity {
 
         // Cartão "Ver mais ›" no fim da faixa (login por servidor e por lista M3U)
         if (xtream || isM3u()) {
-            View more = inflater.inflate(R.layout.item_card_small, rail, false);
+            View more = inflater.inflate(kind == XtreamApi.Kind.LIVE
+                    ? R.layout.item_home_channel : R.layout.item_home_poster, rail, false);
             TextView moreInitial = more.findViewById(R.id.tv_initial);
             TextView moreName = more.findViewById(R.id.tv_name);
             moreName.setText("Ver mais ›");
             moreInitial.setText("›");
-            more.setOnFocusChangeListener(clearLiveOnFocus);
+            setHomeCardFocus(more, clearLiveOnFocus);
             more.setOnClickListener(v -> openBrowse(kind));
             // R6: seta para a direita no "Ver mais" não faz nada (o foco fica no próprio cartão).
             // Para mudar de faixa, só cima e baixo.
@@ -632,6 +640,20 @@ public class HomeActivity extends Activity {
             focusDone = true;
             first.requestFocus();
         }
+    }
+
+    private void setHomeCardFocus(View card, View.OnFocusChangeListener listener) {
+        card.setOnFocusChangeListener((view, hasFocus) -> {
+            view.animate().cancel();
+            view.animate()
+                    .scaleX(hasFocus ? 1.05f : 1f)
+                    .scaleY(hasFocus ? 1.05f : 1f)
+                    .setDuration(120)
+                    .start();
+            if (listener != null) {
+                listener.onFocusChange(view, hasFocus);
+            }
+        });
     }
 
     /** Pede ao servidor o programa de agora e escreve na linha do cartão. */

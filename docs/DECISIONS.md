@@ -483,11 +483,12 @@
 - O commit dd7b6e7 compilou e ficou VERDE no GitHub Actions. O efeito de imagem e fluidez ainda não foi conferido no TX9.
 - Correção após o teste do dono: o FPS do manifesto pode não existir. O diagnóstico agora mede os quadros processados pelo decoder via AnalyticsListener e, enquanto não há medição, mostra o FPS do formato ou informa que está medindo/indisponível.
 
-## 31/10/2026 - Cartões maiores na página inicial
+## 31/10/2026 - Cards da Home no estilo ASC Desk
 
-- Decisão: os cartões exclusivos da página inicial passaram a ter 170dp de largura, nomes em 16sp com até duas linhas, e texto auxiliar em 13sp.
-- Decisão: a borda normal dos cartões foi removida; o contorno vermelho e branco continua visível quando o cartão recebe foco.
-- Motivo: capas e nomes estavam pequenos demais para ler. A página inicial mantém as faixas horizontais e não ganha rolagem vertical.
-- Limite: o novo tamanho ainda precisa ser conferido no TX9, inclusive quando "Continue assistindo" está visível.
-- Validação: XML válido. Compilação local não foi possível porque o Android SDK não está instalado neste ambiente. Actions e teste no TX9 pendentes.
-- Nenhuma dependência nova.
+- Decisão: separar cards de pôster (Continue, filmes e séries) dos cards largos de canais. Pôsteres usam capa centerCrop; canais mantêm o logo inteiro centralizado.
+- Decisão: usar cards com cantos arredondados, placeholder, foco com borda e escala 1,05. Continue mantém "Parou em" e ganha barra de progresso.
+- Referência: proporções e foco inspirados nos estilos `.rail .card`, `.card.tv` e `body.tv .card:focus` de `mundoarkade1-arch/asc-play/www/style.css`.
+- Decisão: permitir rolagem vertical na Home. Quatro fileiras com capas de pôster grandes não cabem integralmente na altura do TX9; fileiras continuam rolando para os lados.
+- Motivo: priorizar capas legíveis e não reduzir as imagens para manter todas as fileiras fixas na tela.
+- Imagens continuam usando o ImageLoader próprio, com cache e redução; nenhuma dependência nova.
+- XML e referências de recursos validados. Build/lint/test locais bloqueados pela ausência do Android SDK; não há testes locais no app. Teste no TX9 pendente.

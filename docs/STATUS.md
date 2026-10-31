@@ -1,10 +1,10 @@
 # Status do projeto
 
-Última atualização: 31/10/2026 (cartões da página inicial ampliados; build e teste pendentes)
+Última atualização: 31/10/2026 (cards da Home redesenhados no estilo Desk; build e TX9 pendentes)
 Regras de trabalho: AGENTS.md. Mapa e limites: docs/ARQUIVOS.md. Montagem e versão: docs/ARCHITECTURE.md. Decisões: docs/DECISIONS.md.
 
 ## Fase atual
-O dono testou a identidade ASC lite no TX9 e disse: "tudo funcionando perfeito". O limite 1080p/60 ficou VERDE no Actions. O diagnóstico foi ajustado para medir FPS processados; os cartões da página inicial foram ampliados e perderam a borda normal, preservando o foco. Novo build e teste no TX9 pendentes.
+O dono testou a identidade ASC lite no TX9 e disse: "tudo funcionando perfeito". A Home foi redesenhada com cards de pôster e de canal separados, foco ampliado e rolagem vertical para acomodar as capas. XML e referências de recursos validados; build, lint e teste no TX9 pendentes. O ambiente local não tem Android SDK.
 
 ## Já feito
 - Base e rodadas anteriores, M6, M9, M10, M12, R4-1, R4-2 e páginas de filme e série: testadas no TX9.
@@ -12,11 +12,12 @@ O dono testou a identidade ASC lite no TX9 e disse: "tudo funcionando perfeito".
 - Nome ASC lite em strings.xml: VERDE no Actions.
 - Nova paleta, fundos, menu, ícones e banners ASC lite: testados no TX9, tudo funcionando. As imagens ainda dizem "PLAY".
 - Player: seleção limitada a 1080p/60 para reduzir carga de fluxos adaptativos. Diagnóstico de FPS agora mede quadros processados pelo decoder e mostra o FPS do formato como alternativa.
-- Página inicial: cartões ficaram mais largos, capas maiores, nomes maiores em até duas linhas e sem borda normal; sem rolagem vertical. XML válido; compilação local bloqueada pela falta do Android SDK.
+- Página inicial: pôsteres maiores para filmes, séries e Continue; canais com logo ampliado; foco ampliado; barra de progresso em Continue; rolagem vertical.
+- Validação local do layout: XML e referências válidos. Build/lint/test bloqueados pela ausência do Android SDK; não há testes locais no app.
 
 ## Falta
 - Conferir o Actions do diagnóstico de FPS.
-- No TX9, testar a página inicial sem rolagem vertical; conferir capas, nomes, contorno de foco e navegação lateral.
+- No TX9, testar a Home: tamanho e corte das capas, foco D-pad, rolagem horizontal/vertical e "Ver mais".
 - Atualizar automaticamente e testar um canal ao vivo; conferir o FPS medido e se o movimento melhorou.
 - Testar também filme e série para confirmar que a nova seleção não piorou a reprodução.
 - Opcional, somente depois do Actions verde: avaliar trocar "PLAY" por "LITE" nas imagens.
@@ -27,6 +28,6 @@ O dono testou a identidade ASC lite no TX9 e disse: "tudo funcionando perfeito".
 
 ## Próximos passos
 1. Conferir o Actions do diagnóstico de FPS.
-2. No TX9, testar a página inicial sem rolagem vertical; conferir capas, nomes, contorno de foco e navegação lateral.
+2. No TX9, testar a Home: tamanho e corte das capas, foco D-pad, rolagem horizontal/vertical e "Ver mais".
 3. No TX9, testar canal ao vivo, filme e episódio; observar o FPS e a fluidez.
 4. Decidir, pelo resultado, se é necessário alterar a tela ou encerrar o diagnóstico temporário.

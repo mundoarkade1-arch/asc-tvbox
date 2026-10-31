@@ -1,27 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="170dp"
+    android:layout_width="220dp"
     android:layout_height="match_parent"
-    android:layout_margin="4dp"
+    android:layout_margin="5dp"
     android:background="@drawable/bg_card_home"
     android:clickable="true"
+    android:clipChildren="false"
     android:focusable="true"
     android:orientation="vertical"
-    android:padding="4dp">
+    android:padding="5dp">
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="@drawable/bg_poster"
-        android:minHeight="16dp">
+        android:background="@drawable/bg_home_image"
+        android:clipToOutline="true">
 
         <TextView
             android:id="@+id/tv_initial"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:textColor="#FF6B78"
+            android:textColor="#FFFF6B78"
             android:textSize="36sp"
             android:textStyle="bold" />
 
@@ -30,7 +31,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:contentDescription="@null"
-            android:padding="2dp"
+            android:padding="8dp"
             android:scaleType="fitCenter" />
     </FrameLayout>
 
@@ -38,12 +39,11 @@
         android:id="@+id/tv_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
+        android:layout_marginTop="4dp"
         android:ellipsize="end"
-        android:maxLines="2"
-        android:minLines="1"
-        android:textColor="#F7F3F4"
-        android:textSize="16sp"
+        android:maxLines="1"
+        android:textColor="#FFF7F3F4"
+        android:textSize="15sp"
         android:textStyle="bold" />
 
     <TextView
@@ -52,8 +52,7 @@
         android:layout_height="wrap_content"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textColor="#A99FA3"
-        android:textSize="13sp"
+        android:textColor="#FFA99FA3"
+        android:textSize="12sp"
         android:visibility="gone" />
-
 </LinearLayout>
