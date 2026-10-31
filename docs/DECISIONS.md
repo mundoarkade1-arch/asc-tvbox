@@ -482,3 +482,12 @@
 - Nenhuma dependência nova. O ajuste se aplica também a filmes e séries; confirmar no TX9 que não piora a reprodução.
 - O commit dd7b6e7 compilou e ficou VERDE no GitHub Actions. O efeito de imagem e fluidez ainda não foi conferido no TX9.
 - Correção após o teste do dono: o FPS do manifesto pode não existir. O diagnóstico agora mede os quadros processados pelo decoder via AnalyticsListener e, enquanto não há medição, mostra o FPS do formato ou informa que está medindo/indisponível.
+
+## 31/10/2026 - Cartões maiores na página inicial
+
+- Decisão: os cartões exclusivos da página inicial passaram a ter 170dp de largura, nomes em 16sp com até duas linhas, e texto auxiliar em 13sp.
+- Decisão: a borda normal dos cartões foi removida; o contorno vermelho e branco continua visível quando o cartão recebe foco.
+- Motivo: capas e nomes estavam pequenos demais para ler. A página inicial mantém as faixas horizontais e não ganha rolagem vertical.
+- Limite: o novo tamanho ainda precisa ser conferido no TX9, inclusive quando "Continue assistindo" está visível.
+- Validação: XML válido. Compilação local não foi possível porque o Android SDK não está instalado neste ambiente. Actions e teste no TX9 pendentes.
+- Nenhuma dependência nova.
