@@ -472,3 +472,11 @@
 - O que não mudou: arquitetura, lógica de reprodução, ids e ordem dos botões, applicationId, pacote, nome do APK, workflow, version.json, User-Agent do ImageLoader, Updater e fundo preto do player.
 - Dependências do app: nenhuma nova. Pillow foi usado apenas no ambiente local para gerar imagens.
 - Validação local: XMLs e referências de recursos conferidos. A compilação local não rodou porque o Android SDK não está instalado no ambiente. O novo visual ainda NÃO foi testado no TX9.
+
+## 31/10/2026 - Limite de vídeo e diagnóstico de FPS
+
+- Decisão: o player usa DefaultTrackSelector com resolução máxima de 1920x1080 e taxa máxima de 60 fps para canais, filmes e episódios.
+- Motivo: o TX9 usa saída 1080p/60 e tem 1 GB de RAM; evitar selecionar variantes adaptativas acima da resolução da tela pode reduzir carga de decodificação.
+- Decisão: o diagnóstico temporário passou a mostrar o FPS informado no formato do vídeo e também pode ser aberto com OK em canal ao vivo.
+- Limite: o app não cria quadros para converter fonte de 25/30 fps em 60 fps. Um canal sem FPS no manifesto pode mostrar "?"/não informar a taxa; a sensação de movimento pode depender da fonte e da frequência da TV.
+- Nenhuma dependência nova. O ajuste se aplica também a filmes e séries; confirmar no TX9 que não piora a reprodução.

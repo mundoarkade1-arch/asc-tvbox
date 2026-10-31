@@ -29,6 +29,7 @@ import androidx.media3.datasource.DefaultHttpDataSource;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.analytics.AnalyticsListener;
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
+import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
 import androidx.media3.ui.PlayerView;
 
 import java.text.SimpleDateFormat;
@@ -493,6 +494,9 @@ public class MainActivity extends Activity {
         } else {
             String mime = f.sampleMimeType == null ? "?" : f.sampleMimeType.replace("video/", "");
             video = "Vídeo: " + f.width + "x" + f.height + " - " + mime;
+            if (f.frameRate > 0) {
+                video = video + " - " + Math.round(f.frameRate) + " fps";
+            }
             if (f.bitrate > 0) {
                 video = video + " - " + (f.bitrate / 1000) + " kbps";
             }
@@ -744,6 +748,7 @@ public class MainActivity extends Activity {
         if (event.getAction() == KeyEvent.ACTION_DOWN && isOk) {
             if (event.getRepeatCount() == 0) {
                 showNowbar();
+                showDiag();
             } else if (event.getRepeatCount() == 1) {
                 // OK segurado: segunda via para abrir a programação
                 openSchedule();
@@ -881,7 +886,13 @@ public class MainActivity extends Activity {
                 .setConnectTimeoutMs(TIMEOUT_MS)
                 .setReadTimeoutMs(TIMEOUT_MS);
 
+        DefaultTrackSelector trackSelector = new DefaultTrackSelector(this);
+        trackSelector.setParameters(trackSelector.buildUponParameters()
+            .setMaxVideoSize(1920, 1080)
+            .setMaxVideoFrameRate(60)
+            .build());
         player = new ExoPlayer.Builder(this)
+            .setTrackSelector(trackSelector)
                 .setMediaSourceFactory(new DefaultMediaSourceFactory(http))
                 .build();
         playerView.setPlayer(player);
