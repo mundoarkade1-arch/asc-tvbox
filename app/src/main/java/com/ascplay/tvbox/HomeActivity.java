@@ -65,7 +65,7 @@ public class HomeActivity extends Activity {
     public static final String EXTRA_SHOW_LOGIN = "show_login";
 
     private static final int LIMIT = 10;
-    private static final int COLOR_NEUTRAL = 0xFFA39A9D;
+    private static final int COLOR_NEUTRAL = 0xFFA99FA3;
     private static final int COLOR_ERROR = 0xFFFF6B78;
     private static final int COLOR_OK = 0xFF4ADE80;
     private static final int COLOR_WHITE = 0xFFFFFFFF;
@@ -145,6 +145,7 @@ public class HomeActivity extends Activity {
         stSeries = findViewById(R.id.st_series);
 
         navHome = findViewById(R.id.nav_home);
+        navHome.setSelected(true);
         navLive = findViewById(R.id.nav_live);
         navMovie = findViewById(R.id.nav_movie);
         navSeries = findViewById(R.id.nav_series);

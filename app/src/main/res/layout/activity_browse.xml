@@ -108,7 +108,7 @@
                     android:gravity="center"
                     android:padding="24dp"
                     android:text="Carregando..."
-                    android:textColor="#A39A9D"
+                    android:textColor="#A99FA3"
                     android:textSize="20sp" />
             </FrameLayout>
         </LinearLayout>

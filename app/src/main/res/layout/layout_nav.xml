@@ -3,7 +3,7 @@
     android:id="@+id/group_nav"
     android:layout_width="110dp"
     android:layout_height="match_parent"
-    android:background="@android:color/transparent"
+    android:background="@drawable/bg_nav"
     android:orientation="vertical"
     android:paddingTop="10dp"
     android:paddingBottom="10dp">
@@ -31,7 +31,7 @@
         android:paddingBottom="4dp"
         android:singleLine="true"
         android:text="Tela inicial"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/nav_text"
         android:textSize="14sp" />
 
     <TextView
@@ -58,7 +58,7 @@
         android:paddingBottom="4dp"
         android:singleLine="true"
         android:text="Canais"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/nav_text"
         android:textSize="14sp" />
 
     <TextView
@@ -85,7 +85,7 @@
         android:paddingBottom="4dp"
         android:singleLine="true"
         android:text="Filmes"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/nav_text"
         android:textSize="14sp" />
 
     <TextView
@@ -112,7 +112,7 @@
         android:paddingBottom="4dp"
         android:singleLine="true"
         android:text="Séries"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/nav_text"
         android:textSize="14sp" />
 
     <TextView
@@ -139,7 +139,7 @@
         android:paddingBottom="4dp"
         android:singleLine="true"
         android:text="Ajustes"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/nav_text"
         android:textSize="14sp" />
 
     <TextView
@@ -165,6 +165,6 @@
         android:paddingBottom="4dp"
         android:singleLine="true"
         android:text="Atualizar"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/nav_text"
         android:textSize="14sp" />
 </LinearLayout>

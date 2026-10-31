@@ -10,7 +10,7 @@
         android:id="@+id/iv_cover"
         android:layout_width="60dp"
         android:layout_height="90dp"
-        android:background="#2A2427"
+        android:background="@drawable/bg_poster"
         android:contentDescription="Capa"
         android:scaleType="centerCrop" />
 
@@ -36,7 +36,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:textColor="#A39A9D"
+            android:textColor="#A99FA3"
             android:textSize="16sp" />
     </LinearLayout>
 </LinearLayout>

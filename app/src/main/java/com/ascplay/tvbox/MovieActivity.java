@@ -33,7 +33,7 @@ public class MovieActivity extends Activity {
     /** Endereço da capa do item (já conhecido da lista). Pode vir vazio. */
     public static final String EXTRA_ICON = "icon";
 
-    private static final int COLOR_NEUTRAL = 0xFFA39A9D;
+    private static final int COLOR_NEUTRAL = 0xFFA99FA3;
 
     private ImageView ivCover;
     private TextView tvTitle;

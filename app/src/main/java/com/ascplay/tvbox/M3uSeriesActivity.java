@@ -58,7 +58,7 @@ import java.util.Map;
  */
 public class M3uSeriesActivity extends Activity {
 
-    private static final int COLOR_NEUTRAL = 0xFFA39A9D;
+    private static final int COLOR_NEUTRAL = 0xFFA99FA3;
     private static final int COLOR_ERROR = 0xFFFF6B78;
     // Cores dos episódios na grade
     private static final int COLOR_WATCHED = 0xFFFF4D5E;

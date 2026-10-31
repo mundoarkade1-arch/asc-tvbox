@@ -35,6 +35,32 @@ final class NavBar {
         }
         nav.setVisibility(View.VISIBLE);
 
+        int selectedId;
+        switch (current) {
+            case HOME:
+                selectedId = R.id.nav_home;
+                break;
+            case LIVE:
+                selectedId = R.id.nav_live;
+                break;
+            case MOVIE:
+                selectedId = R.id.nav_movie;
+                break;
+            case SERIES:
+                selectedId = R.id.nav_series;
+                break;
+            case SETTINGS:
+                selectedId = R.id.nav_settings;
+                break;
+            default:
+                selectedId = View.NO_ID;
+                break;
+        }
+        View selected = activity.findViewById(selectedId);
+        if (selected != null) {
+            selected.setSelected(true);
+        }
+
         click(activity, R.id.nav_home, v -> goHome(activity));
         click(activity, R.id.nav_live, v -> goTab(activity, current, LIVE, XtreamApi.Kind.LIVE));
         click(activity, R.id.nav_movie, v -> goTab(activity, current, MOVIE, XtreamApi.Kind.MOVIE));

@@ -18,7 +18,7 @@
             android:id="@+id/iv_cover"
             android:layout_width="160dp"
             android:layout_height="240dp"
-            android:background="#1A1618"
+            android:background="@drawable/bg_poster"
             android:contentDescription="Capa"
             android:scaleType="centerCrop" />
 
@@ -46,7 +46,7 @@
                 android:layout_marginTop="4dp"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:textColor="#A39A9D"
+                android:textColor="#A99FA3"
                 android:textSize="16sp"
                 android:visibility="gone" />
 
@@ -175,7 +175,7 @@
                 android:gravity="center"
                 android:padding="24dp"
                 android:text="Carregando..."
-                android:textColor="#A39A9D"
+                android:textColor="#A99FA3"
                 android:textSize="20sp" />
         </FrameLayout>
     </LinearLayout>

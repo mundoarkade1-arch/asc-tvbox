@@ -29,7 +29,7 @@ public final class SearchKeyboard {
     }
 
     private static final int COLOR_WHITE = 0xFFFFFFFF;
-    private static final int COLOR_NEUTRAL = 0xFFA39A9D;
+    private static final int COLOR_NEUTRAL = 0xFFA99FA3;
     private static final int COLOR_ERROR = 0xFFFF6B78;
     private static final int COLOR_BACK = 0xFF0C0A0B;
     private static final int MAX_LEN = 40;

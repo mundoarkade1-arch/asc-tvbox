@@ -461,3 +461,14 @@
 - Dependências: nenhuma nova.
 - Ainda NÃO testado no TX9.
 - Ainda NÃO testado no TX9, por decisão do dono: os testes ficam para depois de toda a nova aparência.
+
+## 31/10/2026 - Identidade visual ASC lite
+
+- Decisão: o nome mostrado pelo app passou a ser "ASC lite". A identidade visual foi atualizada com a paleta, fundos, botões, cartões, menu, ícones e banners especificados para o asc-play.
+- Motivo: pedido do dono para aproximar a aparência do app de referência, mantendo o app nativo leve para o TX9.
+- Decisão: foram usados somente os quatro arquivos de imagem autorizados do asc-play. Ícones quadrados e adaptáveis foram gerados em cinco densidades; também foram criados o ícone circular, o banner da TV, o fundo de login e o ícone pequeno do cabeçalho.
+- Decisão: o menu ganhou um fundo próprio e a aba atual passou a usar o estado visual selecionado. Os dois menus (layout_nav.xml e activity_home.xml) continuam iguais.
+- Limite: as imagens ainda dizem "ASC PLAY". A tentativa opcional de trocar "PLAY" por "LITE" só pode ser considerada depois do Actions verde, em alteração separada.
+- O que não mudou: arquitetura, lógica de reprodução, ids e ordem dos botões, applicationId, pacote, nome do APK, workflow, version.json, User-Agent do ImageLoader, Updater e fundo preto do player.
+- Dependências do app: nenhuma nova. Pillow foi usado apenas no ambiente local para gerar imagens.
+- Validação local: XMLs e referências de recursos conferidos. A compilação local não rodou porque o Android SDK não está instalado no ambiente. O novo visual ainda NÃO foi testado no TX9.

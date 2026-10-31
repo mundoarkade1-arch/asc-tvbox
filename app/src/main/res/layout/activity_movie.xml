@@ -14,7 +14,7 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:adjustViewBounds="true"
-        android:background="#1A1618"
+        android:background="@drawable/bg_poster"
         android:contentDescription="Capa"
         android:maxWidth="340dp"
         android:minWidth="120dp"
@@ -44,7 +44,7 @@
             android:layout_marginTop="8dp"
             android:ellipsize="end"
             android:maxLines="2"
-            android:textColor="#A39A9D"
+            android:textColor="#A99FA3"
             android:textSize="18sp"
             android:visibility="gone" />
 

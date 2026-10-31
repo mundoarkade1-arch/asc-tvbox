@@ -1,44 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-
     <item android:state_focused="true">
-        <shape android:shape="rectangle">
-            <solid android:color="#2E2125" />
-            <stroke
-                android:width="4dp"
-                android:color="#FF2A3D" />
-            <corners android:radius="10dp" />
-        </shape>
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <stroke android:width="6dp" android:color="#59FF2A3D" />
+                    <corners android:radius="19dp" />
+                </shape>
+            </item>
+            <item android:left="3dp" android:top="3dp" android:right="3dp" android:bottom="3dp">
+                <shape android:shape="rectangle">
+                    <solid android:color="#1E181B" />
+                    <stroke android:width="3dp" android:color="#FFFFFF" />
+                    <corners android:radius="16dp" />
+                </shape>
+            </item>
+        </layer-list>
     </item>
-
     <item android:state_pressed="true">
-        <shape android:shape="rectangle">
-            <solid android:color="#2E2125" />
-            <stroke
-                android:width="4dp"
-                android:color="#FF2A3D" />
-            <corners android:radius="10dp" />
-        </shape>
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <stroke android:width="6dp" android:color="#59FF2A3D" />
+                    <corners android:radius="19dp" />
+                </shape>
+            </item>
+            <item android:left="3dp" android:top="3dp" android:right="3dp" android:bottom="3dp">
+                <shape android:shape="rectangle">
+                    <solid android:color="#1E181B" />
+                    <stroke android:width="3dp" android:color="#FFFFFF" />
+                    <corners android:radius="16dp" />
+                </shape>
+            </item>
+        </layer-list>
     </item>
-
     <item android:state_selected="true">
-        <shape android:shape="rectangle">
-            <solid android:color="#2E2125" />
-            <stroke
-                android:width="4dp"
-                android:color="#FF2A3D" />
-            <corners android:radius="10dp" />
-        </shape>
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <stroke android:width="6dp" android:color="#59FF2A3D" />
+                    <corners android:radius="19dp" />
+                </shape>
+            </item>
+            <item android:left="3dp" android:top="3dp" android:right="3dp" android:bottom="3dp">
+                <shape android:shape="rectangle">
+                    <solid android:color="#1E181B" />
+                    <stroke android:width="3dp" android:color="#FFFFFF" />
+                    <corners android:radius="16dp" />
+                </shape>
+            </item>
+        </layer-list>
     </item>
-
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#1A1517" />
-            <stroke
-                android:width="1dp"
-                android:color="#2A2326" />
-            <corners android:radius="10dp" />
+            <solid android:color="#161214" />
+            <stroke android:width="1dp" android:color="#0FFFFFFF" />
+            <corners android:radius="16dp" />
         </shape>
     </item>
-
 </selector>

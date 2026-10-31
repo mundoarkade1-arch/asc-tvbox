@@ -1,26 +1,28 @@
 # Status do projeto
 
-Última atualização: 31/10/2026 (nome ASC lite VERDE no Actions)
+Última atualização: 31/10/2026 (identidade visual ASC lite implementada; Actions e TX9 pendentes)
 Regras de trabalho: AGENTS.md. Mapa e limites: docs/ARQUIVOS.md. Montagem e versão: docs/ARCHITECTURE.md. Decisões: docs/DECISIONS.md.
 
 ## Fase atual
-Identidade visual ASC lite em andamento. O nome do app foi alterado em strings.xml e ficou VERDE no Actions. O visual novo ainda NÃO foi visto no TX9.
+Identidade visual ASC lite implementada no código. O nome ASC lite ficou VERDE no Actions; o Actions do visual e o teste no TX9 ainda faltam.
 
 ## Já feito
-- Base, nova aparência e rodadas anteriores: testadas no TX9; detalhes em ARQUIVOS.md e DECISIONS.md.
-- M11 (pesquisa), teclado QWERTY brasileiro, M13 e M13c: testados no TX9.
-- Nome do app alterado para "ASC lite" em res/values/strings.xml: VERDE no Actions.
+- Base e rodadas anteriores, M6, M9, M10, M12, R4-1, R4-2 e páginas de filme e série: testadas no TX9.
+- M11 (pesquisa e teclado), M13 e M13c: testados no TX9.
+- Nome ASC lite em strings.xml: VERDE no Actions.
+- Nova paleta, fundos, menu, ícones e banners ASC lite implementados. Foram usados somente os quatro arquivos autorizados do asc-play; as imagens ainda dizem "PLAY".
 
-## Falta nesta etapa
-- Trocar os outros textos visíveis com o nome antigo.
-- Atualizar cores, fundos, botões, cartões, menu, ícones, login, cabeçalho, player e tema conforme o pedido atual.
-- Gerar os ícones e banners a partir dos quatro arquivos permitidos do asc-play.
-- Conferir referências, XML e build no Actions.
-- Testar o visual novo no TX9.
+## Falta
+- Conferir o Actions do visual e corrigir qualquer erro de build.
+- Atualizar automaticamente e testar a aparência no TX9: ícone/banner, login, menu, foco, cartões e fluidez.
+- Opcional, somente depois do Actions verde: avaliar trocar "PLAY" por "LITE" nas imagens.
+- Investigar a imagem pixelada de filmes e séries. O diagnóstico temporário continua no MainActivity; removê-lo depois de resolver ou encerrar essa investigação.
 
 ## Perguntas abertas
-- O pedido opcional de trocar "PLAY" por "LITE" nas imagens só será avaliado depois de tudo ficar VERDE.
-- A aparência nova ainda não foi conferida no TX9.
+- Qual é o nome do outro app em que a imagem parece melhor?
+- O dono quer avaliar a troca opcional de "PLAY" por "LITE"?
 
-## Próximo passo
-Continuar a mudança visual, um arquivo por vez, seguindo AGENTS.md.
+## Próximos passos
+1. Conferir o Actions do commit visual.
+2. No TX9, verificar ícone/banner, login, menu, foco e cartões; confirmar se as telas continuam fluidas.
+3. Retomar a investigação da imagem pixelada e remover o diagnóstico temporário ao final.

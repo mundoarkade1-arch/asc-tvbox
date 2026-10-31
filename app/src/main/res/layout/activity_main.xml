@@ -15,6 +15,10 @@
         app:show_fastforward_button="false"
         app:show_previous_button="false"
         app:show_next_button="false"
+        app:played_color="#FF2A3D"
+        app:scrubber_color="#FFFFFF"
+        app:buffered_color="#59FFFFFF"
+        app:unplayed_color="#47FFFFFF"
         app:use_controller="true" />
 
     <TextView
@@ -33,7 +37,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="#CC1A1517"
+        android:background="#CC161214"
         android:clickable="false"
         android:focusable="false"
         android:orientation="horizontal"
@@ -55,7 +59,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:textColor="#A39A9D"
+                android:textColor="#A99FA3"
                 android:textSize="18sp" />
 
             <TextView
@@ -79,7 +83,7 @@
                     android:id="@+id/tv_nb_start"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="#F6F2F3"
+                    android:textColor="#F7F3F4"
                     android:textSize="18sp" />
 
                 <ProgressBar
@@ -99,7 +103,7 @@
                     android:id="@+id/tv_nb_end"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="#F6F2F3"
+                    android:textColor="#F7F3F4"
                     android:textSize="18sp" />
             </LinearLayout>
         </LinearLayout>
@@ -114,7 +118,7 @@
             android:ellipsize="end"
             android:gravity="end"
             android:maxLines="2"
-            android:textColor="#A39A9D"
+            android:textColor="#A99FA3"
             android:textSize="20sp" />
     </LinearLayout>
 

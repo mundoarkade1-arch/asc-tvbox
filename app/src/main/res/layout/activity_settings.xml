@@ -55,7 +55,7 @@
                 android:layout_weight="1"
                 android:padding="24dp"
                 android:text="Escolha uma opção à esquerda."
-                android:textColor="#F6F2F3"
+                android:textColor="#F7F3F4"
                 android:textSize="20sp" />
         </LinearLayout>
     </LinearLayout>

@@ -13,7 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="#241D20"
+        android:background="@drawable/bg_poster"
         android:minHeight="16dp">
 
         <TextView
@@ -21,7 +21,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:textColor="#5A4D52"
+            android:textColor="#FF6B78"
             android:textSize="28sp"
             android:textStyle="bold" />
 
@@ -42,7 +42,7 @@
         android:ellipsize="end"
         android:maxLines="1"
         android:minLines="1"
-        android:textColor="#F6F2F3"
+        android:textColor="#F7F3F4"
         android:textSize="13sp"
         android:textStyle="bold" />
 
@@ -52,7 +52,7 @@
         android:layout_height="wrap_content"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textColor="#A39A9D"
+        android:textColor="#A99FA3"
         android:textSize="12sp"
         android:visibility="gone" />
 

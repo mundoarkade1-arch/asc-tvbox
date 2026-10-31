@@ -199,7 +199,7 @@ public class SettingsActivity extends Activity {
         } catch (Exception e) {
             // segue com "desconhecida"
         }
-        return "ASC TV Box\n\nVersão instalada: " + name + " (número " + code + ")";
+        return "ASC lite\n\nVersão instalada: " + name + " (número " + code + ")";
     }
 
     private static String megaOrGiga(long bytes) {

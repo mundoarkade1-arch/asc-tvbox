@@ -12,14 +12,14 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="130dp"
-        android:background="#241D20">
+        android:background="@drawable/bg_poster">
 
         <TextView
             android:id="@+id/tv_initial"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:textColor="#5A4D52"
+            android:textColor="#FF6B78"
             android:textSize="36sp"
             android:textStyle="bold" />
 
@@ -40,7 +40,7 @@
         android:ellipsize="end"
         android:maxLines="2"
         android:minLines="2"
-        android:textColor="#F6F2F3"
+        android:textColor="#F7F3F4"
         android:textSize="14sp"
         android:textStyle="bold" />
 
@@ -51,7 +51,7 @@
         android:layout_marginTop="2dp"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textColor="#A39A9D"
+        android:textColor="#A99FA3"
         android:textSize="12sp"
         android:visibility="gone" />
 

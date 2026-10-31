@@ -41,7 +41,7 @@ public class SearchActivity extends Activity {
 
     private static final int LIMIT = 100;
     private static final int MAX_QUERY = 40;
-    private static final int COLOR_NEUTRAL = 0xFFA39A9D;
+    private static final int COLOR_NEUTRAL = 0xFFA99FA3;
     private static final int COLOR_ERROR = 0xFFFF6B78;
 
     private CredentialStore.Credentials creds;

@@ -9,7 +9,7 @@
         android:id="@+id/group_nav"
         android:layout_width="110dp"
         android:layout_height="match_parent"
-        android:background="@android:color/transparent"
+        android:background="@drawable/bg_nav"
         android:orientation="vertical"
         android:paddingTop="10dp"
         android:paddingBottom="10dp">
@@ -37,7 +37,7 @@
             android:paddingBottom="4dp"
             android:singleLine="true"
             android:text="Tela inicial"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/nav_text"
             android:textSize="14sp" />
 
         <TextView
@@ -64,7 +64,7 @@
             android:paddingBottom="4dp"
             android:singleLine="true"
             android:text="Canais"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/nav_text"
             android:textSize="14sp" />
 
         <TextView
@@ -91,7 +91,7 @@
             android:paddingBottom="4dp"
             android:singleLine="true"
             android:text="Filmes"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/nav_text"
             android:textSize="14sp" />
 
         <TextView
@@ -118,7 +118,7 @@
             android:paddingBottom="4dp"
             android:singleLine="true"
             android:text="Séries"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/nav_text"
             android:textSize="14sp" />
 
         <TextView
@@ -145,7 +145,7 @@
             android:paddingBottom="4dp"
             android:singleLine="true"
             android:text="Ajustes"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/nav_text"
             android:textSize="14sp" />
 
         <TextView
@@ -171,7 +171,7 @@
             android:paddingBottom="4dp"
             android:singleLine="true"
             android:text="Atualizar"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/nav_text"
             android:textSize="14sp" />
     </LinearLayout>
 
@@ -185,13 +185,28 @@
         android:paddingEnd="24dp"
         android:paddingBottom="6dp">
 
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="ASC TV Box"
-            android:textColor="#FF2A3D"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:contentDescription="@null"
+                android:focusable="false"
+                android:src="@drawable/brand_icon" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:text="ASC lite"
+                android:textColor="#FF2A3D"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/group_update"
@@ -254,7 +269,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:text="Continue assistindo"
-                android:textColor="#F6F2F3"
+                android:textColor="#F7F3F4"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -285,7 +300,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:text="Canais ao vivo"
-                android:textColor="#F6F2F3"
+                android:textColor="#F7F3F4"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -294,7 +309,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Carregando..."
-                android:textColor="#A39A9D"
+                android:textColor="#A99FA3"
                 android:textSize="14sp" />
 
             <HorizontalScrollView
@@ -324,7 +339,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:text="Filmes"
-                android:textColor="#F6F2F3"
+                android:textColor="#F7F3F4"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -333,7 +348,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Carregando..."
-                android:textColor="#A39A9D"
+                android:textColor="#A99FA3"
                 android:textSize="14sp" />
 
             <HorizontalScrollView
@@ -363,7 +378,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:text="Séries"
-                android:textColor="#F6F2F3"
+                android:textColor="#F7F3F4"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -372,7 +387,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Carregando..."
-                android:textColor="#A39A9D"
+                android:textColor="#A99FA3"
                 android:textSize="14sp" />
 
             <HorizontalScrollView

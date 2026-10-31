@@ -1,9 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0C0A0B"
-    android:fillViewport="true">
+    android:background="@drawable/bg_gradient">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:adjustViewBounds="true"
+        android:contentDescription="@null"
+        android:focusable="false"
+        android:scaleType="centerCrop"
+        android:src="@drawable/banner_bg" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_banner_fade"
+        android:focusable="false" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="560dp"
@@ -69,7 +89,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="ASC TV Box"
+            android:text="ASC lite"
             android:textColor="#FF2A3D"
             android:textSize="36sp"
             android:textStyle="bold" />
@@ -80,7 +100,7 @@
             android:layout_marginTop="4dp"
             android:gravity="center"
             android:text="@string/login_title"
-            android:textColor="#F6F2F3"
+            android:textColor="#F7F3F4"
             android:textSize="26sp" />
 
         <LinearLayout
@@ -223,4 +243,5 @@
             android:textSize="20sp" />
 
     </LinearLayout>
-</ScrollView>
+    </ScrollView>
+</FrameLayout>
