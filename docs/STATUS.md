@@ -1,10 +1,10 @@
 # Status do projeto
 
-Última atualização: 31/10/2026 (cards da Home redesenhados no estilo Desk; build e TX9 pendentes)
+Última atualização: 31/10/2026 (foco quadrado e limpeza de dados implementados; build e TX9 pendentes)
 Regras de trabalho: AGENTS.md. Mapa e limites: docs/ARQUIVOS.md. Montagem e versão: docs/ARCHITECTURE.md. Decisões: docs/DECISIONS.md.
 
 ## Fase atual
-O dono testou a identidade ASC lite no TX9 e disse: "tudo funcionando perfeito". A Home foi redesenhada com cards de pôster e de canal separados, foco ampliado e rolagem vertical para acomodar as capas. XML e referências de recursos validados; build, lint e teste no TX9 pendentes. O ambiente local não tem Android SDK.
+O dono testou a identidade ASC lite no TX9 e disse: "tudo funcionando perfeito". A borda de foco dos cards da Home agora é quadrada. Ajustes ganhou confirmação para apagar dados de uso, preservando login e PIN parental. Build, lint e teste no TX9 pendentes; o ambiente local não tem Android SDK.
 
 ## Já feito
 - Base e rodadas anteriores, M6, M9, M10, M12, R4-1, R4-2 e páginas de filme e série: testadas no TX9.
@@ -13,9 +13,12 @@ O dono testou a identidade ASC lite no TX9 e disse: "tudo funcionando perfeito".
 - Nova paleta, fundos, menu, ícones e banners ASC lite: testados no TX9, tudo funcionando. As imagens ainda dizem "PLAY".
 - Player: seleção limitada a 1080p/60 para reduzir carga de fluxos adaptativos. Diagnóstico de FPS agora mede quadros processados pelo decoder e mostra o FPS do formato como alternativa.
 - Página inicial: pôsteres maiores para filmes, séries e Continue; canais com logo ampliado; foco ampliado; barra de progresso em Continue; rolagem vertical.
+- Home: borda de foco retangular nos cards de canais, filmes, séries e Continue. Ajustes: botão “Apagar dados” limpa progresso e caches; a conta e o PIN parental ficam salvos.
 - Validação local do layout: XML e referências válidos. Build/lint/test bloqueados pela ausência do Android SDK; não há testes locais no app.
 
 ## Falta
+- Conferir o Actions desta alteração.
+- No TX9, confirmar que a borda quadrada envolve capa e título, e testar “Apagar dados” com Cancelar e Apagar.
 - Conferir o Actions do diagnóstico de FPS.
 - No TX9, testar a Home: tamanho e corte das capas, foco D-pad, rolagem horizontal/vertical e "Ver mais".
 - Atualizar automaticamente e testar um canal ao vivo; conferir o FPS medido e se o movimento melhorou.

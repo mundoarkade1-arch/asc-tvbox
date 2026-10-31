@@ -33,6 +33,7 @@ import java.util.Locale;
  * - Sobre o aplicativo: versão instalada.
  * - Verificar atualização: procura uma versão nova. Se achar, a mesma linha passa a
  *   "Instalar atualização" e OK instala.
+ * - Apagar dados: limpa histórico, progresso e caches; preserva o login e o controle parental.
  *
  * A lista controla o foco (as linhas ficam com setFocusable(false)), como nas outras telas.
  */
@@ -43,7 +44,8 @@ public class SettingsActivity extends Activity {
     private static final int ROW_DEVICE = 2;
     private static final int ROW_APP = 3;
     private static final int ROW_UPDATE = 4;
-    private static final int ROW_COUNT = 5;
+    private static final int ROW_CLEAR_DATA = 5;
+    private static final int ROW_COUNT = 6;
 
     private static final int COLOR_WHITE = 0xFFFFFFFF;
     private static final int COLOR_ERROR = 0xFFFF6B78;
@@ -106,6 +108,8 @@ public class SettingsActivity extends Activity {
                 return "Sobre o dispositivo";
             case ROW_APP:
                 return "Sobre o aplicativo";
+            case ROW_CLEAR_DATA:
+                return "Apagar dados";
             default:
                 return pendingUpdate != null ? "Instalar atualização" : "Verificar atualização";
         }
@@ -125,10 +129,39 @@ public class SettingsActivity extends Activity {
             case ROW_APP:
                 showDetail(appText(), COLOR_WHITE);
                 break;
+            case ROW_CLEAR_DATA:
+                confirmClearData();
+                break;
             default:
                 checkOrInstallUpdate();
                 break;
         }
+    }
+
+    private void confirmClearData() {
+        AlertDialog dialog = new AlertDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+                .setMessage("Isso apaga tudo: continuar assistindo, assistidos e favoritos. "
+                        + "Deseja continuar?")
+                .setNegativeButton("Cancelar", (d, which) -> d.dismiss())
+                .setPositiveButton("Apagar", (d, which) -> clearUsageData())
+                .create();
+        dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_NEGATIVE).requestFocus());
+        dialog.show();
+    }
+
+    private void clearUsageData() {
+        ContinueStore.clear(this);
+        PlaybackProgress.clear(this);
+        SeriesProgress.clear(this);
+        SearchIndex.clear(this);
+        ImageLoader.clear();
+        EpgCache.clear();
+
+        Toast.makeText(this, "Dados de uso apagados.", Toast.LENGTH_SHORT).show();
+        Intent home = new Intent(this, HomeActivity.class);
+        home.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(home);
+        finish();
     }
 
     private void showDetail(String text, int color) {

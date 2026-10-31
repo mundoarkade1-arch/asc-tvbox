@@ -492,3 +492,12 @@
 - Motivo: priorizar capas legíveis e não reduzir as imagens para manter todas as fileiras fixas na tela.
 - Imagens continuam usando o ImageLoader próprio, com cache e redução; nenhuma dependência nova.
 - XML e referências de recursos validados. Build/lint/test locais bloqueados pela ausência do Android SDK; não há testes locais no app. Teste no TX9 pendente.
+
+## 31/10/2026 - Foco quadrado e apagar dados de uso
+
+- Decisão: os cards de canal, filme, série e Continue usam contorno de foco retangular, cobrindo o card inteiro. A imagem continua com cantos arredondados próprios; o foco e a escala 1,05 são mantidos.
+- Decisão: Ajustes ganha a opção "Apagar dados" com confirmação. O foco inicial da janela fica em "Cancelar". Confirmando, apaga ContinueStore, progresso/histórico de vídeo e séries, índice de busca, cache de imagens e EPG; mostra toast e retorna à Home para recarregar a faixa Continue.
+- Dados preservados: CredentialStore (login/servidor/lista M3U) e ParentalStore (PIN e configuração parental), pois não são dados de uso que o dono pediu para apagar.
+- Favoritos: não existe implementação nem armazenamento de favoritos no app; nenhum dado de favorito é criado ou apagado. O texto pedido na confirmação foi mantido.
+- O cache de APKs do Updater não é apagado: não contém histórico de visualização nem lista do usuário, e preservá-lo evita interromper uma atualização em andamento.
+- Nenhuma dependência nova. Confirmar no TX9 o foco inicial, Cancelar, Apagar, retorno à Home e rolagem D-pad.

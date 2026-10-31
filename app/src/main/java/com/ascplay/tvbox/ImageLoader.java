@@ -107,6 +107,9 @@ public final class ImageLoader {
     /** Libera a memória das imagens (chamar quando a tela sair de cena ou faltar memória). */
     public static void clear() {
         CACHE.evictAll();
+        synchronized (FAILED) {
+            FAILED.clear();
+        }
     }
 
     // ---------- Download e redução ----------

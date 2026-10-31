@@ -96,6 +96,13 @@ public final class SeriesProgress {
         }
     }
 
+    /** Apaga as posições guardadas das séries. */
+    public static void clear(Context ctx) {
+        if (ctx != null) {
+            ctx.getSharedPreferences(FILE, Context.MODE_PRIVATE).edit().clear().apply();
+        }
+    }
+
     private static long timeOf(Object value) {
         if (!(value instanceof String)) {
             return 0L;

@@ -164,6 +164,13 @@ public final class PlaybackProgress {
         }
     }
 
+    /** Apaga o histórico de reprodução de filmes e episódios. */
+    public static void clear(Context ctx) {
+        if (ctx != null) {
+            ctx.getSharedPreferences(FILE, Context.MODE_PRIVATE).edit().clear().apply();
+        }
+    }
+
     // ---------- Ajudas ----------
 
     private static Map<String, ?> copyWithout(Map<String, ?> all, String removedKey) {
