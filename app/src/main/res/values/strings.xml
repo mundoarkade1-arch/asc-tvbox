@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ASC TV Box</string>
+    <string name="app_name">ASC lite</string>
 
     <string name="login_title">Entrar</string>
     <string name="mode_xtream">Servidor e login</string>
