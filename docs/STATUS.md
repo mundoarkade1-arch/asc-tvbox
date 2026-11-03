@@ -1,10 +1,10 @@
 # Status do projeto
 
-Última atualização: 31/10/2026 (foco quadrado e limpeza de dados implementados; build e TX9 pendentes)
+Última atualização: 03/11/2026 (foco arredondado aplicado na Home; Actions e TX9 pendentes)
 Regras de trabalho: AGENTS.md. Mapa e limites: docs/ARQUIVOS.md. Montagem e versão: docs/ARCHITECTURE.md. Decisões: docs/DECISIONS.md.
 
 ## Fase atual
-O dono testou a identidade ASC lite no TX9 e disse: "tudo funcionando perfeito". A borda de foco dos cards da Home agora é quadrada. Ajustes ganhou confirmação para apagar dados de uso, preservando login e PIN parental. Build, lint e teste no TX9 pendentes; o ambiente local não tem Android SDK.
+O dono testou a identidade ASC lite no TX9 e disse: "tudo funcionando perfeito". A borda de foco dos cards da Home foi alterada para arredondada e para fora do cartão; falta Actions e teste no TX9. Ajustes ganhou confirmação para apagar dados de uso, preservando login e PIN parental. Build, lint e teste no TX9 pendentes; o ambiente local não tem Android SDK.
 
 ## Já feito
 - Base e rodadas anteriores, M6, M9, M10, M12, R4-1, R4-2 e páginas de filme e série: testadas no TX9.

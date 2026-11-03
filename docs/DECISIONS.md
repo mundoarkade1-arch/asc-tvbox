@@ -501,3 +501,9 @@
 - Favoritos: não existe implementação nem armazenamento de favoritos no app; nenhum dado de favorito é criado ou apagado. O texto pedido na confirmação foi mantido.
 - O cache de APKs do Updater não é apagado: não contém histórico de visualização nem lista do usuário, e preservá-lo evita interromper uma atualização em andamento.
 - Nenhuma dependência nova. Confirmar no TX9 o foco inicial, Cancelar, Apagar, retorno à Home e rolagem D-pad.
+
+## 03/11/2026 - Borda de foco arredondada na Home
+
+- Decisão: os cards da Home voltam a ter borda de foco arredondada, desenhada para fora do cartão.
+- Motivo: pedido do dono; a borda quadrada anterior não era o formato desejado.
+- Nenhuma dependência nova. Confirmar no TX9 com o controle remoto que a borda envolve o cartão sem ser cortada.
