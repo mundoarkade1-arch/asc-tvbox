@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -37,6 +39,17 @@ public class LoginActivity extends Activity {
     private Updater.Info pendingUpdate;
     private boolean downloading = false;
 
+    // Código do aparelho (ligação com o app de gerenciar)
+    private static final long POLL_MS = 8000;
+    private TextView tvCode;
+    private TextView tvLinkStatus;
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final Runnable pollTask = this::pollNow;
+    private volatile boolean resumed = false;
+    private boolean linkScreen = false;
+    private boolean forceLogin = false;
+    private boolean pollRunning = false;
+
     private String mode = CredentialStore.MODE_XTREAM;
     private boolean busy = false;
 
@@ -47,8 +60,10 @@ public class LoginActivity extends Activity {
         // Já existe login salvo? Vai direto para a página inicial.
         // (O botão "Trocar login" da página inicial pede para mostrar esta tela.)
         CredentialStore.Credentials saved = CredentialStore.load(this);
-        boolean forceLogin = getIntent().getBooleanExtra(HomeActivity.EXTRA_SHOW_LOGIN, false);
+        forceLogin = getIntent().getBooleanExtra(HomeActivity.EXTRA_SHOW_LOGIN, false);
         if (saved != null && !forceLogin) {
+            // Confere em segundo plano se o dono mandou uma lista nova.
+            DeviceLink.syncInBackground(this);
             startActivity(new Intent(this, HomeActivity.class));
             finish();
             return;
@@ -66,6 +81,9 @@ public class LoginActivity extends Activity {
         etPass = findViewById(R.id.et_pass);
         etM3u = findViewById(R.id.et_m3u);
         tvStatus = findViewById(R.id.tv_status);
+        tvCode = findViewById(R.id.tv_code);
+        tvLinkStatus = findViewById(R.id.tv_link_status);
+        linkScreen = true;
 
         groupUpdate = findViewById(R.id.group_update);
         tvUpdate = findViewById(R.id.tv_update);
@@ -105,6 +123,104 @@ public class LoginActivity extends Activity {
         setMode(mode);
 
         checkForUpdate();
+    }
+
+    // ---------- Código do aparelho ----------
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        resumed = true;
+        if (!linkScreen) {
+            return;
+        }
+        // Se a lista chegou enquanto o app estava parado, entra direto.
+        if (!forceLogin && CredentialStore.load(this) != null) {
+            startActivity(new Intent(this, HomeActivity.class));
+            finish();
+            return;
+        }
+        handler.removeCallbacks(pollTask);
+        handler.post(pollTask);
+    }
+
+    @Override
+    protected void onPause() {
+        resumed = false;
+        handler.removeCallbacks(pollTask);
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        handler.removeCallbacks(pollTask);
+        super.onDestroy();
+    }
+
+    private void pollNow() {
+        if (!resumed || pollRunning || isFinishing() || isDestroyed()) {
+            return;
+        }
+        pollRunning = true;
+        final Context app = getApplicationContext();
+        new Thread(() -> {
+            DeviceLink.Reply reply;
+            boolean taken = false;
+            String code = "";
+            try {
+                // Mostra o código logo, mesmo sem internet.
+                code = DeviceLink.getDisplayCode(app);
+                final String first = code;
+                runOnUiThread(() -> showCode(first));
+                reply = DeviceLink.poll(app);
+                code = DeviceLink.getDisplayCode(app);
+                if (reply.state == DeviceLink.State.READY && resumed
+                        && (CredentialStore.load(app) == null || DeviceLink.isNewer(app, reply))) {
+                    DeviceLink.apply(app, reply);
+                    taken = true;
+                }
+            } catch (Exception e) {
+                reply = new DeviceLink.Reply(DeviceLink.State.OFFLINE, 0, null);
+            }
+            final DeviceLink.Reply r = reply;
+            final boolean didTake = taken;
+            final String finalCode = code;
+            runOnUiThread(() -> onLinkReply(r, didTake, finalCode));
+        }).start();
+    }
+
+    private void showCode(String code) {
+        if (isFinishing() || isDestroyed() || tvCode == null) {
+            return;
+        }
+        tvCode.setText(code);
+    }
+
+    private void onLinkReply(DeviceLink.Reply r, boolean taken, String code) {
+        pollRunning = false;
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
+        showCode(code);
+        if (taken) {
+            tvLinkStatus.setTextColor(COLOR_OK);
+            tvLinkStatus.setText(R.string.link_received);
+            startActivity(new Intent(this, HomeActivity.class));
+            finish();
+            return;
+        }
+        tvLinkStatus.setTextColor(0xFFB8ADB1);
+        if (r.state == DeviceLink.State.WAITING) {
+            tvLinkStatus.setText(R.string.link_waiting);
+        } else if (r.state == DeviceLink.State.OFFLINE) {
+            tvLinkStatus.setText(R.string.link_offline);
+        } else {
+            tvLinkStatus.setText("");
+        }
+        if (resumed) {
+            handler.removeCallbacks(pollTask);
+            handler.postDelayed(pollTask, POLL_MS);
+        }
     }
 
     // ---------- Atualização automática ----------
