@@ -182,6 +182,21 @@ public final class DeviceLink {
     }
 
     /**
+     * Testa a lista recebida ANTES de usar (para uma lista com defeito não
+     * trocar um login que funciona). Faz rede: só em thread de fundo.
+     */
+    public static LoginChecker.Result verify(Reply reply) {
+        if (reply == null || reply.creds == null) {
+            return LoginChecker.Result.UNKNOWN;
+        }
+        CredentialStore.Credentials c = reply.creds;
+        if (CredentialStore.MODE_M3U.equals(c.mode)) {
+            return LoginChecker.checkM3u(c.m3uUrl);
+        }
+        return LoginChecker.checkXtream(c.server, c.user, c.pass);
+    }
+
+    /**
      * Para quando o app abre com login já salvo: confere em segundo plano
      * se o dono mandou uma lista nova. Vale na próxima vez que o app abrir.
      */
@@ -190,7 +205,7 @@ public final class DeviceLink {
         new Thread(() -> {
             try {
                 Reply r = poll(app);
-                if (isNewer(app, r)) {
+                if (isNewer(app, r) && verify(r) == LoginChecker.Result.OK) {
                     apply(app, r);
                 }
             } catch (Exception ignored) {
