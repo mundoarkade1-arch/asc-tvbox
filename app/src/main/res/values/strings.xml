@@ -29,4 +29,11 @@
     <string name="msg_downloading">Baixando atualização... %1$d%%</string>
     <string name="msg_downloading_unknown">Baixando atualização...</string>
     <string name="msg_installer_opened">Abrindo o instalador...</string>
+
+    <string name="link_code_label">Código deste aparelho</string>
+    <string name="link_code_help">Mande uma foto deste código para o seu fornecedor. Quando ele colocar a sua lista, o app entra sozinho.</string>
+    <string name="link_waiting">Aguardando a sua lista...</string>
+    <string name="link_offline">Sem internet. Confira a conexão do aparelho.</string>
+    <string name="link_received">Lista recebida! Entrando...</string>
+    <string name="link_or_manual">Ou entre com os seus dados:</string>
 </resources>
