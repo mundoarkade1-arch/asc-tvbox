@@ -508,12 +508,22 @@
 - Motivo: pedido do dono; a borda quadrada anterior não era o formato desejado.
 - Nenhuma dependência nova. Confirmar no TX9 com o controle remoto que a borda envolve o cartão sem ser cortada.
 
-## R5 (08/11/2026)
-- Decisão (do dono): cards maiores e nomes maiores para ler de longe. Canais: 3 por fileira; filmes e séries: 4 por fileira. Motivo: pôster é alto; com 3 caberia só uma fileira e meia. Trocar o número em setNumColumns de BrowseActivity, M3uBrowseActivity e SearchActivity.
-- Decisão: arquivo novo item_card_live.xml para canais; item_card.xml ficou só para pôsteres. Motivo: o item_card.xml era dividido entre canais e pôsteres e precisavam de formatos diferentes.
-- Decisão (do dono): capa de filme e série enche o card (centerCrop, 260dp, cantos arredondados), como na Home. Motivo: com fitCenter sobravam faixas dos lados.
-- Decisão (do dono): canais ao vivo mostram "Agora: ..." e "A seguir: ..." (tv_now e tv_next), só em canais. Usa o epg.nextTitle que o EpgCache já traz; sem pedido novo ao servidor.
-- Decisão (do dono): categorias de A a Z (Collator pt-BR, nível PRIMARY) e adultas no fim. Motivo: criança não deve ver conteúdo adulto no começo da lista. Só ordem; a senha continua dependendo do controle parental ligado.
-- Decisão (do dono): faixa de canais da Home mostra a categoria "Jogos do dia" (até 20), achada pelo nome. Só no login por servidor; na lista M3U exigiria ler a lista inteira (1 GB de RAM).
-- Decisão: LoginActivity.pollNow passa a testar a lista remota (DeviceLink.verify) antes de aplicar. Motivo: uma lista com defeito entrava sem teste e a Home ficava com "Não foi possível carregar". DeviceLink.lastDetail mostra o motivo na tela de login, sem senha nem endereço (só código HTTP e tamanhos).
-- Aberto: o dono diz que, depois de mudanças de segurança no Supabase / ASC Admin (fora deste repositório), a lista remota não entra direto. A causa ainda não foi confirmada; aguarda a frase da tela de login.
+## 08/11/2026: Menu pequeno e colorido, foco inicial na Home, teclado do login
+- Decisão: menu à esquerda de 110dp para 72dp, botões de 54dp com fundo colorido (uma cor por botão, cantos arredondados). \"Tela inicial\" virou \"Início\" para caber. Motivo: pedido do dono (\"muito grande, arcaico, queria pequenininho e colorido\").
+- Decisão: o foco inicial da Home vai para o primeiro cartão da faixa mais alta (Continue, senão Canais). Antes ia para a faixa que carregasse primeiro (Filmes/Séries). Se uma faixa mais alta chega depois, o foco sobe, mas só até a pessoa apertar uma seta.
+- Decisão: no login, os campos usam flagNoExtractUi (teclado não ocupa a tela toda) e, ao focar um campo, a tela abre um espaço extra embaixo e rola o campo para o alto, acima do teclado.
+- Dependências: nenhuma nova. Não testado no TX9 nem no Actions (sem Android SDK aqui).
+
+## 08/11/2026: Menu passa para o alto, ícones novos
+- Decisão: o dono não gostou do menu lateral colorido. O menu virou uma barra no alto (marca, Início, Canais, Filmes, Séries, e Ajustes e Atualizar à direita), só nas cores do app (vermelho). Os bg_nav_<cor>.xml foram trocados por um bg_nav_tab.xml.
+- Decisão: ícones novos, cheios e arredondados, pintados por tint com o mesmo seletor de cores do texto (nav_text).
+- Motivo: pedido do dono; a barra no alto libera a largura da tela para os cartões.
+
+## 08/11/2026: Jogos do dia na Home e ordem do servidor
+- Decisão: a faixa de canais da Home mostra a categoria de jogos do dia (servidor), achada pelo nome, como no app original. Sem ela, volta aos canais em geral. Motivo: pedido do dono; a Home mostrava só os primeiros canais de qualquer categoria.
+- Decisão: sem ordenação própria de canais, filmes ou séries: vale a ordem do servidor. Única exceção: categorias adultas vão para o fim da lista de categorias (aba do servidor). Motivo: pedido do dono (a organização anterior ficou pior).
+
+## 08/11/2026: Menu volta para a esquerda, no alto, com ícones coloridos
+- Decisão: a barra superior foi desfeita. O menu voltou à esquerda (80dp), com os botões colados no alto da coluna (não centralizados), no vermelho do app (o mesmo fundo do bg_button). Motivo: pedido do dono (\"não colorido, na esquerda, tudo para cima\").
+- Decisão: os ícones são vetores coloridos de cores fixas (casa, TV, claquete, séries, ajustes, atualizar), sem vermelho para não sumir sobre o botão vermelho. Motivo: pedido do dono (\"ícones mais atuais e coloridos\").
+
