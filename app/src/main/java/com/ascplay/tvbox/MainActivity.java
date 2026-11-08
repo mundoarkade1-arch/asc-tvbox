@@ -153,6 +153,7 @@ public class MainActivity extends Activity {
 
     private PlayerView playerView;
     private TextView status;
+    private View loadingSpinner;
     private ExoPlayer player;
 
     private CredentialStore.Credentials creds;
@@ -255,6 +256,7 @@ public class MainActivity extends Activity {
 
         playerView = findViewById(R.id.player_view);
         status = findViewById(R.id.status);
+        loadingSpinner = findViewById(R.id.loading_spinner);
 
         makeControllerTransparent();
         createSkipButton();
@@ -942,6 +944,7 @@ public class MainActivity extends Activity {
                     showStatus("Carregando...");
                 } else if (state == Player.STATE_READY) {
                     status.setVisibility(View.GONE);
+                    loadingSpinner.setVisibility(View.GONE);
                     saveProgress();
                     if (!nowbarShownOnce) {
                         nowbarShownOnce = true;
@@ -1158,6 +1161,13 @@ public class MainActivity extends Activity {
     }
 
     private void showStatus(String text) {
+        if ("Carregando...".equals(text)) {
+            // Em vez do texto no alto, mostra a bolinha girando no centro da tela
+            status.setVisibility(View.GONE);
+            loadingSpinner.setVisibility(View.VISIBLE);
+            return;
+        }
+        loadingSpinner.setVisibility(View.GONE);
         status.setText(text);
         status.setVisibility(View.VISIBLE);
     }
