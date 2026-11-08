@@ -242,7 +242,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:textColor="#4ADE80"
-                        android:textSize="18sp"
+                        android:textSize="22sp"
                         android:textStyle="bold" />
 
                     <Button
@@ -257,7 +257,7 @@
                         android:text="@string/btn_update_now"
                         android:textAllCaps="false"
                         android:textColor="#FFFFFF"
-                        android:textSize="18sp"
+                        android:textSize="22sp"
                         android:textStyle="bold" />
 
                     <Button
@@ -289,12 +289,12 @@
                         android:layout_height="wrap_content"
                         android:text="Continue assistindo"
                         android:textColor="#F7F3F4"
-                        android:textSize="18sp"
+                        android:textSize="22sp"
                         android:textStyle="bold" />
 
                     <HorizontalScrollView
                         android:layout_width="match_parent"
-                        android:layout_height="280dp"
+                        android:layout_height="350dp"
                         android:clipChildren="false"
                         android:clipToPadding="false"
                         android:paddingStart="8dp"
@@ -324,7 +324,7 @@
                         android:layout_height="wrap_content"
                         android:text="Canais ao vivo"
                         android:textColor="#F7F3F4"
-                        android:textSize="18sp"
+                        android:textSize="22sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -337,7 +337,7 @@
 
                     <HorizontalScrollView
                         android:layout_width="match_parent"
-                        android:layout_height="200dp"
+                        android:layout_height="260dp"
                         android:clipChildren="false"
                         android:clipToPadding="false"
                         android:paddingStart="8dp"
@@ -367,7 +367,7 @@
                         android:layout_height="wrap_content"
                         android:text="Filmes"
                         android:textColor="#F7F3F4"
-                        android:textSize="18sp"
+                        android:textSize="22sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -380,7 +380,7 @@
 
                     <HorizontalScrollView
                         android:layout_width="match_parent"
-                        android:layout_height="280dp"
+                        android:layout_height="350dp"
                         android:clipChildren="false"
                         android:clipToPadding="false"
                         android:paddingStart="8dp"
@@ -410,7 +410,7 @@
                         android:layout_height="wrap_content"
                         android:text="Séries"
                         android:textColor="#F7F3F4"
-                        android:textSize="18sp"
+                        android:textSize="22sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -423,7 +423,7 @@
 
                     <HorizontalScrollView
                         android:layout_width="match_parent"
-                        android:layout_height="280dp"
+                        android:layout_height="350dp"
                         android:clipChildren="false"
                         android:clipToPadding="false"
                         android:paddingStart="8dp"
