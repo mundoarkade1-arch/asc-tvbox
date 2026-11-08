@@ -89,6 +89,7 @@ public class SearchActivity extends Activity {
 
         gvItems.setHorizontalSpacing(dp(10));
         gvItems.setVerticalSpacing(dp(10));
+        gvItems.setNumColumns(kind == XtreamApi.Kind.LIVE ? 3 : 4);
         itemAdapter = new ItemAdapter();
         gvItems.setAdapter(itemAdapter);
         gvItems.setOnItemClickListener((parent, view, position, id) -> {
@@ -270,7 +271,8 @@ public class SearchActivity extends Activity {
             View card = convertView;
             if (card == null) {
                 card = LayoutInflater.from(SearchActivity.this)
-                        .inflate(R.layout.item_card, parent, false);
+                        .inflate(kind == XtreamApi.Kind.LIVE
+                                ? R.layout.item_card_live : R.layout.item_card, parent, false);
                 card.setFocusable(false);
                 card.setClickable(false);
             }
