@@ -41,8 +41,9 @@ jobs:
             echo "HAS_KEY=true" >> "$GITHUB_ENV"
           else
             echo "::warning::Sem chave nos Secrets. APK so para teste: nao sera publicado."
-            keytool -genkeypair -keystore release.keystore -storepass android -keypass android -alias key0 -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=ASC TV Box teste"
-            KS_PASS=android; KS_ALIAS=key0; KEY_PASS=android
+            TMP_PASS=$(openssl rand -hex 16)
+            keytool -genkeypair -keystore release.keystore -storepass "$TMP_PASS" -keypass "$TMP_PASS" -alias key0 -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=ASC TV Box teste"
+            KS_PASS="$TMP_PASS"; KS_ALIAS=key0; KEY_PASS="$TMP_PASS"
           fi
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n1)
           IN=$(ls app/build/outputs/apk/release/*.apk | head -n1)
