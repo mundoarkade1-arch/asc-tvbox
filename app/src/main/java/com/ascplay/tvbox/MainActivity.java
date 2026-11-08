@@ -907,6 +907,8 @@ public class MainActivity extends Activity {
                 .setMediaSourceFactory(new DefaultMediaSourceFactory(http))
                 .build();
         playerView.setPlayer(player);
+        // Canal ao vivo não tem pausa: sem botão de pause. Só filme e episódio têm controles.
+        playerView.setUseController(item == null || item.kind != XtreamApi.Kind.LIVE);
         playerView.requestFocus();
 
         // Diagnóstico: guarda o nome do decodificador de vídeo que o aparelho escolheu
