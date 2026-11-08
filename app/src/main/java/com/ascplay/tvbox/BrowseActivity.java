@@ -79,7 +79,7 @@ public class BrowseActivity extends Activity {
     private ItemAdapter itemAdapter;
 
     // Programa de agora de cada canal já consultado nesta categoria (id do canal -> texto).
-    private final Map<String, String> nowText = new HashMap<>();
+    private final Map<String, String[]> nowText = new HashMap<>();
     private final Set<String> nowAsked = new HashSet<>();
 
     private String currentCat = null;
@@ -128,6 +128,8 @@ public class BrowseActivity extends Activity {
         lvCategories.setDividerHeight(dp(6));
         gvItems.setHorizontalSpacing(dp(10));
         gvItems.setVerticalSpacing(dp(10));
+        // Canais: 3 cards por fileira (maiores). Filmes e séries: 4.
+        gvItems.setNumColumns(kind == XtreamApi.Kind.LIVE ? 3 : 4);
 
         // Botão "Pesquisar" fixo: sempre à vista, acima da lista de categorias (R4-1).
         // Foco: do botão, baixo vai à lista; do alto da lista, cima volta ao botão.
@@ -588,15 +590,18 @@ public class BrowseActivity extends Activity {
      * Escreve na linha do cartão o programa de agora. Usa o que já foi consultado;
      * se ainda não foi, pede ao servidor uma única vez por canal.
      */
-    private void showNow(final XtreamApi.Item item, final TextView now) {
+    private void showNow(final XtreamApi.Item item, final TextView now, final TextView next) {
         now.setTag(item.id);
         now.setVisibility(View.VISIBLE);
-        String known = nowText.get(item.id);
+        next.setVisibility(View.VISIBLE);
+        String[] known = nowText.get(item.id);
         if (known != null) {
-            now.setText(known);
+            now.setText(known[0]);
+            next.setText(known[1]);
             return;
         }
         now.setText("");
+        next.setText("");
         if (!nowAsked.add(item.id)) {
             return; // já pedido: a resposta vai preencher o cartão quando chegar
         }
@@ -605,10 +610,19 @@ public class BrowseActivity extends Activity {
             if (isFinishing() || isDestroyed() || myGen != gen) {
                 return;
             }
-            String text = epg == null ? "Programação indisponível" : "Agora: " + epg.title;
+            String[] text = new String[2];
+            if (epg == null) {
+                text[0] = "Programação indisponível";
+                text[1] = "";
+            } else {
+                text[0] = "Agora: " + epg.title;
+                text[1] = (epg.nextTitle == null || epg.nextTitle.isEmpty())
+                        ? "" : "A seguir: " + epg.nextTitle;
+            }
             nowText.put(item.id, text);
             if (item.id.equals(now.getTag())) {
-                now.setText(text);
+                now.setText(text[0]);
+                next.setText(text[1]);
             }
         });
     }
@@ -692,7 +706,8 @@ public class BrowseActivity extends Activity {
             View card = convertView;
             if (card == null) {
                 card = LayoutInflater.from(BrowseActivity.this)
-                        .inflate(R.layout.item_card, parent, false);
+                        .inflate(kind == XtreamApi.Kind.LIVE
+                                ? R.layout.item_card_live : R.layout.item_card, parent, false);
                 card.setFocusable(false);
                 card.setClickable(false);
             }
@@ -702,11 +717,13 @@ public class BrowseActivity extends Activity {
             ImageLoader.load((ImageView) card.findViewById(R.id.iv_logo), item.icon);
 
             TextView now = card.findViewById(R.id.tv_now);
+            TextView next = card.findViewById(R.id.tv_next);
             if (item.kind == XtreamApi.Kind.LIVE) {
-                showNow(item, now);
+                showNow(item, now, next);
             } else {
                 now.setTag(null);
                 now.setVisibility(View.GONE);
+                next.setVisibility(View.GONE);
             }
             return card;
         }
