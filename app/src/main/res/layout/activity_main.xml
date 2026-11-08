@@ -48,12 +48,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="#00000000"
+        android:background="@drawable/bg_nowbar_scrim"
         android:clickable="false"
         android:focusable="false"
         android:orientation="horizontal"
         android:paddingStart="48dp"
-        android:paddingTop="14dp"
+        android:paddingTop="56dp"
         android:paddingEnd="48dp"
         android:paddingBottom="22dp"
         android:visibility="gone">
@@ -70,12 +70,12 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:textColor="#A99FA3"
+                android:textColor="#E6DDE0"
                 android:shadowColor="#E6000000"
                 android:shadowDx="0"
                 android:shadowDy="1"
                 android:shadowRadius="6"
-                android:textSize="18sp" />
+                android:textSize="24sp" />
 
             <TextView
                 android:id="@+id/tv_nb_title"
@@ -88,7 +88,7 @@
                 android:shadowDx="0"
                 android:shadowDy="1"
                 android:shadowRadius="6"
-                android:textSize="26sp"
+                android:textSize="34sp"
                 android:textStyle="bold" />
 
             <LinearLayout
@@ -107,20 +107,20 @@
                     android:shadowDx="0"
                     android:shadowDy="1"
                     android:shadowRadius="6"
-                    android:textSize="18sp" />
+                    android:textSize="24sp" />
 
                 <ProgressBar
                     android:id="@+id/pb_nowbar"
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="0dp"
-                    android:layout_height="8dp"
-                    android:layout_marginStart="12dp"
-                    android:layout_marginEnd="12dp"
+                    android:layout_height="6dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
                     android:layout_weight="1"
                     android:max="100"
                     android:progress="0"
-                    android:progressTint="#FF2A3D"
-                    android:progressBackgroundTint="#4A4245" />
+                    android:progressTint="#FFFFFF"
+                    android:progressBackgroundTint="#66FFFFFF" />
 
                 <TextView
                     android:id="@+id/tv_nb_end"
@@ -131,7 +131,7 @@
                     android:shadowDx="0"
                     android:shadowDy="1"
                     android:shadowRadius="6"
-                    android:textSize="18sp" />
+                    android:textSize="24sp" />
             </LinearLayout>
         </LinearLayout>
 
@@ -145,12 +145,12 @@
             android:ellipsize="end"
             android:gravity="end"
             android:maxLines="2"
-            android:textColor="#A99FA3"
+            android:textColor="#E6DDE0"
             android:shadowColor="#E6000000"
             android:shadowDx="0"
             android:shadowDy="1"
             android:shadowRadius="6"
-            android:textSize="20sp" />
+            android:textSize="26sp" />
     </LinearLayout>
 
 </FrameLayout>
