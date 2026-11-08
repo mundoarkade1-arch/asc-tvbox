@@ -66,6 +66,8 @@ public class HomeActivity extends Activity {
     public static final String EXTRA_SHOW_LOGIN = "show_login";
 
     private static final int LIMIT = 10;
+    /** Quantos jogos mostrar na faixa "Jogos do dia". */
+    private static final int LIMIT_GAMES = 20;
     private static final int COLOR_NEUTRAL = 0xFFA99FA3;
     private static final int COLOR_ERROR = 0xFFFF6B78;
     private static final int COLOR_OK = 0xFF4ADE80;
@@ -79,6 +81,7 @@ public class HomeActivity extends Activity {
     private LinearLayout railMovie;
     private LinearLayout railSeries;
     private TextView stLive;
+    private TextView tvLiveTitle;
     private TextView stMovie;
     private TextView stSeries;
 
@@ -142,6 +145,7 @@ public class HomeActivity extends Activity {
         railMovie = findViewById(R.id.rail_movie);
         railSeries = findViewById(R.id.rail_series);
         stLive = findViewById(R.id.st_live);
+        tvLiveTitle = findViewById(R.id.tv_live_title);
         stMovie = findViewById(R.id.st_movie);
         stSeries = findViewById(R.id.st_series);
 
@@ -486,18 +490,58 @@ public class HomeActivity extends Activity {
         final int gen = railGen;
         new Thread(() -> {
             List<XtreamApi.Item> items = null;
+            boolean games = false;
             try {
-                items = XtreamApi.items(server, user, pass, kind, null, LIMIT);
+                if (kind == XtreamApi.Kind.LIVE) {
+                    // Procura a categoria "Jogos do dia" (ou parecida) e mostra ela na faixa.
+                    String gamesId = null;
+                    try {
+                        for (XtreamApi.Category c : XtreamApi.categories(server, user, pass, kind)) {
+                            if (isGamesCategory(c.name)) {
+                                gamesId = c.id;
+                                break;
+                            }
+                        }
+                    } catch (Exception e) {
+                        // sem categorias: segue com os canais de sempre
+                    }
+                    if (gamesId != null) {
+                        List<XtreamApi.Item> g =
+                                XtreamApi.items(server, user, pass, kind, gamesId, LIMIT_GAMES);
+                        if (g != null && !g.isEmpty()) {
+                            items = g;
+                            games = true;
+                        }
+                    }
+                }
+                if (items == null) {
+                    items = XtreamApi.items(server, user, pass, kind, null, LIMIT);
+                }
             } catch (Exception e) {
                 // sem rede, servidor fora do ar ou resposta estranha: mostra aviso abaixo
             }
             final List<XtreamApi.Item> result = items;
+            final boolean showGames = games;
             runOnUiThread(() -> {
                 if (gen == railGen) {
+                    if (kind == XtreamApi.Kind.LIVE) {
+                        tvLiveTitle.setText(showGames ? "Jogos do dia" : "Canais ao vivo");
+                    }
                     showRail(kind, result, rail, status);
                 }
             });
         }).start();
+    }
+
+    /** O nome da categoria parece "Jogos do dia" (ou "Jogos de hoje")? */
+    private static boolean isGamesCategory(String name) {
+        if (name == null) {
+            return false;
+        }
+        String n = java.text.Normalizer.normalize(name, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "").toLowerCase(Locale.ROOT);
+        return n.contains("jogos do dia") || n.contains("jogo do dia")
+                || n.contains("jogos de hoje") || n.contains("jogos hoje");
     }
 
     /** Lista M3U: uma única leitura da lista traz os 10 primeiros de cada tipo. */
