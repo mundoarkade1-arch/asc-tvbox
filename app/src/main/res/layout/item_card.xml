@@ -7,12 +7,13 @@
     android:clickable="true"
     android:focusable="true"
     android:orientation="vertical"
-    android:padding="6dp">
+    android:padding="3dp">
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:background="@drawable/bg_poster">
+        android:layout_height="260dp"
+        android:background="@drawable/bg_home_image"
+        android:clipToOutline="true">
 
         <TextView
             android:id="@+id/tv_initial"
@@ -28,8 +29,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:contentDescription="@null"
-            android:padding="4dp"
-            android:scaleType="fitCenter" />
+            android:scaleType="centerCrop" />
     </FrameLayout>
 
     <TextView
