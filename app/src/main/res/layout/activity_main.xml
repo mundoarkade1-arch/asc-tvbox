@@ -9,7 +9,7 @@
         android:id="@+id/player_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:show_buffering="when_playing"
+        app:show_buffering="never"
         app:show_timeout="3000"
         app:show_rewind_button="false"
         app:show_fastforward_button="false"
@@ -32,12 +32,23 @@
         android:textSize="20sp"
         android:visibility="gone" />
 
+    <ProgressBar
+        android:id="@+id/loading_spinner"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_gravity="center"
+        android:focusable="false"
+        android:indeterminate="true"
+        android:indeterminateDrawable="@drawable/spinner_red"
+        android:indeterminateOnly="true"
+        android:visibility="gone" />
+
     <LinearLayout
         android:id="@+id/group_nowbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="#CC161214"
+        android:background="#00000000"
         android:clickable="false"
         android:focusable="false"
         android:orientation="horizontal"
@@ -60,6 +71,10 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:textColor="#A99FA3"
+                android:shadowColor="#E6000000"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="6"
                 android:textSize="18sp" />
 
             <TextView
@@ -69,6 +84,10 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:textColor="#FFFFFF"
+                android:shadowColor="#E6000000"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="6"
                 android:textSize="26sp"
                 android:textStyle="bold" />
 
@@ -84,6 +103,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="#F7F3F4"
+                    android:shadowColor="#E6000000"
+                    android:shadowDx="0"
+                    android:shadowDy="1"
+                    android:shadowRadius="6"
                     android:textSize="18sp" />
 
                 <ProgressBar
@@ -104,6 +127,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="#F7F3F4"
+                    android:shadowColor="#E6000000"
+                    android:shadowDx="0"
+                    android:shadowDy="1"
+                    android:shadowRadius="6"
                     android:textSize="18sp" />
             </LinearLayout>
         </LinearLayout>
@@ -119,6 +146,10 @@
             android:gravity="end"
             android:maxLines="2"
             android:textColor="#A99FA3"
+            android:shadowColor="#E6000000"
+            android:shadowDx="0"
+            android:shadowDy="1"
+            android:shadowRadius="6"
             android:textSize="20sp" />
     </LinearLayout>
 
