@@ -54,6 +54,9 @@ public final class DeviceLink {
         }
     }
 
+    /** Texto curto para o dono ver na tela de login o que deu errado (sem senhas). */
+    public static volatile String lastDetail = "";
+
     private DeviceLink() {
     }
 
@@ -114,6 +117,7 @@ public final class DeviceLink {
      */
     public static synchronized Reply poll(Context context) {
         SharedPreferences p = ensureIdentity(context);
+        lastDetail = "";
         for (int attempt = 0; attempt < 3; attempt++) {
             String reg = rpc("register_device", body(p));
             if (reg == null) {
@@ -151,11 +155,17 @@ public final class DeviceLink {
                 String user = str(o, "user");
                 String pass = str(o, "pass");
                 String origin = LoginChecker.normalizeServer(server);
+                lastDetail = "Servidor " + (origin != null ? "ok" : "invalido")
+                        + ", usuario " + user.length() + " letras, senha " + pass.length()
+                        + " letras.";
                 if (origin != null && !user.isEmpty() && !pass.isEmpty()) {
                     c = new CredentialStore.Credentials(mode, origin, user, pass, "");
                 }
             }
             if (c == null) {
+                if (lastDetail.isEmpty()) {
+                    lastDetail = "Lista incompleta (modo: " + mode + ").";
+                }
                 // Lista incompleta: espera o dono corrigir.
                 return new Reply(State.WAITING, 0, null);
             }
@@ -256,7 +266,9 @@ public final class DeviceLink {
             } finally {
                 os.close();
             }
-            if (conn.getResponseCode() != 200) {
+            int httpCode = conn.getResponseCode();
+            if (httpCode != 200) {
+                lastDetail = "Erro " + httpCode + " em " + function + ".";
                 return null;
             }
             InputStream in = conn.getInputStream();
@@ -276,8 +288,10 @@ public final class DeviceLink {
                 in.close();
             }
         } catch (IOException e) {
+            lastDetail = "Falha de rede em " + function + ".";
             return null;
         } catch (Exception e) {
+            lastDetail = "Falha em " + function + ".";
             return null;
         } finally {
             if (conn != null) {
