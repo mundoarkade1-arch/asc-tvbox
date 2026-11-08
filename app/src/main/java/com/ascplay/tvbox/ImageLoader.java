@@ -33,14 +33,14 @@ public final class ImageLoader {
 
     private static final int MAX_SIDE = 256;
     private static final int MAX_BYTES = 2 * 1024 * 1024;
-    private static final int CACHE_BYTES = 16 * 1024 * 1024;
+    private static final int CACHE_BYTES = 8 * 1024 * 1024;
     private static final int TIMEOUT_MS = 8000;
     private static final int MAX_REDIRECTS = 4;
     private static final int MAX_FAILED = 500;
     private static final String USER_AGENT = "ASC-TVBox/1.0 (Android)";
 
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
-    private static final ExecutorService POOL = Executors.newFixedThreadPool(4);
+    private static final ExecutorService POOL = Executors.newFixedThreadPool(2);
 
     private static final LruCache<String, Bitmap> CACHE =
             new LruCache<String, Bitmap>(CACHE_BYTES) {
