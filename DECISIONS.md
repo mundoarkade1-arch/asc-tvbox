@@ -519,3 +519,7 @@
 - Decisão: ícones novos, cheios e arredondados, pintados por tint com o mesmo seletor de cores do texto (nav_text).
 - Motivo: pedido do dono; a barra no alto libera a largura da tela para os cartões.
 
+## 08/11/2026: Jogos do dia na Home e ordem do servidor
+- Decisão: a faixa de canais da Home mostra a categoria de jogos do dia (servidor), achada pelo nome, como no app original. Sem ela, volta aos canais em geral. Motivo: pedido do dono; a Home mostrava só os primeiros canais de qualquer categoria.
+- Decisão: sem ordenação própria de canais, filmes ou séries: vale a ordem do servidor. Única exceção: categorias adultas vão para o fim da lista de categorias (aba do servidor). Motivo: pedido do dono (a organização anterior ficou pior).
+
