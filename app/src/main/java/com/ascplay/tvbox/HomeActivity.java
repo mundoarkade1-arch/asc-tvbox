@@ -589,9 +589,12 @@ public class HomeActivity extends Activity {
 
             if (item.kind == XtreamApi.Kind.LIVE && xtream) {
                 TextView now = card.findViewById(R.id.tv_now);
+                TextView next = card.findViewById(R.id.tv_next);
                 now.setText("");
                 now.setVisibility(View.VISIBLE);
-                loadNow(item, now);
+                next.setText("");
+                next.setVisibility(View.VISIBLE);
+                loadNow(item, now, next);
                 setHomeCardFocus(card, (v, hasFocus) -> {
                     if (hasFocus) {
                         focusedLive = item;
@@ -657,15 +660,18 @@ public class HomeActivity extends Activity {
     }
 
     /** Pede ao servidor o programa de agora e escreve na linha do cartão. */
-    private void loadNow(XtreamApi.Item item, final TextView now) {
+    private void loadNow(XtreamApi.Item item, final TextView now, final TextView next) {
         EpgCache.get(creds.server, creds.user, creds.pass, item.id, epg -> {
             if (isFinishing() || isDestroyed()) {
                 return;
             }
             if (epg == null) {
                 now.setText("Programação indisponível");
+                next.setText("");
             } else {
                 now.setText("Agora: " + epg.title);
+                next.setText(epg.nextTitle == null || epg.nextTitle.isEmpty()
+                        ? "" : "A seguir: " + epg.nextTitle);
             }
         });
     }
