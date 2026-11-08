@@ -351,7 +351,13 @@ public class BrowseActivity extends Activity {
             Toast.makeText(this, "Não foi possível carregar as categorias.",
                     Toast.LENGTH_SHORT).show();
         } else {
-            for (XtreamApi.Category c : res) {
+            // Ordem alfabética (ignora maiúsculas e acentos)
+            final java.text.Collator collator =
+                    java.text.Collator.getInstance(new java.util.Locale("pt", "BR"));
+            collator.setStrength(java.text.Collator.PRIMARY);
+            List<XtreamApi.Category> sorted = new ArrayList<>(res);
+            java.util.Collections.sort(sorted, (a, b) -> collator.compare(a.name, b.name));
+            for (XtreamApi.Category c : sorted) {
                 catIds.add(c.id);
                 catNames.add(c.name);
                 if (parentalOn && ParentalStore.isAdultCategory(c.name)) {
