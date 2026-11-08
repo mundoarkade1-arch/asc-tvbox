@@ -97,7 +97,7 @@
                     android:columnWidth="158dp"
                     android:horizontalSpacing="0dp"
                     android:listSelector="@android:color/transparent"
-                    android:numColumns="5"
+                    android:numColumns="4"
                     android:padding="5dp"
                     android:scrollbars="none"
                     android:stretchMode="columnWidth"
