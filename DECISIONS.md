@@ -514,3 +514,8 @@
 - Decisão: no login, os campos usam flagNoExtractUi (teclado não ocupa a tela toda) e, ao focar um campo, a tela abre um espaço extra embaixo e rola o campo para o alto, acima do teclado.
 - Dependências: nenhuma nova. Não testado no TX9 nem no Actions (sem Android SDK aqui).
 
+## 08/11/2026: Menu passa para o alto, ícones novos
+- Decisão: o dono não gostou do menu lateral colorido. O menu virou uma barra no alto (marca, Início, Canais, Filmes, Séries, e Ajustes e Atualizar à direita), só nas cores do app (vermelho). Os bg_nav_<cor>.xml foram trocados por um bg_nav_tab.xml.
+- Decisão: ícones novos, cheios e arredondados, pintados por tint com o mesmo seletor de cores do texto (nav_text).
+- Motivo: pedido do dono; a barra no alto libera a largura da tela para os cartões.
+
