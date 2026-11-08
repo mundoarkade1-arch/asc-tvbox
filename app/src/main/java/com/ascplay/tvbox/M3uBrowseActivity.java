@@ -308,7 +308,21 @@ public class M3uBrowseActivity extends Activity {
                     Toast.LENGTH_SHORT).show();
             return;
         }
-        catNames.addAll(res);
+        // Ordem alfabética (ignora maiúsculas e acentos)
+        final java.text.Collator collator =
+                java.text.Collator.getInstance(new java.util.Locale("pt", "BR"));
+        collator.setStrength(java.text.Collator.PRIMARY);
+        List<String> sorted = new ArrayList<>(res);
+        // Categorias adultas vão para o fim da lista, também em ordem alfabética
+        java.util.Collections.sort(sorted, (a, b) -> {
+            boolean adultA = ParentalStore.isAdultCategory(a);
+            boolean adultB = ParentalStore.isAdultCategory(b);
+            if (adultA != adultB) {
+                return adultA ? 1 : -1;
+            }
+            return collator.compare(a, b);
+        });
+        catNames.addAll(sorted);
         catAdapter.notifyDataSetChanged();
     }
 
