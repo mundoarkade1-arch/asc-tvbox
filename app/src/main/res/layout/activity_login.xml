@@ -21,6 +21,7 @@
         android:focusable="false" />
 
     <ScrollView
+        android:id="@+id/scroll_login"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true">
@@ -196,7 +197,7 @@
                 android:layout_marginTop="14dp"
                 android:background="@drawable/bg_field"
                 android:hint="@string/hint_server"
-                android:imeOptions="actionNext"
+                android:imeOptions="actionNext|flagNoExtractUi"
                 android:inputType="textUri"
                 android:minHeight="56dp"
                 android:paddingStart="16dp"
@@ -213,7 +214,7 @@
                 android:layout_marginTop="12dp"
                 android:background="@drawable/bg_field"
                 android:hint="@string/hint_user"
-                android:imeOptions="actionNext"
+                android:imeOptions="actionNext|flagNoExtractUi"
                 android:inputType="textNoSuggestions"
                 android:minHeight="56dp"
                 android:paddingStart="16dp"
@@ -230,7 +231,7 @@
                 android:layout_marginTop="12dp"
                 android:background="@drawable/bg_field"
                 android:hint="@string/hint_pass"
-                android:imeOptions="actionDone"
+                android:imeOptions="actionDone|flagNoExtractUi"
                 android:inputType="textPassword"
                 android:minHeight="56dp"
                 android:paddingStart="16dp"
@@ -255,7 +256,7 @@
                 android:layout_marginTop="14dp"
                 android:background="@drawable/bg_field"
                 android:hint="@string/hint_m3u"
-                android:imeOptions="actionDone"
+                android:imeOptions="actionDone|flagNoExtractUi"
                 android:inputType="textUri"
                 android:minHeight="56dp"
                 android:paddingStart="16dp"
@@ -288,6 +289,14 @@
             android:minHeight="48dp"
             android:textColor="#FFFFFF"
             android:textSize="20sp" />
+
+        <!-- Espaço extra que só aparece com o teclado aberto, para o campo subir acima dele -->
+        <View
+            android:id="@+id/space_keyboard"
+            android:layout_width="match_parent"
+            android:layout_height="260dp"
+            android:focusable="false"
+            android:visibility="gone" />
 
     </LinearLayout>
     </ScrollView>

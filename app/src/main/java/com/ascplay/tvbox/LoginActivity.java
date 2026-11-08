@@ -12,6 +12,7 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 public class LoginActivity extends Activity {
@@ -30,6 +31,8 @@ public class LoginActivity extends Activity {
     private EditText etPass;
     private EditText etM3u;
     private TextView tvStatus;
+    private ScrollView scrollLogin;
+    private View spaceKeyboard;
 
     // Aviso de atualização
     private View groupUpdate;
@@ -81,6 +84,8 @@ public class LoginActivity extends Activity {
         etPass = findViewById(R.id.et_pass);
         etM3u = findViewById(R.id.et_m3u);
         tvStatus = findViewById(R.id.tv_status);
+        scrollLogin = findViewById(R.id.scroll_login);
+        spaceKeyboard = findViewById(R.id.space_keyboard);
         tvCode = findViewById(R.id.tv_code);
         tvLinkStatus = findViewById(R.id.tv_link_status);
         linkScreen = true;
@@ -110,6 +115,26 @@ public class LoginActivity extends Activity {
         etPass.setOnEditorActionListener(enterOnDone);
         etM3u.setOnEditorActionListener(enterOnDone);
 
+        // Teclado aberto: o campo sobe para o alto da tela, acima do teclado
+        View.OnFocusChangeListener keepFieldVisible = (v, hasFocus) -> {
+            if (hasFocus) {
+                spaceKeyboard.setVisibility(View.VISIBLE);
+                scrollFieldToTop(v);
+            } else {
+                // Só tira o espaço se o foco não foi para outro campo de texto
+                scrollLogin.post(() -> {
+                    if (!etServer.hasFocus() && !etUser.hasFocus()
+                            && !etPass.hasFocus() && !etM3u.hasFocus()) {
+                        spaceKeyboard.setVisibility(View.GONE);
+                    }
+                });
+            }
+        };
+        etServer.setOnFocusChangeListener(keepFieldVisible);
+        etUser.setOnFocusChangeListener(keepFieldVisible);
+        etPass.setOnFocusChangeListener(keepFieldVisible);
+        etM3u.setOnFocusChangeListener(keepFieldVisible);
+
         // Preenche com o último login salvo (se houver).
         if (saved != null) {
             etServer.setText(saved.server);
@@ -123,6 +148,25 @@ public class LoginActivity extends Activity {
         setMode(mode);
 
         checkForUpdate();
+    }
+
+    /** Rola a tela para o campo ficar no alto, longe do teclado. Espera o teclado abrir. */
+    private void scrollFieldToTop(final View field) {
+        Runnable doScroll = () -> {
+            int top = 0;
+            View v = field;
+            while (v != null && v != scrollLogin) {
+                top += v.getTop();
+                if (!(v.getParent() instanceof View)) {
+                    break;
+                }
+                v = (View) v.getParent();
+            }
+            int margin = (int) (60 * getResources().getDisplayMetrics().density);
+            scrollLogin.smoothScrollTo(0, Math.max(0, top - margin));
+        };
+        scrollLogin.postDelayed(doScroll, 150);
+        scrollLogin.postDelayed(doScroll, 450);
     }
 
     // ---------- Código do aparelho ----------
@@ -176,16 +220,8 @@ public class LoginActivity extends Activity {
                 code = DeviceLink.getDisplayCode(app);
                 if (reply.state == DeviceLink.State.READY && resumed
                         && (CredentialStore.load(app) == null || DeviceLink.isNewer(app, reply))) {
-                    // Testa a lista antes de usar, para uma lista com defeito não
-                    // entrar e deixar a tela principal com erro.
-                    LoginChecker.Result check = DeviceLink.verify(reply);
-                    if (check == LoginChecker.Result.OK) {
-                        DeviceLink.apply(app, reply);
-                        taken = true;
-                    } else {
-                        DeviceLink.lastDetail = "A lista chegou, mas o teste falhou ("
-                                + check + "). " + DeviceLink.lastDetail;
-                    }
+                    DeviceLink.apply(app, reply);
+                    taken = true;
                 }
             } catch (Exception e) {
                 reply = new DeviceLink.Reply(DeviceLink.State.OFFLINE, 0, null);
@@ -224,10 +260,6 @@ public class LoginActivity extends Activity {
             tvLinkStatus.setText(R.string.link_offline);
         } else {
             tvLinkStatus.setText("");
-        }
-        String detail = DeviceLink.lastDetail;
-        if (detail != null && !detail.isEmpty()) {
-            tvLinkStatus.setText(tvLinkStatus.getText() + "\n" + detail);
         }
         if (resumed) {
             handler.removeCallbacks(pollTask);

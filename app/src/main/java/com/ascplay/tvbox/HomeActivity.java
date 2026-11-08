@@ -66,8 +66,6 @@ public class HomeActivity extends Activity {
     public static final String EXTRA_SHOW_LOGIN = "show_login";
 
     private static final int LIMIT = 10;
-    /** Quantos jogos mostrar na faixa "Jogos do dia". */
-    private static final int LIMIT_GAMES = 20;
     private static final int COLOR_NEUTRAL = 0xFFA99FA3;
     private static final int COLOR_ERROR = 0xFFFF6B78;
     private static final int COLOR_OK = 0xFF4ADE80;
@@ -81,7 +79,6 @@ public class HomeActivity extends Activity {
     private LinearLayout railMovie;
     private LinearLayout railSeries;
     private TextView stLive;
-    private TextView tvLiveTitle;
     private TextView stMovie;
     private TextView stSeries;
 
@@ -122,7 +119,15 @@ public class HomeActivity extends Activity {
         }
     };
 
-    private boolean focusDone = false;
+    // Foco inicial: vai para o primeiro cartão da faixa mais alta da tela (Continue, Canais,
+    // Filmes, Séries), mesmo que uma faixa de baixo carregue antes. Só vale enquanto a pessoa
+    // ainda não apertou nenhuma seta.
+    private static final int RANK_CONTINUE = 0;
+    private static final int RANK_LIVE = 1;
+    private static final int RANK_MOVIE = 2;
+    private static final int RANK_SERIES = 3;
+    private boolean userNavigated = false;
+    private int autoFocusRank = Integer.MAX_VALUE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -145,7 +150,6 @@ public class HomeActivity extends Activity {
         railMovie = findViewById(R.id.rail_movie);
         railSeries = findViewById(R.id.rail_series);
         stLive = findViewById(R.id.st_live);
-        tvLiveTitle = findViewById(R.id.tv_live_title);
         stMovie = findViewById(R.id.st_movie);
         stSeries = findViewById(R.id.st_series);
 
@@ -225,6 +229,13 @@ public class HomeActivity extends Activity {
      */
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
+        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+            int code = event.getKeyCode();
+            if (code == KeyEvent.KEYCODE_DPAD_UP || code == KeyEvent.KEYCODE_DPAD_DOWN
+                    || code == KeyEvent.KEYCODE_DPAD_LEFT || code == KeyEvent.KEYCODE_DPAD_RIGHT) {
+                userNavigated = true;
+            }
+        }
         if (event.getKeyCode() == KeyEvent.KEYCODE_MENU && isXtream() && focusedLive != null) {
             if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
                 openSchedule(focusedLive);
@@ -376,6 +387,8 @@ public class HomeActivity extends Activity {
 
         if (hadFocus && first != null) {
             first.requestFocus();
+        } else {
+            autoFocus(RANK_CONTINUE, first);
         }
     }
 
@@ -490,58 +503,18 @@ public class HomeActivity extends Activity {
         final int gen = railGen;
         new Thread(() -> {
             List<XtreamApi.Item> items = null;
-            boolean games = false;
             try {
-                if (kind == XtreamApi.Kind.LIVE) {
-                    // Procura a categoria "Jogos do dia" (ou parecida) e mostra ela na faixa.
-                    String gamesId = null;
-                    try {
-                        for (XtreamApi.Category c : XtreamApi.categories(server, user, pass, kind)) {
-                            if (isGamesCategory(c.name)) {
-                                gamesId = c.id;
-                                break;
-                            }
-                        }
-                    } catch (Exception e) {
-                        // sem categorias: segue com os canais de sempre
-                    }
-                    if (gamesId != null) {
-                        List<XtreamApi.Item> g =
-                                XtreamApi.items(server, user, pass, kind, gamesId, LIMIT_GAMES);
-                        if (g != null && !g.isEmpty()) {
-                            items = g;
-                            games = true;
-                        }
-                    }
-                }
-                if (items == null) {
-                    items = XtreamApi.items(server, user, pass, kind, null, LIMIT);
-                }
+                items = XtreamApi.items(server, user, pass, kind, null, LIMIT);
             } catch (Exception e) {
                 // sem rede, servidor fora do ar ou resposta estranha: mostra aviso abaixo
             }
             final List<XtreamApi.Item> result = items;
-            final boolean showGames = games;
             runOnUiThread(() -> {
                 if (gen == railGen) {
-                    if (kind == XtreamApi.Kind.LIVE) {
-                        tvLiveTitle.setText(showGames ? "Jogos do dia" : "Canais ao vivo");
-                    }
                     showRail(kind, result, rail, status);
                 }
             });
         }).start();
-    }
-
-    /** O nome da categoria parece "Jogos do dia" (ou "Jogos de hoje")? */
-    private static boolean isGamesCategory(String name) {
-        if (name == null) {
-            return false;
-        }
-        String n = java.text.Normalizer.normalize(name, java.text.Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "").toLowerCase(Locale.ROOT);
-        return n.contains("jogos do dia") || n.contains("jogo do dia")
-                || n.contains("jogos de hoje") || n.contains("jogos hoje");
     }
 
     /** Lista M3U: uma única leitura da lista traz os 10 primeiros de cada tipo. */
@@ -577,7 +550,7 @@ public class HomeActivity extends Activity {
             return;
         }
         railGen++;
-        focusDone = true; // não tira o foco de onde a pessoa está
+        userNavigated = true; // não tira o foco de onde a pessoa está
         focusedLive = null;
         LinearLayout[] rails = {railLive, railMovie, railSeries};
         TextView[] states = {stLive, stMovie, stSeries};
@@ -633,12 +606,9 @@ public class HomeActivity extends Activity {
 
             if (item.kind == XtreamApi.Kind.LIVE && xtream) {
                 TextView now = card.findViewById(R.id.tv_now);
-                TextView next = card.findViewById(R.id.tv_next);
                 now.setText("");
                 now.setVisibility(View.VISIBLE);
-                next.setText("");
-                next.setVisibility(View.VISIBLE);
-                loadNow(item, now, next);
+                loadNow(item, now);
                 setHomeCardFocus(card, (v, hasFocus) -> {
                     if (hasFocus) {
                         focusedLive = item;
@@ -683,10 +653,18 @@ public class HomeActivity extends Activity {
             rail.addView(more);
         }
 
-        if (!focusDone && first != null && groupUpdate.getVisibility() != View.VISIBLE) {
-            focusDone = true;
-            first.requestFocus();
+        autoFocus(kind == XtreamApi.Kind.LIVE ? RANK_LIVE
+                : kind == XtreamApi.Kind.MOVIE ? RANK_MOVIE : RANK_SERIES, first);
+    }
+
+    /** Foco inicial automático: só sobe (para uma faixa mais alta), nunca desce. */
+    private void autoFocus(int rank, View card) {
+        if (card == null || userNavigated || rank >= autoFocusRank
+                || groupUpdate.getVisibility() == View.VISIBLE) {
+            return;
         }
+        autoFocusRank = rank;
+        card.requestFocus();
     }
 
     private void setHomeCardFocus(View card, View.OnFocusChangeListener listener) {
@@ -704,18 +682,15 @@ public class HomeActivity extends Activity {
     }
 
     /** Pede ao servidor o programa de agora e escreve na linha do cartão. */
-    private void loadNow(XtreamApi.Item item, final TextView now, final TextView next) {
+    private void loadNow(XtreamApi.Item item, final TextView now) {
         EpgCache.get(creds.server, creds.user, creds.pass, item.id, epg -> {
             if (isFinishing() || isDestroyed()) {
                 return;
             }
             if (epg == null) {
                 now.setText("Programação indisponível");
-                next.setText("");
             } else {
                 now.setText("Agora: " + epg.title);
-                next.setText(epg.nextTitle == null || epg.nextTitle.isEmpty()
-                        ? "" : "A seguir: " + epg.nextTitle);
             }
         });
     }

@@ -7,9 +7,10 @@
 
     <LinearLayout
         android:id="@+id/group_nav"
-        android:layout_width="110dp"
+        android:layout_width="72dp"
         android:layout_height="match_parent"
         android:background="@drawable/bg_nav"
+        android:gravity="center_vertical"
         android:orientation="vertical"
         android:paddingTop="10dp"
         android:paddingBottom="10dp">
@@ -17,162 +18,168 @@
         <TextView
             android:id="@+id/nav_home"
             android:layout_width="match_parent"
-            android:layout_height="62dp"
+            android:layout_height="54dp"
             android:layout_marginLeft="8dp"
             android:layout_marginTop="4dp"
             android:layout_marginRight="8dp"
             android:layout_marginBottom="4dp"
-            android:background="@drawable/bg_button"
+            android:background="@drawable/bg_nav_home"
             android:clickable="true"
             android:contentDescription="Tela inicial"
             android:drawableTop="@drawable/ic_nav_home"
-            android:drawablePadding="2dp"
+            android:drawablePadding="1dp"
             android:ellipsize="end"
             android:focusable="true"
             android:gravity="center"
-            android:nextFocusDown="@+id/nav_live"
-            android:paddingLeft="4dp"
-            android:paddingTop="4dp"
-            android:paddingRight="4dp"
+                    android:nextFocusDown="@+id/nav_live"
+            android:paddingLeft="2dp"
+            android:paddingTop="6dp"
+            android:paddingRight="2dp"
             android:paddingBottom="4dp"
             android:singleLine="true"
-            android:text="Tela inicial"
+            android:text="Início"
             android:textColor="@color/nav_text"
-            android:textSize="14sp" />
+            android:textSize="10sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/nav_live"
             android:layout_width="match_parent"
-            android:layout_height="62dp"
+            android:layout_height="54dp"
             android:layout_marginLeft="8dp"
             android:layout_marginTop="4dp"
             android:layout_marginRight="8dp"
             android:layout_marginBottom="4dp"
-            android:background="@drawable/bg_button"
+            android:background="@drawable/bg_nav_live"
             android:clickable="true"
             android:contentDescription="Canais"
             android:drawableTop="@drawable/ic_nav_live"
-            android:drawablePadding="2dp"
+            android:drawablePadding="1dp"
             android:ellipsize="end"
             android:focusable="true"
             android:gravity="center"
-            android:nextFocusDown="@+id/nav_movie"
-            android:nextFocusUp="@+id/nav_home"
-            android:paddingLeft="4dp"
-            android:paddingTop="4dp"
-            android:paddingRight="4dp"
+                    android:nextFocusDown="@+id/nav_movie"
+                    android:nextFocusUp="@+id/nav_home"
+            android:paddingLeft="2dp"
+            android:paddingTop="6dp"
+            android:paddingRight="2dp"
             android:paddingBottom="4dp"
             android:singleLine="true"
             android:text="Canais"
             android:textColor="@color/nav_text"
-            android:textSize="14sp" />
+            android:textSize="10sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/nav_movie"
             android:layout_width="match_parent"
-            android:layout_height="62dp"
+            android:layout_height="54dp"
             android:layout_marginLeft="8dp"
             android:layout_marginTop="4dp"
             android:layout_marginRight="8dp"
             android:layout_marginBottom="4dp"
-            android:background="@drawable/bg_button"
+            android:background="@drawable/bg_nav_movie"
             android:clickable="true"
             android:contentDescription="Filmes"
             android:drawableTop="@drawable/ic_nav_movie"
-            android:drawablePadding="2dp"
+            android:drawablePadding="1dp"
             android:ellipsize="end"
             android:focusable="true"
             android:gravity="center"
-            android:nextFocusDown="@+id/nav_series"
-            android:nextFocusUp="@+id/nav_live"
-            android:paddingLeft="4dp"
-            android:paddingTop="4dp"
-            android:paddingRight="4dp"
+                    android:nextFocusDown="@+id/nav_series"
+                    android:nextFocusUp="@+id/nav_live"
+            android:paddingLeft="2dp"
+            android:paddingTop="6dp"
+            android:paddingRight="2dp"
             android:paddingBottom="4dp"
             android:singleLine="true"
             android:text="Filmes"
             android:textColor="@color/nav_text"
-            android:textSize="14sp" />
+            android:textSize="10sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/nav_series"
             android:layout_width="match_parent"
-            android:layout_height="62dp"
+            android:layout_height="54dp"
             android:layout_marginLeft="8dp"
             android:layout_marginTop="4dp"
             android:layout_marginRight="8dp"
             android:layout_marginBottom="4dp"
-            android:background="@drawable/bg_button"
+            android:background="@drawable/bg_nav_series"
             android:clickable="true"
             android:contentDescription="Séries"
             android:drawableTop="@drawable/ic_nav_series"
-            android:drawablePadding="2dp"
+            android:drawablePadding="1dp"
             android:ellipsize="end"
             android:focusable="true"
             android:gravity="center"
-            android:nextFocusDown="@+id/nav_settings"
-            android:nextFocusUp="@+id/nav_movie"
-            android:paddingLeft="4dp"
-            android:paddingTop="4dp"
-            android:paddingRight="4dp"
+                    android:nextFocusDown="@+id/nav_settings"
+                    android:nextFocusUp="@+id/nav_movie"
+            android:paddingLeft="2dp"
+            android:paddingTop="6dp"
+            android:paddingRight="2dp"
             android:paddingBottom="4dp"
             android:singleLine="true"
             android:text="Séries"
             android:textColor="@color/nav_text"
-            android:textSize="14sp" />
+            android:textSize="10sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/nav_settings"
             android:layout_width="match_parent"
-            android:layout_height="62dp"
+            android:layout_height="54dp"
             android:layout_marginLeft="8dp"
             android:layout_marginTop="4dp"
             android:layout_marginRight="8dp"
             android:layout_marginBottom="4dp"
-            android:background="@drawable/bg_button"
+            android:background="@drawable/bg_nav_settings"
             android:clickable="true"
             android:contentDescription="Ajustes"
             android:drawableTop="@drawable/ic_nav_settings"
-            android:drawablePadding="2dp"
+            android:drawablePadding="1dp"
             android:ellipsize="end"
             android:focusable="true"
             android:gravity="center"
-            android:nextFocusDown="@+id/nav_refresh"
-            android:nextFocusUp="@+id/nav_series"
-            android:paddingLeft="4dp"
-            android:paddingTop="4dp"
-            android:paddingRight="4dp"
+                    android:nextFocusDown="@+id/nav_refresh"
+                    android:nextFocusUp="@+id/nav_series"
+            android:paddingLeft="2dp"
+            android:paddingTop="6dp"
+            android:paddingRight="2dp"
             android:paddingBottom="4dp"
             android:singleLine="true"
             android:text="Ajustes"
             android:textColor="@color/nav_text"
-            android:textSize="14sp" />
+            android:textSize="10sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/nav_refresh"
             android:layout_width="match_parent"
-            android:layout_height="62dp"
+            android:layout_height="54dp"
             android:layout_marginLeft="8dp"
             android:layout_marginTop="4dp"
             android:layout_marginRight="8dp"
             android:layout_marginBottom="4dp"
-            android:background="@drawable/bg_button"
+            android:background="@drawable/bg_nav_refresh"
             android:clickable="true"
             android:contentDescription="Atualizar lista"
             android:drawableTop="@drawable/ic_nav_refresh"
-            android:drawablePadding="2dp"
+            android:drawablePadding="1dp"
             android:ellipsize="end"
             android:focusable="true"
             android:gravity="center"
-            android:nextFocusUp="@+id/nav_settings"
-            android:paddingLeft="4dp"
-            android:paddingTop="4dp"
-            android:paddingRight="4dp"
+                    android:nextFocusUp="@+id/nav_settings"
+            android:paddingLeft="2dp"
+            android:paddingTop="6dp"
+            android:paddingRight="2dp"
             android:paddingBottom="4dp"
             android:singleLine="true"
             android:text="Atualizar"
             android:textColor="@color/nav_text"
-            android:textSize="14sp" />
+            android:textSize="10sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <LinearLayout
@@ -242,7 +249,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:textColor="#4ADE80"
-                        android:textSize="22sp"
+                        android:textSize="18sp"
                         android:textStyle="bold" />
 
                     <Button
@@ -257,7 +264,7 @@
                         android:text="@string/btn_update_now"
                         android:textAllCaps="false"
                         android:textColor="#FFFFFF"
-                        android:textSize="22sp"
+                        android:textSize="18sp"
                         android:textStyle="bold" />
 
                     <Button
@@ -289,12 +296,12 @@
                         android:layout_height="wrap_content"
                         android:text="Continue assistindo"
                         android:textColor="#F7F3F4"
-                        android:textSize="22sp"
+                        android:textSize="18sp"
                         android:textStyle="bold" />
 
                     <HorizontalScrollView
                         android:layout_width="match_parent"
-                        android:layout_height="350dp"
+                        android:layout_height="280dp"
                         android:clipChildren="false"
                         android:clipToPadding="false"
                         android:paddingStart="8dp"
@@ -320,12 +327,11 @@
                     android:orientation="vertical">
 
                     <TextView
-                        android:id="@+id/tv_live_title"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Canais ao vivo"
                         android:textColor="#F7F3F4"
-                        android:textSize="22sp"
+                        android:textSize="18sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -338,7 +344,7 @@
 
                     <HorizontalScrollView
                         android:layout_width="match_parent"
-                        android:layout_height="260dp"
+                        android:layout_height="200dp"
                         android:clipChildren="false"
                         android:clipToPadding="false"
                         android:paddingStart="8dp"
@@ -368,7 +374,7 @@
                         android:layout_height="wrap_content"
                         android:text="Filmes"
                         android:textColor="#F7F3F4"
-                        android:textSize="22sp"
+                        android:textSize="18sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -381,7 +387,7 @@
 
                     <HorizontalScrollView
                         android:layout_width="match_parent"
-                        android:layout_height="350dp"
+                        android:layout_height="280dp"
                         android:clipChildren="false"
                         android:clipToPadding="false"
                         android:paddingStart="8dp"
@@ -411,7 +417,7 @@
                         android:layout_height="wrap_content"
                         android:text="Séries"
                         android:textColor="#F7F3F4"
-                        android:textSize="22sp"
+                        android:textSize="18sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -424,7 +430,7 @@
 
                     <HorizontalScrollView
                         android:layout_width="match_parent"
-                        android:layout_height="350dp"
+                        android:layout_height="280dp"
                         android:clipChildren="false"
                         android:clipToPadding="false"
                         android:paddingStart="8dp"
