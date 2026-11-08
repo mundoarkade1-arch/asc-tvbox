@@ -2,6 +2,7 @@ package com.ascplay.tvbox;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.SystemClock;
 import android.util.Base64;
 
 import java.security.MessageDigest;
@@ -70,6 +71,8 @@ public final class ParentalStore {
                 .putString("hash", Base64.encodeToString(hash, Base64.NO_WRAP))
                 .putInt("fails", 0)
                 .putLong("locked_until", 0L)
+                .putLong("locked_elapsed_end", 0L)
+                .putLong("locked_elapsed_set", 0L)
                 .apply();
         return true;
     }
@@ -81,14 +84,31 @@ public final class ParentalStore {
 
     // ---------- Conferir a senha ----------
 
-    /** Quantos segundos faltam para poder tentar de novo (0 = pode tentar agora). */
+    /**
+     * Quantos segundos faltam para poder tentar de novo (0 = pode tentar agora).
+     * Usa o relógio do aparelho E o relógio interno que não muda quando alguém
+     * mexe na data. Vale o que tiver mais tempo faltando.
+     */
     public static long lockedSeconds(Context context) {
-        long until = prefs(context).getLong("locked_until", 0L);
+        SharedPreferences p = prefs(context);
+        long secs = 0L;
+
+        long until = p.getLong("locked_until", 0L);
         long now = System.currentTimeMillis();
-        if (until <= now) {
-            return 0L;
+        if (until > now) {
+            secs = (until - now + 999L) / 1000L;
         }
-        long secs = (until - now + 999L) / 1000L;
+
+        long elapsedEnd = p.getLong("locked_elapsed_end", 0L);
+        long elapsedSet = p.getLong("locked_elapsed_set", 0L);
+        long elapsedNow = SystemClock.elapsedRealtime();
+        // Se o aparelho reiniciou, o relógio interno volta a zero: aí só vale a data.
+        if (elapsedEnd > 0L && elapsedNow >= elapsedSet && elapsedEnd > elapsedNow) {
+            long s2 = (elapsedEnd - elapsedNow + 999L) / 1000L;
+            if (s2 > secs) {
+                secs = s2;
+            }
+        }
         return Math.min(secs, MAX_LOCK_SECONDS);
     }
 
@@ -121,12 +141,17 @@ public final class ParentalStore {
         if (ok) {
             ed.putInt("fails", 0);
             ed.putLong("locked_until", 0L);
+            ed.putLong("locked_elapsed_end", 0L);
+            ed.putLong("locked_elapsed_set", 0L);
         } else {
             int fails = p.getInt("fails", 0) + 1;
             ed.putInt("fails", fails);
             if (fails >= MAX_FAILS) {
                 long secs = Math.min(MAX_LOCK_SECONDS, 30L << Math.min(fails - MAX_FAILS, 7));
                 ed.putLong("locked_until", System.currentTimeMillis() + secs * 1000L);
+                long elapsedNow = SystemClock.elapsedRealtime();
+                ed.putLong("locked_elapsed_set", elapsedNow);
+                ed.putLong("locked_elapsed_end", elapsedNow + secs * 1000L);
             }
         }
         ed.apply();
