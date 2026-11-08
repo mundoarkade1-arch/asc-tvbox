@@ -155,7 +155,7 @@ public final class Updater {
             String name = json.optString("name", "");
             String url = json.optString("url", "");
             String sha = json.optString("sha256", "").trim().toLowerCase();
-            if (code <= 0 || !url.startsWith(DOWNLOAD_PREFIX) || !sha.matches("[0-9a-f]{64}")) {
+            if (code <= 0 || !isSafeDownloadUrl(url) || !sha.matches("[0-9a-f]{64}")) {
                 return null;
             }
             return new Info(code, name, url, sha);
@@ -180,7 +180,7 @@ public final class Updater {
             @Override
             public void run() {
                 try {
-                    if (info == null || !info.url.startsWith(DOWNLOAD_PREFIX)) {
+                    if (info == null || !isSafeDownloadUrl(info.url)) {
                         throw new IOException("endereco invalido");
                     }
                     final File apk = download(app, info, listener);
@@ -326,6 +326,16 @@ public final class Updater {
             return conn;
         }
         throw new IOException("redirecionamentos demais");
+    }
+
+    /** Endereço do APK: tem que começar pelo repositório e não pode ter "..", "%2e" nem "\\". */
+    private static boolean isSafeDownloadUrl(String url) {
+        if (url == null || !url.startsWith(DOWNLOAD_PREFIX)) {
+            return false;
+        }
+        String lower = url.toLowerCase();
+        return !lower.contains("..") && !lower.contains("%2e")
+                && !lower.contains("\\") && !lower.contains("%5c");
     }
 
     private static byte[] readUpTo(InputStream in, int max) throws IOException {
