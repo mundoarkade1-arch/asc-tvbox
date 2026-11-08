@@ -176,8 +176,16 @@ public class LoginActivity extends Activity {
                 code = DeviceLink.getDisplayCode(app);
                 if (reply.state == DeviceLink.State.READY && resumed
                         && (CredentialStore.load(app) == null || DeviceLink.isNewer(app, reply))) {
-                    DeviceLink.apply(app, reply);
-                    taken = true;
+                    // Testa a lista antes de usar, para uma lista com defeito não
+                    // entrar e deixar a tela principal com erro.
+                    LoginChecker.Result check = DeviceLink.verify(reply);
+                    if (check == LoginChecker.Result.OK) {
+                        DeviceLink.apply(app, reply);
+                        taken = true;
+                    } else {
+                        DeviceLink.lastDetail = "A lista chegou, mas o teste falhou ("
+                                + check + "). " + DeviceLink.lastDetail;
+                    }
                 }
             } catch (Exception e) {
                 reply = new DeviceLink.Reply(DeviceLink.State.OFFLINE, 0, null);
@@ -216,6 +224,10 @@ public class LoginActivity extends Activity {
             tvLinkStatus.setText(R.string.link_offline);
         } else {
             tvLinkStatus.setText("");
+        }
+        String detail = DeviceLink.lastDetail;
+        if (detail != null && !detail.isEmpty()) {
+            tvLinkStatus.setText(tvLinkStatus.getText() + "\n" + detail);
         }
         if (resumed) {
             handler.removeCallbacks(pollTask);
