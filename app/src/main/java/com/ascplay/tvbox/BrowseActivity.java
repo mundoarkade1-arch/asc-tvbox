@@ -356,7 +356,15 @@ public class BrowseActivity extends Activity {
                     java.text.Collator.getInstance(new java.util.Locale("pt", "BR"));
             collator.setStrength(java.text.Collator.PRIMARY);
             List<XtreamApi.Category> sorted = new ArrayList<>(res);
-            java.util.Collections.sort(sorted, (a, b) -> collator.compare(a.name, b.name));
+            // Categorias adultas vão para o fim da lista, também em ordem alfabética
+            java.util.Collections.sort(sorted, (a, b) -> {
+                boolean adultA = ParentalStore.isAdultCategory(a.name);
+                boolean adultB = ParentalStore.isAdultCategory(b.name);
+                if (adultA != adultB) {
+                    return adultA ? 1 : -1;
+                }
+                return collator.compare(a.name, b.name);
+            });
             for (XtreamApi.Category c : sorted) {
                 catIds.add(c.id);
                 catNames.add(c.name);
