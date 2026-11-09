@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Ajustes"
-            android:textColor="#FF2A3D"
+            android:textColor="#C8FF00"
             android:textSize="30sp"
             android:textStyle="bold" />
 
@@ -55,7 +55,7 @@
                 android:layout_weight="1"
                 android:padding="24dp"
                 android:text="Escolha uma opção à esquerda."
-                android:textColor="#F7F3F4"
+                android:textColor="#FFFFFF"
                 android:textSize="20sp" />
         </LinearLayout>
     </LinearLayout>

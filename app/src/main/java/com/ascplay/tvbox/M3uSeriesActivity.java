@@ -47,7 +47,7 @@ import java.util.Map;
  * Grade: os quadradinhos NÃO recebem foco; quem controla as setas, a seleção e a rolagem é a
  * própria grade (como nas outras listas do app). O clique é da grade (setOnItemClickListener).
  *
- * Cores dos episódios: visto = vermelho; atual (o do "Continuar") = verde; resto = branco.
+ * Cores dos episódios: visto = cinza; atual (o do "Continuar") = verde; resto = branco.
  * As cores e os botões são refeitos ao voltar do player.
  *
  * As listas antigas (lv_seasons e lv_episodes) continuam no layout, mas ficam escondidas.
@@ -58,11 +58,11 @@ import java.util.Map;
  */
 public class M3uSeriesActivity extends Activity {
 
-    private static final int COLOR_NEUTRAL = 0xFFA99FA3;
+    private static final int COLOR_NEUTRAL = 0xFFA6A6A6;
     private static final int COLOR_ERROR = 0xFFFF6B78;
     // Cores dos episódios na grade
-    private static final int COLOR_WATCHED = 0xFFFF4D5E;
-    private static final int COLOR_CURRENT = 0xFF4ADE80;
+    private static final int COLOR_WATCHED = 0xFF8A8A8A;
+    private static final int COLOR_CURRENT = 0xFFC8FF00;
     private static final int COLOR_TODO = 0xFFFFFFFF;
     // Limite de texto (em letras) dos endereços mandados ao player de uma vez
     private static final int MAX_LIST_CHARS = 100000;
@@ -465,7 +465,7 @@ public class M3uSeriesActivity extends Activity {
         return String.valueOf(e.number > 0 ? e.number : position + 1);
     }
 
-    /** Cor do episódio: atual = verde; visto = vermelho; resto = branco. */
+    /** Cor do episódio: atual = verde; visto = cinza; resto = branco. */
     private int colorOf(M3uApi.Episode ep) {
         if (ep == continueEpisode) {
             return COLOR_CURRENT;

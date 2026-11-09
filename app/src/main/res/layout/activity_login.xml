@@ -47,7 +47,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:textColor="#4ADE80"
+                android:textColor="#C8FF00"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
@@ -91,7 +91,7 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:text="ASC lite"
-            android:textColor="#FF2A3D"
+            android:textColor="#C8FF00"
             android:textSize="36sp"
             android:textStyle="bold" />
 
@@ -101,7 +101,7 @@
             android:layout_marginTop="4dp"
             android:gravity="center"
             android:text="@string/login_title"
-            android:textColor="#F7F3F4"
+            android:textColor="#FFFFFF"
             android:textSize="26sp" />
 
         <TextView
@@ -110,7 +110,7 @@
             android:layout_marginTop="18dp"
             android:gravity="center"
             android:text="@string/link_code_label"
-            android:textColor="#B8ADB1"
+            android:textColor="#B8B8B8"
             android:textSize="18sp" />
 
         <TextView
@@ -130,7 +130,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:gravity="center"
-            android:textColor="#B8ADB1"
+            android:textColor="#B8B8B8"
             android:textSize="18sp" />
 
         <TextView
@@ -139,7 +139,7 @@
             android:layout_marginTop="8dp"
             android:gravity="center"
             android:text="@string/link_code_help"
-            android:textColor="#B8ADB1"
+            android:textColor="#B8B8B8"
             android:textSize="16sp" />
 
         <TextView
@@ -148,7 +148,7 @@
             android:layout_marginTop="24dp"
             android:gravity="center"
             android:text="@string/link_or_manual"
-            android:textColor="#F7F3F4"
+            android:textColor="#FFFFFF"
             android:textSize="20sp" />
 
         <LinearLayout
@@ -204,7 +204,7 @@
                 android:paddingEnd="16dp"
                 android:singleLine="true"
                 android:textColor="#FFFFFF"
-                android:textColorHint="#8A7F83"
+                android:textColorHint="#8A8A8A"
                 android:textSize="20sp" />
 
             <EditText
@@ -221,7 +221,7 @@
                 android:paddingEnd="16dp"
                 android:singleLine="true"
                 android:textColor="#FFFFFF"
-                android:textColorHint="#8A7F83"
+                android:textColorHint="#8A8A8A"
                 android:textSize="20sp" />
 
             <EditText
@@ -238,7 +238,7 @@
                 android:paddingEnd="16dp"
                 android:singleLine="true"
                 android:textColor="#FFFFFF"
-                android:textColorHint="#8A7F83"
+                android:textColorHint="#8A8A8A"
                 android:textSize="20sp" />
         </LinearLayout>
 
@@ -263,7 +263,7 @@
                 android:paddingEnd="16dp"
                 android:singleLine="true"
                 android:textColor="#FFFFFF"
-                android:textColorHint="#8A7F83"
+                android:textColorHint="#8A8A8A"
                 android:textSize="20sp" />
         </LinearLayout>
 
@@ -272,11 +272,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
-            android:background="@drawable/bg_button"
+            android:background="@drawable/bg_button_primary"
             android:minHeight="60dp"
             android:text="@string/btn_enter"
             android:textAllCaps="false"
-            android:textColor="#FFFFFF"
+            android:textColor="#101010"
             android:textSize="22sp"
             android:textStyle="bold" />
 

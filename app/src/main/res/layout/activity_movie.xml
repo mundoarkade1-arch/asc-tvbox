@@ -33,7 +33,7 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="2"
-            android:textColor="#FF2A3D"
+            android:textColor="#C8FF00"
             android:textSize="30sp"
             android:textStyle="bold" />
 
@@ -44,7 +44,7 @@
             android:layout_marginTop="8dp"
             android:ellipsize="end"
             android:maxLines="2"
-            android:textColor="#A99FA3"
+            android:textColor="#A6A6A6"
             android:textSize="18sp"
             android:visibility="gone" />
 
@@ -53,13 +53,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:background="@drawable/bg_button"
+            android:background="@drawable/bg_button_primary"
             android:focusable="true"
             android:minWidth="200dp"
             android:paddingStart="28dp"
             android:paddingEnd="28dp"
             android:text="Continuar de onde parei"
-            android:textColor="#FFFFFF"
+            android:textColor="#101010"
             android:textSize="22sp"
             android:textStyle="bold"
             android:visibility="gone" />
@@ -69,13 +69,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:background="@drawable/bg_button"
+            android:background="@drawable/bg_button_primary"
             android:focusable="true"
             android:minWidth="200dp"
             android:paddingStart="28dp"
             android:paddingEnd="28dp"
             android:text="Tocar"
-            android:textColor="#FFFFFF"
+            android:textColor="#101010"
             android:textSize="22sp"
             android:textStyle="bold" />
 
@@ -96,7 +96,7 @@
                 android:layout_height="wrap_content"
                 android:lineSpacingExtra="4dp"
                 android:text="Carregando..."
-                android:textColor="#E6DFE1"
+                android:textColor="#E6E6E6"
                 android:textSize="18sp" />
         </ScrollView>
     </LinearLayout>

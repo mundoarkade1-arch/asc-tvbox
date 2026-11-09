@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000">
+    android:background="#101010">
 
     <androidx.media3.ui.PlayerView
         android:id="@+id/player_view"
@@ -15,7 +15,7 @@
         app:show_fastforward_button="false"
         app:show_previous_button="false"
         app:show_next_button="false"
-        app:played_color="#FF2A3D"
+        app:played_color="#C8FF00"
         app:scrubber_color="#FFFFFF"
         app:buffered_color="#59FFFFFF"
         app:unplayed_color="#47FFFFFF"
@@ -70,7 +70,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:textColor="#E6DDE0"
+                android:textColor="#E6E6E6"
                 android:shadowColor="#E6000000"
                 android:shadowDx="0"
                 android:shadowDy="1"
@@ -102,7 +102,7 @@
                     android:id="@+id/tv_nb_start"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="#F7F3F4"
+                    android:textColor="#FFFFFF"
                     android:shadowColor="#E6000000"
                     android:shadowDx="0"
                     android:shadowDy="1"
@@ -126,7 +126,7 @@
                     android:id="@+id/tv_nb_end"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="#F7F3F4"
+                    android:textColor="#FFFFFF"
                     android:shadowColor="#E6000000"
                     android:shadowDx="0"
                     android:shadowDy="1"
@@ -145,7 +145,7 @@
             android:ellipsize="end"
             android:gravity="end"
             android:maxLines="2"
-            android:textColor="#E6DDE0"
+            android:textColor="#E6E6E6"
             android:shadowColor="#E6000000"
             android:shadowDx="0"
             android:shadowDy="1"

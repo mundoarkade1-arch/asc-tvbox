@@ -4,14 +4,14 @@
         <layer-list>
             <item>
                 <shape android:shape="rectangle">
-                    <stroke android:width="6dp" android:color="#59FF2A3D" />
+                    <stroke android:width="6dp" android:color="#59C8FF00" />
                     <corners android:radius="17dp" />
                 </shape>
             </item>
             <item android:left="3dp" android:top="3dp" android:right="3dp" android:bottom="3dp">
                 <shape android:shape="rectangle">
-                    <gradient android:angle="315" android:startColor="#FF3B4E" android:endColor="#D3091B" />
-                    <stroke android:width="3dp" android:color="#FFFFFF" />
+                    <solid android:color="#222222" />
+                    <stroke android:width="3dp" android:color="#C8FF00" />
                     <corners android:radius="14dp" />
                 </shape>
             </item>
@@ -21,24 +21,18 @@
         <layer-list>
             <item>
                 <shape android:shape="rectangle">
-                    <stroke android:width="6dp" android:color="#59FF2A3D" />
+                    <stroke android:width="6dp" android:color="#59C8FF00" />
                     <corners android:radius="17dp" />
                 </shape>
             </item>
             <item android:left="3dp" android:top="3dp" android:right="3dp" android:bottom="3dp">
                 <shape android:shape="rectangle">
-                    <solid android:color="#D3091B" />
-                    <stroke android:width="3dp" android:color="#FFFFFF" />
+                    <solid android:color="#2E2E2E" />
+                    <stroke android:width="3dp" android:color="#C8FF00" />
                     <corners android:radius="14dp" />
                 </shape>
             </item>
         </layer-list>
-    </item>
-    <item android:state_selected="true">
-        <shape android:shape="rectangle">
-            <gradient android:angle="315" android:startColor="#FF3B4E" android:endColor="#D3091B" />
-            <corners android:radius="14dp" />
-        </shape>
     </item>
     <item>
         <shape android:shape="rectangle">

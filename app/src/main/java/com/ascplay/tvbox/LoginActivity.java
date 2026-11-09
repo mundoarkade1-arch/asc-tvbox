@@ -19,7 +19,7 @@ public class LoginActivity extends Activity {
 
     private static final int COLOR_NEUTRAL = 0xFFFFFFFF;
     private static final int COLOR_ERROR = 0xFFFF6B78;
-    private static final int COLOR_OK = 0xFF4ADE80;
+    private static final int COLOR_OK = 0xFFC8FF00;
 
     private Button btnXtream;
     private Button btnM3u;
@@ -253,7 +253,7 @@ public class LoginActivity extends Activity {
             finish();
             return;
         }
-        tvLinkStatus.setTextColor(0xFFB8ADB1);
+        tvLinkStatus.setTextColor(0xFFB8B8B8);
         if (r.state == DeviceLink.State.WAITING) {
             tvLinkStatus.setText(R.string.link_waiting);
         } else if (r.state == DeviceLink.State.OFFLINE) {

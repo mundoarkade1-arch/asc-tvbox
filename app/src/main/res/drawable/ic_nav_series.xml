@@ -5,13 +5,13 @@
     android:viewportWidth="48"
     android:viewportHeight="48">
     <path
-        android:fillColor="#B07CFF"
+        android:fillColor="#C8FF00"
         android:pathData="M11 5 H37 A2 2 0 0 1 39 7 V9 H9 V7 A2 2 0 0 1 11 5 Z" />
     <path
-        android:fillColor="#D2A6FF"
+        android:fillColor="#FFFFFF"
         android:pathData="M7 11 H41 A2 2 0 0 1 43 13 V15 H5 V13 A2 2 0 0 1 7 11 Z" />
     <path
-        android:fillColor="#8E5CFF"
+        android:fillColor="#C8FF00"
         android:pathData="M7 17 H41 A3 3 0 0 1 44 20 V38 A3 3 0 0 1 41 41 H7 A3 3 0 0 1 4 38 V20 A3 3 0 0 1 7 17 Z" />
     <path
         android:fillColor="#FFFFFF"

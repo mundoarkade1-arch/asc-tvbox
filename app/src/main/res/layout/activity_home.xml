@@ -210,7 +210,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
                 android:text="ASC lite"
-                android:textColor="#FF2A3D"
+                android:textColor="#C8FF00"
                 android:textSize="24sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -248,7 +248,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:textColor="#4ADE80"
+                        android:textColor="#C8FF00"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
@@ -295,7 +295,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Continue assistindo"
-                        android:textColor="#F7F3F4"
+                        android:textColor="#FFFFFF"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
@@ -331,7 +331,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Canais ao vivo"
-                        android:textColor="#F7F3F4"
+                        android:textColor="#FFFFFF"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
@@ -340,7 +340,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Carregando..."
-                        android:textColor="#A99FA3"
+                        android:textColor="#A6A6A6"
                         android:textSize="14sp" />
 
                     <HorizontalScrollView
@@ -374,7 +374,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Filmes"
-                        android:textColor="#F7F3F4"
+                        android:textColor="#FFFFFF"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
@@ -383,7 +383,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Carregando..."
-                        android:textColor="#A99FA3"
+                        android:textColor="#A6A6A6"
                         android:textSize="14sp" />
 
                     <HorizontalScrollView
@@ -417,7 +417,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Séries"
-                        android:textColor="#F7F3F4"
+                        android:textColor="#FFFFFF"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
@@ -426,7 +426,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Carregando..."
-                        android:textColor="#A99FA3"
+                        android:textColor="#A6A6A6"
                         android:textSize="14sp" />
 
                     <HorizontalScrollView

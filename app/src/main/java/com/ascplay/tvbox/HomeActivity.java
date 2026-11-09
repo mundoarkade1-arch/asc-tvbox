@@ -66,9 +66,9 @@ public class HomeActivity extends Activity {
     public static final String EXTRA_SHOW_LOGIN = "show_login";
 
     private static final int LIMIT = 10;
-    private static final int COLOR_NEUTRAL = 0xFFA99FA3;
+    private static final int COLOR_NEUTRAL = 0xFFA6A6A6;
     private static final int COLOR_ERROR = 0xFFFF6B78;
-    private static final int COLOR_OK = 0xFF4ADE80;
+    private static final int COLOR_OK = 0xFFC8FF00;
     private static final int COLOR_WHITE = 0xFFFFFFFF;
 
     private CredentialStore.Credentials creds;

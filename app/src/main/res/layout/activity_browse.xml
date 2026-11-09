@@ -33,7 +33,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:textColor="#FF2A3D"
+                android:textColor="#C8FF00"
                 android:textSize="30sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -110,7 +110,7 @@
                     android:gravity="center"
                     android:padding="24dp"
                     android:text="Carregando..."
-                    android:textColor="#A99FA3"
+                    android:textColor="#A6A6A6"
                     android:textSize="20sp" />
             </FrameLayout>
         </LinearLayout>

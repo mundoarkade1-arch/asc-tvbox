@@ -527,3 +527,10 @@
 - Decisão: a barra superior foi desfeita. O menu voltou à esquerda (80dp), com os botões colados no alto da coluna (não centralizados), no vermelho do app (o mesmo fundo do bg_button). Motivo: pedido do dono (\"não colorido, na esquerda, tudo para cima\").
 - Decisão: os ícones são vetores coloridos de cores fixas (casa, TV, claquete, séries, ajustes, atualizar), sem vermelho para não sumir sobre o botão vermelho. Motivo: pedido do dono (\"ícones mais atuais e coloridos\").
 
+
+## Nova paleta (verde-limão)
+- Fundo de todas as telas: #101010 (preto-carvão). Texto principal e botão principal (Tocar, Assistir, Continuar, Entrar): #FFFFFF.
+- Destaque: #C8FF00 (verde-limão): foco, aba selecionada, barra de progresso, ícones do menu, ícone do app e banner.
+- Botão principal é branco com texto #101010 (drawable/bg_button_primary.xml). Os outros botões são escuros e ganham borda e brilho verde-limão no foco.
+- Mensagens de erro continuam vermelhas (#FF6B78) de propósito: erro precisa ser diferente do destaque.
+- Episódio visto agora é cinza (#8A8A8A); episódio atual é verde-limão.
