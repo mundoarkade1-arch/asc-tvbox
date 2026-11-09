@@ -18,7 +18,7 @@
                 android:right="-3dp"
                 android:bottom="-3dp">
                 <shape android:shape="rectangle">
-                    <solid android:color="#FFFFFF" />
+                    <solid android:color="#C8FF00" />
                     <corners android:radius="19dp" />
                 </shape>
             </item>
@@ -48,7 +48,7 @@
                 android:right="-3dp"
                 android:bottom="-3dp">
                 <shape android:shape="rectangle">
-                    <solid android:color="#FFFFFF" />
+                    <solid android:color="#C8FF00" />
                     <corners android:radius="19dp" />
                 </shape>
             </item>
@@ -78,7 +78,7 @@
                 android:right="-3dp"
                 android:bottom="-3dp">
                 <shape android:shape="rectangle">
-                    <solid android:color="#FFFFFF" />
+                    <solid android:color="#C8FF00" />
                     <corners android:radius="19dp" />
                 </shape>
             </item>

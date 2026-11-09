@@ -7,14 +7,11 @@
     </item>
     <item>
         <shape android:shape="rectangle">
-            <gradient android:type="radial" android:centerX="0.0" android:centerY="0.0"
-                android:gradientRadius="75%p" android:startColor="#14C8FF00" android:endColor="#00C8FF00" />
-        </shape>
-    </item>
-    <item>
-        <shape android:shape="rectangle">
-            <gradient android:type="radial" android:centerX="1.0" android:centerY="1.0"
-                android:gradientRadius="60%p" android:startColor="#0DC8FF00" android:endColor="#00C8FF00" />
+            <gradient
+                android:angle="315"
+                android:startColor="#6B8A00"
+                android:centerColor="#233000"
+                android:endColor="#101010" />
         </shape>
     </item>
 </layer-list>
