@@ -1,20 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item>
-        <shape android:shape="rectangle">
-            <solid android:color="#101010" />
-        </shape>
-    </item>
-    <item>
-        <shape android:shape="rectangle">
-            <gradient android:type="radial" android:centerX="0.0" android:centerY="0.0"
-                android:gradientRadius="75%p" android:startColor="#14C8FF00" android:endColor="#00C8FF00" />
-        </shape>
-    </item>
-    <item>
-        <shape android:shape="rectangle">
-            <gradient android:type="radial" android:centerX="1.0" android:centerY="1.0"
-                android:gradientRadius="60%p" android:startColor="#0DC8FF00" android:endColor="#00C8FF00" />
-        </shape>
-    </item>
-</layer-list>
+<!-- Transparente de propósito: o fundo global (imagem + camada escura) é desenhado por Glass.java atrás de toda tela. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#00000000" />
+</shape>

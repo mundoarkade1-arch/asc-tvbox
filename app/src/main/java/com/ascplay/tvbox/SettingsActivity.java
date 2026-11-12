@@ -139,7 +139,7 @@ public class SettingsActivity extends Activity {
     }
 
     private void confirmClearData() {
-        AlertDialog dialog = new AlertDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+        AlertDialog dialog = new AlertDialog.Builder(this, R.style.AscDialog)
                 .setMessage("Isso apaga tudo: continuar assistindo, assistidos e favoritos. "
                         + "Deseja continuar?")
                 .setNegativeButton("Cancelar", (d, which) -> d.dismiss())
@@ -323,7 +323,7 @@ public class SettingsActivity extends Activity {
 
     private void openParentalMenu() {
         final boolean on = ParentalStore.isEnabled(this);
-        AlertDialog.Builder b = new AlertDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
+        AlertDialog.Builder b = new AlertDialog.Builder(this, R.style.AscDialog);
         if (on) {
             b.setTitle("Controle parental: ativo");
             b.setItems(new CharSequence[]{"Trocar senha", "Desativar controle parental", "Voltar"},

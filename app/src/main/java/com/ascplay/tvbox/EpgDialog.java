@@ -57,11 +57,7 @@ public final class EpgDialog {
         root.setOrientation(LinearLayout.VERTICAL);
         int pad = dp(activity, 26);
         root.setPadding(pad, pad, pad, pad);
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(COLOR_PANEL);
-        bg.setCornerRadius(dp(activity, 12));
-        bg.setStroke(dp(activity, 2), COLOR_BORDER);
-        root.setBackground(bg);
+        root.setBackgroundResource(R.drawable.glass_strong);
 
         TextView label = new TextView(activity);
         label.setText("Programação");

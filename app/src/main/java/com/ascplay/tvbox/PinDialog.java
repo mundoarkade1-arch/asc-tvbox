@@ -88,7 +88,7 @@ public final class PinDialog {
 
         ScrollView scroll = new ScrollView(activity);
         scroll.setFillViewport(true);
-        scroll.setBackgroundColor(COLOR_BACK);
+        scroll.setBackgroundColor(0x00000000);
 
         LinearLayout root = new LinearLayout(activity);
         root.setOrientation(LinearLayout.VERTICAL);
@@ -138,7 +138,7 @@ public final class PinDialog {
             root.addView(line, wrap());
         }
 
-        dialog.setContentView(scroll);
+        dialog.setContentView(Glass.wrap(activity, scroll));
         refreshDots();
         if (firstKey != null) {
             firstKey.requestFocus();

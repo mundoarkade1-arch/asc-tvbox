@@ -69,7 +69,7 @@ public final class SearchKeyboard {
 
         ScrollView scroll = new ScrollView(activity);
         scroll.setFillViewport(true);
-        scroll.setBackgroundColor(COLOR_BACK);
+        scroll.setBackgroundColor(0x00000000);
 
         LinearLayout root = new LinearLayout(activity);
         root.setOrientation(LinearLayout.VERTICAL);
@@ -140,7 +140,7 @@ public final class SearchKeyboard {
         hint.setTextColor(COLOR_NEUTRAL);
         root.addView(hint, wrap());
 
-        dialog.setContentView(scroll);
+        dialog.setContentView(Glass.wrap(activity, scroll));
         refreshText();
         if (firstKey != null) {
             firstKey.requestFocus();
@@ -176,7 +176,7 @@ public final class SearchKeyboard {
         LinearLayout box = new LinearLayout(activity);
         box.setOrientation(LinearLayout.HORIZONTAL);
         box.setGravity(Gravity.CENTER);
-        box.setBackgroundColor(COLOR_BACK);
+        box.setBackgroundResource(R.drawable.glass_strong);
         box.setPadding(dp(10), dp(10), dp(10), dp(10));
 
         Button first = null;
@@ -193,6 +193,9 @@ public final class SearchKeyboard {
             box.addView(b);
         }
         pop.setContentView(box);
+        if (pop.getWindow() != null) {
+            pop.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0x00000000));
+        }
         if (first != null) {
             first.requestFocus();
         }

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  CENTRAL DO VIDRO (Glassmorphism) E DO FUNDO.
+  Mude AQUI para ajustar o visual do app inteiro. Nenhuma tela precisa ser editada.
+
+  FUNDO: para trocar a imagem, substitua drawable-nodpi/asc_bg.jpg (mesmo nome).
+  ESCURECIMENTO DO FUNDO: asc_bg_scrim (os dois primeiros dígitos = opacidade; 00 = sem camada, FF = tudo preto).
+-->
+<resources>
+    <color name="asc_bg_scrim">#B3101010</color>
+    <color name="asc_bg_scrim_dialog">#E0101010</color>
+
+    <!-- Vidro: leve (secundário), intermediário (cards, menus), intenso (painéis, modais) -->
+    <color name="asc_glass_light">#661A1A1A</color>
+    <color name="asc_glass_mid">#8C1A1A1A</color>
+    <color name="asc_glass_strong">#D9141414</color>
+    <color name="asc_glass_field">#99101010</color>
+    <color name="asc_glass_focus">#CC262626</color>
+
+    <!-- Detalhes do vidro -->
+    <color name="asc_glass_border">#2EFFFFFF</color>
+    <color name="asc_glass_border_strong">#3DFFFFFF</color>
+    <color name="asc_glass_sheen">#26FFFFFF</color>
+    <color name="asc_glass_sheen_end">#00FFFFFF</color>
+    <color name="asc_glass_shadow">#40000000</color>
+
+    <!-- Verde-limão oficial e seus brilhos -->
+    <color name="asc_accent">#C8FF00</color>
+    <color name="asc_accent_glow">#59C8FF00</color>
+    <color name="asc_accent_tint">#26C8FF00</color>
+</resources>

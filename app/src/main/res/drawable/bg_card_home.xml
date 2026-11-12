@@ -8,7 +8,7 @@
                 android:right="-4dp"
                 android:bottom="-4dp">
                 <shape android:shape="rectangle">
-                    <solid android:color="#59C8FF00" />
+                    <stroke android:width="2dp" android:color="@color/asc_accent_glow" />
                     <corners android:radius="16dp" />
                 </shape>
             </item>
@@ -18,17 +18,26 @@
                 android:right="-2dp"
                 android:bottom="-2dp">
                 <shape android:shape="rectangle">
-                    <solid android:color="#C8FF00" />
+                    <stroke android:width="2dp" android:color="@color/asc_accent" />
                     <corners android:radius="14dp" />
                 </shape>
             </item>
             <item>
                 <shape android:shape="rectangle">
-                    <solid android:color="#222222" />
+                    <solid android:color="@color/asc_glass_focus" />
+                    <corners android:radius="12dp" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="rectangle">
+                    <gradient
+                        android:angle="270"
+                        android:endColor="@color/asc_glass_sheen_end"
+                        android:startColor="@color/asc_glass_sheen" />
                     <corners android:radius="12dp" />
                 </shape>
             </item>
         </layer-list>
     </item>
-    <item android:drawable="@android:color/transparent" />
+    <item android:drawable="@drawable/glass_light" />
 </selector>

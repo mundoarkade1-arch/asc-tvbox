@@ -53,6 +53,7 @@
                 android:layout_height="match_parent"
                 android:layout_marginStart="16dp"
                 android:layout_weight="1"
+                android:background="@drawable/glass_strong"
                 android:padding="24dp"
                 android:text="Escolha uma opção à esquerda."
                 android:textColor="#FFFFFF"

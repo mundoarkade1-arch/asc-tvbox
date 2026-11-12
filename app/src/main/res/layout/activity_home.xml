@@ -239,8 +239,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
+                    android:background="@drawable/glass_strong"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
+                    android:padding="12dp"
                     android:visibility="gone">
 
                     <TextView
