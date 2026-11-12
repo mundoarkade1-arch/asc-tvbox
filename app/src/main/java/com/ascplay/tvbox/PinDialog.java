@@ -27,7 +27,7 @@ public final class PinDialog {
     }
 
     private static final int COLOR_WHITE = 0xFFFFFFFF;
-    private static final int COLOR_NEUTRAL = 0xFFA6A6A6;
+    private static final int COLOR_NEUTRAL = 0xFFA8A8A8;
     private static final int COLOR_ERROR = 0xFFFF6B78;
     private static final int COLOR_BACK = 0xFF101010;
 

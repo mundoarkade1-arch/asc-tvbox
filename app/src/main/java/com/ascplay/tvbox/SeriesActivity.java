@@ -62,11 +62,11 @@ public class SeriesActivity extends Activity {
     /** Posição do episódio escolhido dentro da lista. */
     public static final String EXTRA_LIST_INDEX = "list_index";
 
-    private static final int COLOR_NEUTRAL = 0xFFA6A6A6;
+    private static final int COLOR_NEUTRAL = 0xFFA8A8A8;
     private static final int COLOR_ERROR = 0xFFFF6B78;
-    private static final int COLOR_PLOT = 0xFFE6E6E6;
+    private static final int COLOR_PLOT = 0xFFA8A8A8;
     // Cores dos episódios na grade
-    private static final int COLOR_WATCHED = 0xFF8A8A8A;
+    private static final int COLOR_WATCHED = 0xFF6B6B6B;
     private static final int COLOR_CURRENT = 0xFFC8FF00;
     private static final int COLOR_TODO = 0xFFFFFFFF;
 

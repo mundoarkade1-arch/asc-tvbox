@@ -2,5 +2,6 @@
 <resources>
     <style name="AppTheme" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">#101010</item>
+        <item name="android:colorAccent">#C8FF00</item>
     </style>
 </resources>

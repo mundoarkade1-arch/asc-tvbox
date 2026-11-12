@@ -33,9 +33,9 @@ import java.util.Locale;
 public final class EpgDialog {
 
     private static final int COLOR_PANEL = 0xFF1A1A1A;
-    private static final int COLOR_BORDER = 0xFF2E2E2E;
+    private static final int COLOR_BORDER = 0xFF2A2A2A;
     private static final int COLOR_WHITE = 0xFFFFFFFF;
-    private static final int COLOR_NEUTRAL = 0xFFA6A6A6;
+    private static final int COLOR_NEUTRAL = 0xFFA8A8A8;
     private static final int COLOR_ERROR = 0xFFFF6B78;
     private static final int COLOR_NOW = 0xFFC8FF00;
 

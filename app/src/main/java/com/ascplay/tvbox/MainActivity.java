@@ -428,13 +428,13 @@ public class MainActivity extends Activity {
     private void createSkipButton() {
         skipButton = new TextView(this);
         skipButton.setText("Pular para o próximo episódio");
-        skipButton.setTextColor(Color.WHITE);
+        skipButton.setTextColor(0xFFFFFFFF);
         skipButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
         skipButton.setPadding(dp(14), dp(8), dp(14), dp(8));
         GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xCC000000);
+        bg.setColor(0xCC101010);
         bg.setCornerRadius(dp(6));
-        bg.setStroke(dp(1), 0x99FFFFFF);
+        bg.setStroke(dp(1), 0xFFC8FF00);
         skipButton.setBackground(bg);
         skipButton.setFocusable(false);
         skipButton.setVisibility(View.GONE);
@@ -453,9 +453,9 @@ public class MainActivity extends Activity {
      */
     private void createEpisodeLabel() {
         episodeLabel = new TextView(this);
-        episodeLabel.setTextColor(Color.WHITE);
+        episodeLabel.setTextColor(0xFFFFFFFF);
         episodeLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
-        episodeLabel.setShadowLayer(6f, 0f, 0f, Color.BLACK);
+        episodeLabel.setShadowLayer(6f, 0f, 0f, 0xFF101010);
         episodeLabel.setSingleLine(true);
         episodeLabel.setFocusable(false);
         episodeLabel.setVisibility(View.GONE);
@@ -473,9 +473,9 @@ public class MainActivity extends Activity {
      */
     private void createDiagLabel() {
         diagLabel = new TextView(this);
-        diagLabel.setTextColor(Color.WHITE);
+        diagLabel.setTextColor(0xFFFFFFFF);
         diagLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-        diagLabel.setShadowLayer(6f, 0f, 0f, Color.BLACK);
+        diagLabel.setShadowLayer(6f, 0f, 0f, 0xFF101010);
         diagLabel.setGravity(Gravity.END);
         diagLabel.setFocusable(false);
         diagLabel.setVisibility(View.GONE);

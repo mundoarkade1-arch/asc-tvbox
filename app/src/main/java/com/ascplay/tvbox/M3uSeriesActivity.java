@@ -58,10 +58,10 @@ import java.util.Map;
  */
 public class M3uSeriesActivity extends Activity {
 
-    private static final int COLOR_NEUTRAL = 0xFFA6A6A6;
+    private static final int COLOR_NEUTRAL = 0xFFA8A8A8;
     private static final int COLOR_ERROR = 0xFFFF6B78;
     // Cores dos episódios na grade
-    private static final int COLOR_WATCHED = 0xFF8A8A8A;
+    private static final int COLOR_WATCHED = 0xFF6B6B6B;
     private static final int COLOR_CURRENT = 0xFFC8FF00;
     private static final int COLOR_TODO = 0xFFFFFFFF;
     // Limite de texto (em letras) dos endereços mandados ao player de uma vez

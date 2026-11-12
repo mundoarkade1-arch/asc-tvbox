@@ -253,7 +253,7 @@ public class LoginActivity extends Activity {
             finish();
             return;
         }
-        tvLinkStatus.setTextColor(0xFFB8B8B8);
+        tvLinkStatus.setTextColor(0xFFA8A8A8);
         if (r.state == DeviceLink.State.WAITING) {
             tvLinkStatus.setText(R.string.link_waiting);
         } else if (r.state == DeviceLink.State.OFFLINE) {
