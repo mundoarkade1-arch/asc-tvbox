@@ -79,7 +79,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="ASC lite"
+            android:text="ASC Play"
             android:textColor="#5AA2FF"
             android:textSize="36sp"
             android:textStyle="bold" />

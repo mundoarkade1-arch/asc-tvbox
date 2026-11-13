@@ -209,7 +209,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
-                android:text="ASC lite"
+                android:text="ASC Play"
                 android:textColor="#5AA2FF"
                 android:textSize="24sp"
                 android:textStyle="bold" />
