@@ -16,7 +16,7 @@
         app:show_previous_button="false"
         app:show_next_button="false"
         app:played_color="#1F6FEB"
-        app:scrubber_color="#5AA2FF"
+        app:scrubber_color="#C9A55C"
         app:buffered_color="#66B8C0CC"
         app:unplayed_color="#33FFFFFF"
         app:use_controller="true" />

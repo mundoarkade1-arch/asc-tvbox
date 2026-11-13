@@ -287,6 +287,8 @@ public class HomeActivity extends Activity {
         LinearLayout column = new LinearLayout(this);
         column.setOrientation(LinearLayout.VERTICAL);
         column.setClipChildren(false);
+        // sem isto a coluna corta o que passa do padding (banner até a borda e anel de foco)
+        column.setClipToPadding(false);
         column.setPadding(GlassKit.dp(this, 16), GlassKit.dp(this, 20), GlassKit.dp(this, 24), 0);
         main.addView(column, new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.MATCH_PARENT, 1f));

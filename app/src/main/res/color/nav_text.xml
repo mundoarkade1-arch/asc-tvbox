@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Cor do texto E dos ícones do menu (os ícones usam android:tint="@color/nav_text") -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_selected="true" android:color="#5AA2FF" />
+    <item android:state_selected="true" android:color="#C9A55C" />
     <item android:state_focused="true" android:color="#FFFFFF" />
     <item android:color="#B8C0CC" />
 </selector>

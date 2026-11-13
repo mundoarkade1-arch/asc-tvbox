@@ -67,7 +67,7 @@ public class SeriesActivity extends Activity {
     private static final int COLOR_PLOT = 0xFFB8C0CC;
     // Cores dos episódios na grade
     private static final int COLOR_WATCHED = 0xFF7C8798;
-    private static final int COLOR_CURRENT = 0xFF5AA2FF;
+    private static final int COLOR_CURRENT = 0xFFC9A55C;
     private static final int COLOR_TODO = 0xFFFFFFFF;
 
     private CredentialStore.Credentials creds;

@@ -37,7 +37,7 @@ public final class EpgDialog {
     private static final int COLOR_WHITE = 0xFFFFFFFF;
     private static final int COLOR_NEUTRAL = 0xFFB8C0CC;
     private static final int COLOR_ERROR = 0xFFF28B82;
-    private static final int COLOR_NOW = 0xFF5AA2FF;
+    private static final int COLOR_NOW = 0xFFC9A55C;
 
     private EpgDialog() {
     }

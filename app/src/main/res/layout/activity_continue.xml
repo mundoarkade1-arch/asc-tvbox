@@ -4,6 +4,8 @@
     android:layout_height="match_parent"
     android:background="@drawable/bg_gradient"
     android:orientation="vertical"
+    android:clipChildren="false"
+    android:clipToPadding="false"
     android:paddingStart="48dp"
     android:paddingTop="16dp"
     android:paddingEnd="48dp"
@@ -13,7 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Continue assistindo"
-        android:textColor="#5AA2FF"
+        android:textColor="@color/asc_gold"
         android:textSize="26sp"
         android:textStyle="bold" />
 

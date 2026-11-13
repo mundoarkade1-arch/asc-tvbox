@@ -18,6 +18,8 @@
         android:layout_marginBottom="16dp"
         android:background="@drawable/glass_strong"
         android:orientation="vertical"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:paddingStart="32dp"
         android:paddingTop="32dp"
         android:paddingEnd="32dp"
@@ -80,7 +82,7 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:text="ASC Play"
-            android:textColor="#5AA2FF"
+            android:textColor="@color/asc_gold"
             android:textSize="36sp"
             android:textStyle="bold" />
 

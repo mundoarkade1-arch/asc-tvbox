@@ -27,6 +27,7 @@ final class TopBar extends LinearLayout {
         setOrientation(HORIZONTAL);
         setGravity(Gravity.CENTER_VERTICAL);
         setClipChildren(false);
+        setClipToPadding(false);
         final int h = GlassKit.dp(c, 36);
         final int corner = GlassKit.dp(c, 18);
 

@@ -548,3 +548,7 @@
 - Decisão: banner mais alto (HeroBanner.HEIGHT 296 -> 410), painel com título e botões no canto inferior esquerdo. Motivo: ficava "curtinho".
 - Decisão: banner vai até a borda direita da tela (margem negativa igual ao padding da coluna; cantos da direita retos). Motivo: sobrava uma faixa azul à direita.
 - Decisão: menu lateral (SideRail) com clipChildren/clipToPadding desligados. Motivo: o item em foco cresce e o anel/borda de seleção era cortado nas laterais.
+
+## 13/11/2026: Dourado e vidro no app inteiro; correção de cortes
+- Decisão: foco, item selecionado do menu, títulos das telas e episódio atual agora são dourados (#C9A55C) em TODAS as telas, não só na Home. Feito nos drawables compartilhados (glass_focus_14/16, bg_card_outer_focus, bg_card_home, bg_field, bg_button_primary, bg_nav_tab, nav_text) e em asc_gold.xml (novas cores asc_gold_glow e asc_gold_tint). Motivo: pedido do dono (app inteiro coerente).
+- Lição: ViewGroup com padding corta os filhos na área do padding mesmo com clipChildren=false. É preciso também clipToPadding=false (era o que cortava o banner na direita, a busca e o menu).

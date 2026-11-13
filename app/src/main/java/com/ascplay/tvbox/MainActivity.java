@@ -434,7 +434,7 @@ public class MainActivity extends Activity {
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xCC101010);
         bg.setCornerRadius(dp(6));
-        bg.setStroke(dp(1), 0xFF5AA2FF);
+        bg.setStroke(dp(1), 0xFFC9A55C);
         skipButton.setBackground(bg);
         skipButton.setFocusable(false);
         skipButton.setVisibility(View.GONE);

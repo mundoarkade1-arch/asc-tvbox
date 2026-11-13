@@ -10,7 +10,7 @@
             </item>
             <item>
                 <shape android:shape="rectangle">
-                    <stroke android:width="2dp" android:color="@color/asc_focus" />
+                    <stroke android:width="2dp" android:color="@color/asc_gold" />
                     <corners android:radius="14dp" />
                 </shape>
             </item>
