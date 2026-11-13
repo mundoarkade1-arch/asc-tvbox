@@ -289,18 +289,23 @@ public class HomeActivity extends Activity {
         column.setClipChildren(false);
         // sem isto a coluna corta o que passa do padding (banner até a borda e anel de foco)
         column.setClipToPadding(false);
-        column.setPadding(GlassKit.dp(this, 16), GlassKit.dp(this, 20), GlassKit.dp(this, 24), 0);
+        column.setPadding(0, GlassKit.dp(this, 20), 0, 0); // margens laterais ficam na barra e no corpo
         main.addView(column, new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.MATCH_PARENT, 1f));
 
         topBar = new TopBar(this);
-        column.addView(topBar, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        // Barra do topo FIXA: fica fora da rolagem
+        LinearLayout.LayoutParams tbl = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        tbl.leftMargin = GlassKit.dp(this, 16);
+        tbl.rightMargin = GlassKit.dp(this, 24);
+        column.addView(topBar, tbl);
 
         scroll = new ScrollView(this);
         scroll.setFocusable(false);
         scroll.setVerticalScrollBarEnabled(false);
-        scroll.setClipChildren(false);
+        // Corta o que rola por cima da barra do topo (a rolagem ocupa a tela até a borda direita)
+        scroll.setClipChildren(true);
         scroll.setClipToPadding(false);
         column.addView(scroll, new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
@@ -309,7 +314,8 @@ public class HomeActivity extends Activity {
         body.setOrientation(LinearLayout.VERTICAL);
         body.setClipChildren(false);
         body.setClipToPadding(false);
-        body.setPadding(0, GlassKit.dp(this, 10), 0, GlassKit.dp(this, 28));
+        body.setPadding(GlassKit.dp(this, 16), GlassKit.dp(this, 10), GlassKit.dp(this, 24),
+                GlassKit.dp(this, 28));
         scroll.addView(body, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
 
