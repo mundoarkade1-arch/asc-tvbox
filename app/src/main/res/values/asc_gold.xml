@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Dourado discreto (champagne), pedido para dar um toque de sofisticação.
+  Usado só em pequenos detalhes: anel de foco, borda do item selecionado, etiquetas
+  ("EM DESTAQUE", "AO VIVO AGORA"), traço ao lado dos títulos e nota dos filmes.
+  As demais cores do app continuam as mesmas.
+-->
+<resources>
+    <color name="asc_gold">#FFC9A55C</color>
+</resources>

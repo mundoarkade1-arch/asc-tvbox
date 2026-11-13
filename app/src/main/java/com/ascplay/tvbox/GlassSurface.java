@@ -123,7 +123,7 @@ class GlassSurface extends FrameLayout {
             focusLo = selLo;
             // borda de 1dp: branco com ~10% (bem sutil)
             borderNormal = GlassKit.alpha(c, R.color.asc_text_primary, 0.10f);
-            borderSelected = GlassKit.alpha(c, R.color.asc_focus, 0.85f);
+            borderSelected = GlassKit.alpha(c, R.color.asc_gold, 0.80f);
             sheenNormal = GlassKit.alpha(c, R.color.asc_text_primary, 0.14f);
             accent = GlassKit.color(c, R.color.asc_accent);
             // item selecionado = destaque (azul do app); foco = azul mais leve
@@ -276,7 +276,7 @@ class GlassSurface extends FrameLayout {
             this.glowW = GlassKit.dp(c, 6f);
             ringPaint.setStyle(Paint.Style.STROKE);
             ringPaint.setStrokeWidth(ringW);
-            ringPaint.setColor(GlassKit.color(c, R.color.asc_focus));
+            ringPaint.setColor(GlassKit.alpha(c, R.color.asc_gold, 0.95f)); // anel dourado
             glowPaint.setStyle(Paint.Style.STROKE);
             glowPaint.setStrokeWidth(glowW);
             glowPaint.setColor(GlassKit.alpha(c, R.color.asc_accent, 0.55f));

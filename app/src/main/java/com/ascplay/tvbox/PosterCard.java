@@ -65,7 +65,7 @@ final class PosterCard extends GlassSurface {
         title = new TextView(c);
         title.setTextSize(GlassKit.sp(13));
         title.setTypeface(title.getTypeface(), Typeface.BOLD);
-        title.setSingleLine(true);
+        title.setMaxLines(2); // nome em até 2 linhas, para dar para ler
         title.setEllipsize(TextUtils.TruncateAt.END);
         title.setTextColor(GlassKit.color(c, R.color.asc_text_primary));
         strip.addView(title, new LinearLayout.LayoutParams(
@@ -93,8 +93,8 @@ final class PosterCard extends GlassSurface {
         rating.setTypeface(rating.getTypeface(), Typeface.BOLD);
         rating.setSingleLine(true);
         rating.setPadding(GlassKit.dp(c, 6), GlassKit.dp(c, 2), GlassKit.dp(c, 6), GlassKit.dp(c, 2));
-        GlassKit.chip(rating, GlassKit.dp(c, 10), R.color.asc_glass_light, 0.85f,
-                R.color.asc_text_primary);
+        GlassKit.chip(rating, GlassKit.dp(c, 10), R.color.asc_glass_light, 0.90f,
+                R.color.asc_gold);
         rating.setVisibility(GONE);
         FrameLayout.LayoutParams rl = new FrameLayout.LayoutParams(
                 LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, Gravity.TOP | Gravity.START);
@@ -107,9 +107,15 @@ final class PosterCard extends GlassSurface {
 
     /** Medidas e margem do card dentro da linha. */
     static LinearLayout.LayoutParams params(Context c) {
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                GlassKit.d(c, W), GlassKit.d(c, H));
-        lp.rightMargin = GlassKit.d(c, 20);
+        // Tamanho calculado pela largura da tela: aparecem no máximo 6 cards por vez.
+        // O resto da linha se vê rolando para a direita.
+        int screenW = c.getResources().getDisplayMetrics().widthPixels;
+        int overhead = GlassKit.dp(c, 16 + 76 + 16 + 24 + 12); // menu, margens e folgas
+        int gap = GlassKit.d(c, 20);
+        int w = (screenW - overhead - gap * 6) / 6;
+        int h = Math.round(w * 1.5f); // proporção 2:3
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(w, h);
+        lp.rightMargin = gap;
         return lp;
     }
 

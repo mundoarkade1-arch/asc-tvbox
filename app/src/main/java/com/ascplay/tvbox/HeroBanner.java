@@ -75,8 +75,8 @@ final class HeroBanner extends FrameLayout {
         chips.setOrientation(LinearLayout.HORIZONTAL);
         chips.setGravity(Gravity.CENTER_VERTICAL);
         TextView chipFeatured = makeChip(c, "EM DESTAQUE");
-        GlassKit.chip(chipFeatured, GlassKit.dp(c, 10), R.color.asc_accent, 0.90f,
-                R.color.asc_text_primary);
+        GlassKit.chip(chipFeatured, GlassKit.dp(c, 10), R.color.asc_glass_light, 0.95f,
+                R.color.asc_gold);
         chips.addView(chipFeatured, chipParams(c));
         chipKind = makeChip(c, "");
         chips.addView(chipKind, chipParams(c));
@@ -135,7 +135,7 @@ final class HeroBanner extends FrameLayout {
         View dot = new View(c);
         GradientDrawable dg = new GradientDrawable();
         dg.setShape(GradientDrawable.OVAL);
-        dg.setColor(GlassKit.color(c, R.color.asc_focus));
+        dg.setColor(GlassKit.color(c, R.color.asc_gold));
         dot.setBackground(dg);
         LinearLayout.LayoutParams dl = new LinearLayout.LayoutParams(
                 GlassKit.dp(c, 7), GlassKit.dp(c, 7));
@@ -145,7 +145,7 @@ final class HeroBanner extends FrameLayout {
         label.setText("AO VIVO AGORA");
         label.setTextSize(GlassKit.sp(12));
         label.setTypeface(label.getTypeface(), Typeface.BOLD);
-        label.setTextColor(GlassKit.color(c, R.color.asc_focus));
+        label.setTextColor(GlassKit.color(c, R.color.asc_gold));
         labelRow.addView(label, new LinearLayout.LayoutParams(
                 LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
         lc.addView(labelRow, new LinearLayout.LayoutParams(

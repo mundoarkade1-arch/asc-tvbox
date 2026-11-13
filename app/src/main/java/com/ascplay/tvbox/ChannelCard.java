@@ -88,7 +88,7 @@ final class ChannelCard extends GlassSurface {
         View dot = new View(c);
         GradientDrawable dotBg = new GradientDrawable();
         dotBg.setShape(GradientDrawable.OVAL);
-        dotBg.setColor(GlassKit.color(c, R.color.asc_focus));
+        dotBg.setColor(GlassKit.color(c, R.color.asc_gold));
         dot.setBackground(dotBg);
         int ds = GlassKit.dp(c, 6);
         FrameLayout.LayoutParams dl = new FrameLayout.LayoutParams(ds, ds, Gravity.TOP | Gravity.END);

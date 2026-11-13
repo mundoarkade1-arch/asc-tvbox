@@ -2,6 +2,7 @@ package com.ascplay.tvbox;
 
 import android.content.Context;
 import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -38,6 +39,18 @@ final class SectionRow extends LinearLayout {
         header.setClipChildren(false);
         addView(header, new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, GlassKit.dp(c, 32)));
+
+        // traço dourado discreto ao lado do título
+        View mark = new View(c);
+        GradientDrawable markBg = new GradientDrawable();
+        markBg.setColor(GlassKit.alpha(c, R.color.asc_gold, 0.90f));
+        markBg.setCornerRadius(GlassKit.dp(c, 2));
+        mark.setBackground(markBg);
+        LinearLayout.LayoutParams ml = new LinearLayout.LayoutParams(
+                GlassKit.dp(c, 3), GlassKit.dp(c, 18));
+        ml.leftMargin = GlassKit.dp(c, 6);
+        ml.rightMargin = GlassKit.dp(c, 8);
+        header.addView(mark, ml);
 
         title = new TextView(c);
         title.setText(titleText);
