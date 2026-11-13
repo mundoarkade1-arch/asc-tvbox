@@ -61,7 +61,11 @@ final class HeroBanner extends FrameLayout {
                 GlassSurface.STYLE_GLASS, true);
         LinearLayout pc = new LinearLayout(c);
         pc.setOrientation(LinearLayout.VERTICAL);
-        pc.setPadding(GlassKit.dp(c, 14), GlassKit.dp(c, 10), GlassKit.dp(c, 14), GlassKit.dp(c, 12));
+        pc.setClipChildren(false);
+        pc.setClipToPadding(false);
+        panel.setClipChildren(false);
+        panel.setClipToPadding(false);
+        pc.setPadding(GlassKit.dp(c, 14), GlassKit.dp(c, 10), GlassKit.dp(c, 14), GlassKit.dp(c, 14));
         panel.addView(pc, new FrameLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
@@ -97,17 +101,20 @@ final class HeroBanner extends FrameLayout {
         LinearLayout buttons = new LinearLayout(c);
         buttons.setOrientation(LinearLayout.HORIZONTAL);
         buttons.setClipChildren(false);
+        buttons.setClipToPadding(false);
+        buttons.setPadding(GlassKit.dp(c, 4), GlassKit.dp(c, 4), GlassKit.dp(c, 4), GlassKit.dp(c, 4));
         playButton = new GlassSurface.Button(c, "\u25B6  Assistir", true);
         listButton = new GlassSurface.Button(c, "+ Minha lista", false);
+        // largura pelo texto (antes era fixa e o "+ Minha lista" ficava cortado)
         buttons.addView(playButton, new LinearLayout.LayoutParams(
-                GlassKit.dp(c, 104), GlassKit.dp(c, 36)));
+                LayoutParams.WRAP_CONTENT, GlassKit.dp(c, 40)));
         LinearLayout.LayoutParams lb = new LinearLayout.LayoutParams(
-                GlassKit.dp(c, 116), GlassKit.dp(c, 36));
+                LayoutParams.WRAP_CONTENT, GlassKit.dp(c, 40));
         lb.leftMargin = GlassKit.dp(c, 10);
         buttons.addView(listButton, lb);
         LinearLayout.LayoutParams bl = new LinearLayout.LayoutParams(
                 LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        bl.topMargin = GlassKit.dp(c, 8);
+        bl.topMargin = GlassKit.dp(c, 6);
         pc.addView(buttons, bl);
 
         FrameLayout.LayoutParams pp = new FrameLayout.LayoutParams(

@@ -294,19 +294,11 @@ public class HomeActivity extends Activity {
                 0, LinearLayout.LayoutParams.MATCH_PARENT, 1f));
 
         topBar = new TopBar(this);
-        // Barra do topo FIXA: fica fora da rolagem
-        LinearLayout.LayoutParams tbl = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        tbl.leftMargin = GlassKit.dp(this, 16);
-        tbl.rightMargin = GlassKit.dp(this, 24);
-        column.addView(topBar, tbl);
-        // Garantia extra: a barra do topo fica SEMPRE na frente de qualquer card (maior que o 6dp do foco)
-        topBar.setTranslationZ(GlassKit.dp(this, 12));
 
         scroll = new ScrollView(this);
         scroll.setFocusable(false);
         scroll.setVerticalScrollBarEnabled(false);
-        // Corta o que rola por cima da barra do topo (a rolagem ocupa a tela até a borda direita)
+        // A rolagem ocupa a tela até a borda direita (o banner vai até a borda)
         scroll.setClipChildren(true);
         scroll.setClipToPadding(false);
         column.addView(scroll, new LinearLayout.LayoutParams(
@@ -320,6 +312,13 @@ public class HomeActivity extends Activity {
                 GlassKit.dp(this, 28));
         scroll.addView(body, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
+
+        // Barra do topo (busca, "Lista atualizada", relógio): fica PARADA no topo da página e
+        // rola junto com o conteúdo (some ao descer; para pesquisar, sobe até o topo)
+        LinearLayout.LayoutParams tbl = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        tbl.bottomMargin = GlassKit.dp(this, 8);
+        body.addView(topBar, tbl);
 
         buildUpdateBar(body);
 
