@@ -155,7 +155,7 @@ final class GlassKit {
         Bar(Context c) {
             super(c);
             track.setColor(alpha(c, R.color.asc_text_primary, 0.18f));
-            fill.setColor(color(c, R.color.asc_accent));
+            fill.setColor(color(c, R.color.asc_gold)); // progresso dourado
         }
 
         void setFraction(float f) {

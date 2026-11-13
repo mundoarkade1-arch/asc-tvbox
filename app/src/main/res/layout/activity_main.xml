@@ -119,7 +119,7 @@
                     android:layout_weight="1"
                     android:max="100"
                     android:progress="0"
-                    android:progressTint="#1F6FEB"
+                    android:progressTint="#C9A55C"
                     android:progressBackgroundTint="#33FFFFFF" />
 
                 <TextView

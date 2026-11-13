@@ -3,6 +3,8 @@ package com.ascplay.tvbox;
 import android.app.Activity;
 import android.content.Intent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 /**
@@ -27,47 +29,61 @@ final class NavBar {
     private NavBar() {
     }
 
-    /** Mostra o menu na tela e liga os botões. "current" é a aba em que a tela está. */
+    /**
+     * Mostra o menu na tela e liga os botões. "current" é a aba em que a tela está.
+     * O menu é o MESMO da tela inicial (SideRail, cápsula de vidro flutuante com borda dourada):
+     * troca o menu antigo do layout (group_nav) por ele, no mesmo lugar.
+     */
     static void bind(final Activity activity, final int current, final Runnable onRefresh) {
-        View nav = activity.findViewById(R.id.group_nav);
-        if (nav == null) {
+        View old = activity.findViewById(R.id.group_nav);
+        if (old == null || !(old.getParent() instanceof ViewGroup)) {
             return;
         }
-        nav.setVisibility(View.VISIBLE);
+        ViewGroup parent = (ViewGroup) old.getParent();
+        int index = parent.indexOfChild(old);
+        parent.removeView(old);
 
-        int selectedId;
+        SideRail rail = new SideRail(activity);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                GlassKit.dp(activity, 76), LinearLayout.LayoutParams.MATCH_PARENT);
+        lp.leftMargin = GlassKit.dp(activity, 16);
+        lp.topMargin = GlassKit.dp(activity, 16);
+        lp.bottomMargin = GlassKit.dp(activity, 16);
+        parent.addView(rail, index, lp);
+
+        rail.home.setSelected(false);
+        GlassSurface selected;
         switch (current) {
             case HOME:
-                selectedId = R.id.nav_home;
+                selected = rail.home;
                 break;
             case LIVE:
-                selectedId = R.id.nav_live;
+                selected = rail.live;
                 break;
             case MOVIE:
-                selectedId = R.id.nav_movie;
+                selected = rail.movie;
                 break;
             case SERIES:
-                selectedId = R.id.nav_series;
+                selected = rail.series;
                 break;
             case SETTINGS:
-                selectedId = R.id.nav_settings;
+                selected = rail.settings;
                 break;
             default:
-                selectedId = View.NO_ID;
+                selected = null;
                 break;
         }
-        View selected = activity.findViewById(selectedId);
         if (selected != null) {
             selected.setSelected(true);
         }
 
-        click(activity, R.id.nav_home, v -> goHome(activity));
-        click(activity, R.id.nav_live, v -> goTab(activity, current, LIVE, XtreamApi.Kind.LIVE));
-        click(activity, R.id.nav_movie, v -> goTab(activity, current, MOVIE, XtreamApi.Kind.MOVIE));
-        click(activity, R.id.nav_series,
+        rail.home.setOnClickListener(v -> goHome(activity));
+        rail.live.setOnClickListener(v -> goTab(activity, current, LIVE, XtreamApi.Kind.LIVE));
+        rail.movie.setOnClickListener(v -> goTab(activity, current, MOVIE, XtreamApi.Kind.MOVIE));
+        rail.series.setOnClickListener(
                 v -> goTab(activity, current, SERIES, XtreamApi.Kind.SERIES));
-        click(activity, R.id.nav_settings, v -> goSettings(activity, current));
-        click(activity, R.id.nav_refresh, v -> {
+        rail.settings.setOnClickListener(v -> goSettings(activity, current));
+        rail.refresh.setOnClickListener(v -> {
             if (onRefresh != null) {
                 Toast.makeText(activity, "Atualizando a lista...", Toast.LENGTH_SHORT).show();
                 onRefresh.run();
