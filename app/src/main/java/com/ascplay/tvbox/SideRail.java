@@ -30,10 +30,15 @@ final class SideRail extends GlassSurface {
 
     SideRail(Context c) {
         super(c, GlassKit.d(c, 40), false, STYLE_GLASS, true);
+        // O item em foco cresce e tem anel/brilho: sem isto o menu cortava a borda de seleção
+        setClipChildren(false);
+        setClipToPadding(false);
 
         LinearLayout col = new LinearLayout(c);
         col.setOrientation(LinearLayout.VERTICAL);
         col.setGravity(Gravity.CENTER_HORIZONTAL);
+        col.setClipChildren(false);
+        col.setClipToPadding(false);
         col.setPadding(GlassKit.dp(c, 5), GlassKit.dp(c, 10), GlassKit.dp(c, 5), GlassKit.dp(c, 12));
         addView(col, new FrameLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));

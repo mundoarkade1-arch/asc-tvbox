@@ -83,6 +83,22 @@ final class GlassKit {
         v.setClipToOutline(true);
     }
 
+    /**
+     * Como roundClip, mas só os cantos da ESQUERDA ficam arredondados (os da direita ficam
+     * retos). Usado no banner que vai até a borda direita da tela.
+     */
+    static void roundClipStart(View v, final float radiusPx) {
+        v.setOutlineProvider(new ViewOutlineProvider() {
+            @Override
+            public void getOutline(View view, Outline outline) {
+                // o retângulo passa da borda direita: os cantos de lá ficam fora da view
+                outline.setRoundRect(0, 0, view.getWidth() + Math.round(radiusPx),
+                        view.getHeight(), radiusPx);
+            }
+        });
+        v.setClipToOutline(true);
+    }
+
     /** Pílula pequena de vidro (chips e notas). Não é focável. */
     static void chip(TextView t, int corner, int bgResId, float bgAlpha, int textResId) {
         Context c = t.getContext();
@@ -175,9 +191,18 @@ final class GlassKit {
 
     /** Fundo do placeholder sem capa: degradê sutil com as cores do app. */
     static GradientDrawable placeholder(Context c, int corner) {
+        return placeholder(c, corner, false);
+    }
+
+    /** startOnly = true: só os cantos da esquerda arredondados (banner até a borda da tela). */
+    static GradientDrawable placeholder(Context c, int corner, boolean startOnly) {
         GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
                 new int[]{alpha(c, R.color.asc_accent, 0.55f), alpha(c, R.color.asc_glass_light, 0.95f)});
-        g.setCornerRadius(corner);
+        if (startOnly) {
+            g.setCornerRadii(new float[]{corner, corner, 0, 0, 0, 0, corner, corner});
+        } else {
+            g.setCornerRadius(corner);
+        }
         return g;
     }
 }

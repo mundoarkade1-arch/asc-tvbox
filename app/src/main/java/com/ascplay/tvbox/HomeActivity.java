@@ -95,7 +95,6 @@ public class HomeActivity extends Activity {
     private int railGen = 0;
     private int continueGen = 0;
     private int favGen = 0;
-    private int liveGen = 0;
     private volatile int heroGen = 0;
 
     // Estado do controle parental na última vez que as faixas foram montadas
@@ -144,7 +143,6 @@ public class HomeActivity extends Activity {
     private List<HeroEntry> heroEntries = new ArrayList<>();
     private int heroIndex = 0;
     private XtreamApi.Item currentHero;
-    private XtreamApi.Item heroLive;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private boolean resumed = false;
 
@@ -214,7 +212,6 @@ public class HomeActivity extends Activity {
             // O "Continue assistindo", a Minha lista e o último canal podem ter mudado
             loadContinue();
             loadFavorites();
-            refreshLiveCard();
         }
     }
 
@@ -317,7 +314,8 @@ public class HomeActivity extends Activity {
         buildUpdateBar(body);
 
         hero = new HeroBanner(this);
-        body.addView(hero, HeroBanner.params(this));
+        // O banner vai até a borda direita da tela (sem a faixa de margem da coluna)
+        body.addView(hero, HeroBanner.params(this, GlassKit.dp(this, 24)));
 
         rowContinue = addRow(body, "Continue assistindo");
         rowContinue.setVisibility(View.GONE);
@@ -393,7 +391,7 @@ public class HomeActivity extends Activity {
             public void onFocusChange(View v, boolean hasFocus) {
                 if (hasFocus) {
                     lastContentFocus = v;
-                    focusedLive = (v == hero.liveCard()) ? heroLive : null;
+                    focusedLive = null;
                     scroll.smoothScrollTo(0, 0);
                 }
             }
@@ -401,7 +399,6 @@ public class HomeActivity extends Activity {
         GlassKit.focusScale(topBar.searchPill(), 1.05f, heroTrack);
         GlassKit.focusScale(hero.playButton(), 1.08f, heroTrack);
         GlassKit.focusScale(hero.listButton(), 1.08f, heroTrack);
-        GlassKit.focusScale(hero.liveCard(), 1.06f, heroTrack);
 
         for (SectionRow r : rows) {
             final SectionRow row = r;
@@ -440,15 +437,6 @@ public class HomeActivity extends Activity {
             }
         });
         hero.listButton().setOnClickListener(v -> toggleHeroFavorite());
-        hero.liveCard().setOnClickListener(v -> {
-            if (heroLive != null) {
-                openItem(heroLive);
-            }
-        });
-        hero.liveCard().setOnLongClickListener(v -> {
-            openSchedule(heroLive);
-            return heroLive != null && isXtream();
-        });
 
         rowContinue.viewAllButton().setOnClickListener(
                 v -> startActivity(new Intent(this, ContinueActivity.class)));
@@ -739,9 +727,7 @@ public class HomeActivity extends Activity {
     }
 
     private void afterRail(XtreamApi.Kind kind) {
-        if (kind == XtreamApi.Kind.LIVE) {
-            refreshLiveCard();
-        } else {
+        if (kind != XtreamApi.Kind.LIVE) {
             // espera um instante para as duas faixas (filmes e séries) chegarem
             handler.removeCallbacks(heroBuild);
             handler.postDelayed(heroBuild, 400L);
@@ -973,54 +959,6 @@ public class HomeActivity extends Activity {
                 loadFavorites();
             });
         }).start();
-    }
-
-    // ---------------------------------------------------------------------------------
-    // Card "AO VIVO AGORA"
-    // ---------------------------------------------------------------------------------
-
-    /** Último canal aberto (ou o primeiro da lista). Lê o Keystore fora da thread principal. */
-    private void refreshLiveCard() {
-        if (creds == null) {
-            return;
-        }
-        final int gen = ++liveGen;
-        new Thread(() -> {
-            final XtreamApi.Item saved = HomeStore.loadLastLive(this, owner);
-            runOnUiThread(() -> applyLiveCard(gen, saved));
-        }).start();
-    }
-
-    private void applyLiveCard(int gen, XtreamApi.Item saved) {
-        if (gen != liveGen || isFinishing() || isDestroyed()) {
-            return;
-        }
-        XtreamApi.Item chosen = saved;
-        if (chosen != null && ParentalStore.isEnabled(this)
-                && ParentalStore.isAdultName(chosen.name)) {
-            chosen = null;
-        }
-        if (chosen == null && !liveItems.isEmpty()) {
-            chosen = liveItems.get(0);
-        }
-        if (chosen == null) {
-            heroLive = null;
-            hero.hideLive();
-            return;
-        }
-        heroLive = chosen;
-        hero.setLive(chosen.name, liveSubtitle(chosen), -1f, chosen.icon);
-        if (isXtream()) {
-            final XtreamApi.Item target = chosen;
-            EpgCache.get(creds.server, creds.user, creds.pass, target.id, epg -> {
-                if (isFinishing() || isDestroyed() || heroLive != target) {
-                    return;
-                }
-                if (epg != null) {
-                    hero.setLiveProgress(epg.title, progressOf(epg));
-                }
-            });
-        }
     }
 
     // ---------------------------------------------------------------------------------

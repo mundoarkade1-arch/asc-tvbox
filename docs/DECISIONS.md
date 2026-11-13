@@ -542,3 +542,9 @@
 - Decisão: ícones do menu viraram linha fina de um traço, tingidos por nav_text.xml (cinza-claro, azul-claro quando selecionado). Ícone do app, brand_icon e banner da TV refeitos com o ícone novo. Nome do app: ASC Play.
 - Decisão: cards sem transparência (#12294D) e borda de 1dp com 8% de branco; cantos de 14 a 16dp. Texto de erro mais suave (#F28B82).
 
+
+## 13/11/2026: Ajustes da Home (banner e menu)
+- Decisão: tirado o card "AO VIVO AGORA" de cima do banner de destaque. Motivo: pedido do dono (o banner mostra só o filme/série em destaque e o botão Assistir).
+- Decisão: banner mais alto (HeroBanner.HEIGHT 296 -> 410), painel com título e botões no canto inferior esquerdo. Motivo: ficava "curtinho".
+- Decisão: banner vai até a borda direita da tela (margem negativa igual ao padding da coluna; cantos da direita retos). Motivo: sobrava uma faixa azul à direita.
+- Decisão: menu lateral (SideRail) com clipChildren/clipToPadding desligados. Motivo: o item em foco cresce e o anel/borda de seleção era cortado nas laterais.
