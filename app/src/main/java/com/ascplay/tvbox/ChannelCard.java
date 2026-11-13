@@ -18,8 +18,8 @@ import android.widget.TextView;
  */
 final class ChannelCard extends GlassSurface {
 
-    static final int W = 264;
-    static final int H = 96;
+    static final int W = 340;
+    static final int H = 104;
 
     private final TextView initial;
     private final ImageView logo;
@@ -46,7 +46,7 @@ final class ChannelCard extends GlassSurface {
         GlassKit.roundClip(logoBox, GlassKit.dp(c, 9));
         initial = new TextView(c);
         initial.setGravity(Gravity.CENTER);
-        initial.setTextSize(16);
+        initial.setTextSize(GlassKit.sp(16));
         initial.setTypeface(initial.getTypeface(), Typeface.BOLD);
         initial.setTextColor(GlassKit.color(c, R.color.asc_focus));
         logoBox.addView(initial, new FrameLayout.LayoutParams(
@@ -68,7 +68,7 @@ final class ChannelCard extends GlassSurface {
         row.addView(texts, tl);
 
         name = new TextView(c);
-        name.setTextSize(13);
+        name.setTextSize(GlassKit.sp(13));
         name.setTypeface(name.getTypeface(), Typeface.BOLD);
         name.setSingleLine(true);
         name.setEllipsize(TextUtils.TruncateAt.END);
@@ -77,7 +77,7 @@ final class ChannelCard extends GlassSurface {
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
         sub = new TextView(c);
-        sub.setTextSize(12);
+        sub.setTextSize(GlassKit.sp(12));
         sub.setSingleLine(true);
         sub.setEllipsize(TextUtils.TruncateAt.END);
         sub.setTextColor(GlassKit.color(c, R.color.asc_text_secondary));

@@ -38,7 +38,7 @@ final class PosterCard extends GlassSurface {
 
         initial = new TextView(c);
         initial.setGravity(Gravity.CENTER);
-        initial.setTextSize(30);
+        initial.setTextSize(GlassKit.sp(30));
         initial.setTypeface(initial.getTypeface(), Typeface.BOLD);
         initial.setTextColor(GlassKit.alpha(c, R.color.asc_text_primary, 0.85f));
         initial.setBackground(GlassKit.placeholder(c, 0));
@@ -63,7 +63,7 @@ final class PosterCard extends GlassSurface {
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT, Gravity.BOTTOM));
 
         title = new TextView(c);
-        title.setTextSize(13);
+        title.setTextSize(GlassKit.sp(13));
         title.setTypeface(title.getTypeface(), Typeface.BOLD);
         title.setSingleLine(true);
         title.setEllipsize(TextUtils.TruncateAt.END);
@@ -72,7 +72,7 @@ final class PosterCard extends GlassSurface {
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
         subtitle = new TextView(c);
-        subtitle.setTextSize(12);
+        subtitle.setTextSize(GlassKit.sp(12));
         subtitle.setSingleLine(true);
         subtitle.setEllipsize(TextUtils.TruncateAt.END);
         subtitle.setTextColor(GlassKit.color(c, R.color.asc_text_secondary));
@@ -89,7 +89,7 @@ final class PosterCard extends GlassSurface {
         addView(progress, pl);
 
         rating = new TextView(c);
-        rating.setTextSize(12);
+        rating.setTextSize(GlassKit.sp(12));
         rating.setTypeface(rating.getTypeface(), Typeface.BOLD);
         rating.setSingleLine(true);
         rating.setPadding(GlassKit.dp(c, 6), GlassKit.dp(c, 2), GlassKit.dp(c, 6), GlassKit.dp(c, 2));

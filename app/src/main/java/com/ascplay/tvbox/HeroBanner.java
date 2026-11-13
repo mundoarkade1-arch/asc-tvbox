@@ -81,7 +81,7 @@ final class HeroBanner extends FrameLayout {
         chipKind = makeChip(c, "");
         chips.addView(chipKind, chipParams(c));
         chipMeta = makeChip(c, "");
-        chipMeta.setMaxWidth(GlassKit.dp(c, 120));
+        chipMeta.setMaxWidth(GlassKit.dp(c, 100));
         chipMeta.setEllipsize(TextUtils.TruncateAt.END);
         chips.addView(chipMeta, chipParams(c));
         chipRating = makeChip(c, "");
@@ -90,7 +90,7 @@ final class HeroBanner extends FrameLayout {
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
         title = new TextView(c);
-        title.setTextSize(26);
+        title.setTextSize(GlassKit.sp(26));
         title.setTypeface(title.getTypeface(), Typeface.BOLD);
         title.setSingleLine(true);
         title.setEllipsize(TextUtils.TruncateAt.END);
@@ -106,9 +106,9 @@ final class HeroBanner extends FrameLayout {
         playButton = new GlassSurface.Button(c, "\u25B6  Assistir", true);
         listButton = new GlassSurface.Button(c, "+ Minha lista", false);
         buttons.addView(playButton, new LinearLayout.LayoutParams(
-                GlassKit.dp(c, 104), GlassKit.dp(c, 34)));
+                GlassKit.dp(c, 100), GlassKit.dp(c, 34)));
         LinearLayout.LayoutParams lb = new LinearLayout.LayoutParams(
-                GlassKit.dp(c, 118), GlassKit.dp(c, 34));
+                GlassKit.dp(c, 112), GlassKit.dp(c, 34));
         lb.leftMargin = GlassKit.dp(c, 10);
         buttons.addView(listButton, lb);
         LinearLayout.LayoutParams bl = new LinearLayout.LayoutParams(
@@ -117,7 +117,7 @@ final class HeroBanner extends FrameLayout {
         pc.addView(buttons, bl);
 
         FrameLayout.LayoutParams pp = new FrameLayout.LayoutParams(
-                GlassKit.dp(c, 372), LayoutParams.WRAP_CONTENT, Gravity.START | Gravity.CENTER_VERTICAL);
+                GlassKit.dp(c, 340), LayoutParams.WRAP_CONTENT, Gravity.START | Gravity.CENTER_VERTICAL);
         pp.leftMargin = GlassKit.dp(c, 14);
         addView(panel, pp);
 
@@ -143,7 +143,7 @@ final class HeroBanner extends FrameLayout {
         labelRow.addView(dot, dl);
         TextView label = new TextView(c);
         label.setText("AO VIVO AGORA");
-        label.setTextSize(12);
+        label.setTextSize(GlassKit.sp(12));
         label.setTypeface(label.getTypeface(), Typeface.BOLD);
         label.setTextColor(GlassKit.color(c, R.color.asc_focus));
         labelRow.addView(label, new LinearLayout.LayoutParams(
@@ -162,7 +162,7 @@ final class HeroBanner extends FrameLayout {
         GlassKit.roundClip(thumbBox, GlassKit.dp(c, 9));
         liveInitial = new TextView(c);
         liveInitial.setGravity(Gravity.CENTER);
-        liveInitial.setTextSize(16);
+        liveInitial.setTextSize(GlassKit.sp(16));
         liveInitial.setTypeface(liveInitial.getTypeface(), Typeface.BOLD);
         liveInitial.setTextColor(GlassKit.color(c, R.color.asc_focus));
         thumbBox.addView(liveInitial, new FrameLayout.LayoutParams(
@@ -181,7 +181,7 @@ final class HeroBanner extends FrameLayout {
         xl.leftMargin = GlassKit.dp(c, 8);
         body.addView(texts, xl);
         liveName = new TextView(c);
-        liveName.setTextSize(13);
+        liveName.setTextSize(GlassKit.sp(13));
         liveName.setTypeface(liveName.getTypeface(), Typeface.BOLD);
         liveName.setSingleLine(true);
         liveName.setEllipsize(TextUtils.TruncateAt.END);
@@ -189,7 +189,7 @@ final class HeroBanner extends FrameLayout {
         texts.addView(liveName, new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         liveProgram = new TextView(c);
-        liveProgram.setTextSize(12);
+        liveProgram.setTextSize(GlassKit.sp(12));
         liveProgram.setSingleLine(true);
         liveProgram.setEllipsize(TextUtils.TruncateAt.END);
         liveProgram.setTextColor(GlassKit.color(c, R.color.asc_text_secondary));
@@ -208,7 +208,7 @@ final class HeroBanner extends FrameLayout {
         lc.addView(liveBar, barLp);
 
         FrameLayout.LayoutParams cp = new FrameLayout.LayoutParams(
-                GlassKit.dp(c, 196), LayoutParams.WRAP_CONTENT, Gravity.END | Gravity.CENTER_VERTICAL);
+                GlassKit.dp(c, 170), LayoutParams.WRAP_CONTENT, Gravity.END | Gravity.CENTER_VERTICAL);
         cp.rightMargin = GlassKit.dp(c, 16);
         addView(liveCard, cp);
         GlassKit.focusScale(liveCard, 1.06f, null);
@@ -224,11 +224,11 @@ final class HeroBanner extends FrameLayout {
     private static TextView makeChip(Context c, String text) {
         TextView t = new TextView(c);
         t.setText(text);
-        t.setTextSize(12);
+        t.setTextSize(GlassKit.sp(12));
         t.setTypeface(t.getTypeface(), Typeface.BOLD);
         t.setSingleLine(true);
         t.setPadding(GlassKit.dp(c, 8), GlassKit.dp(c, 3), GlassKit.dp(c, 8), GlassKit.dp(c, 3));
-        GlassKit.chip(t, GlassKit.dp(c, 10), R.color.asc_text_primary, 0.14f, R.color.asc_text_primary);
+        GlassKit.chip(t, GlassKit.dp(c, 10), R.color.asc_glass_light, 0.90f, R.color.asc_text_primary);
         return t;
     }
 

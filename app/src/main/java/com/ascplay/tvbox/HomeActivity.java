@@ -280,7 +280,7 @@ public class HomeActivity extends Activity {
         // Menu lateral flutuante: 32px das bordas no desenho = 16dp
         rail = new SideRail(this);
         LinearLayout.LayoutParams rl = new LinearLayout.LayoutParams(
-                GlassKit.dp(this, 68), LinearLayout.LayoutParams.MATCH_PARENT);
+                GlassKit.dp(this, 76), LinearLayout.LayoutParams.MATCH_PARENT);
         rl.leftMargin = GlassKit.dp(this, 16);
         rl.topMargin = GlassKit.dp(this, 16);
         rl.bottomMargin = GlassKit.dp(this, 16);
@@ -352,7 +352,7 @@ public class HomeActivity extends Activity {
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
 
         tvUpdate = new TextView(this);
-        tvUpdate.setTextSize(15);
+        tvUpdate.setTextSize(GlassKit.sp(15));
         tvUpdate.setTypeface(tvUpdate.getTypeface(), Typeface.BOLD);
         tvUpdate.setTextColor(GlassKit.color(this, R.color.asc_focus));
         row.addView(tvUpdate, new LinearLayout.LayoutParams(0,

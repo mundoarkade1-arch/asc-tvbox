@@ -28,6 +28,12 @@ final class GlassKit {
 
     static final float DESIGN_TO_DP = 0.5f;
 
+    /**
+     * Aumenta TUDO da tela inicial de uma vez (cards, menu, ícones, textos) para enxergar de
+     * longe na TV. 1.0 = tamanho anterior. Para mudar o tamanho geral, mude só este número.
+     */
+    static final float UI_SCALE = 1.3f;
+
     private GlassKit() {
     }
 
@@ -35,12 +41,17 @@ final class GlassKit {
 
     /** Pixels reais a partir de uma medida do desenho 1920x1080. */
     static int d(Context c, float designPx) {
-        return Math.round(designPx * DESIGN_TO_DP * c.getResources().getDisplayMetrics().density);
+        return Math.round(designPx * DESIGN_TO_DP * UI_SCALE * c.getResources().getDisplayMetrics().density);
     }
 
     /** Pixels reais a partir de dp. */
     static int dp(Context c, float dp) {
-        return Math.round(dp * c.getResources().getDisplayMetrics().density);
+        return Math.round(dp * UI_SCALE * c.getResources().getDisplayMetrics().density);
+    }
+
+    /** Tamanho de texto (sp) já com o aumento geral. */
+    static float sp(float sp) {
+        return sp * UI_SCALE;
     }
 
     // ---------- Cores (sempre as do app, só com alpha diferente) ----------

@@ -41,14 +41,14 @@ final class SectionRow extends LinearLayout {
 
         title = new TextView(c);
         title.setText(titleText);
-        title.setTextSize(18);
+        title.setTextSize(GlassKit.sp(18));
         title.setTypeface(title.getTypeface(), Typeface.BOLD);
         title.setTextColor(GlassKit.color(c, R.color.asc_text_primary));
         header.addView(title, new LinearLayout.LayoutParams(
                 LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
 
         count = new TextView(c);
-        count.setTextSize(13);
+        count.setTextSize(GlassKit.sp(13));
         count.setTextColor(GlassKit.color(c, R.color.asc_text_secondary));
         LinearLayout.LayoutParams cl = new LinearLayout.LayoutParams(
                 0, LayoutParams.WRAP_CONTENT, 1f);
@@ -62,7 +62,7 @@ final class SectionRow extends LinearLayout {
         // estado (carregando / vazio / erro)
         statusBox = new GlassSurface(c, GlassKit.dp(c, 14), false);
         statusText = new TextView(c);
-        statusText.setTextSize(13);
+        statusText.setTextSize(GlassKit.sp(13));
         statusText.setTextColor(GlassKit.color(c, R.color.asc_text_secondary));
         statusText.setPadding(GlassKit.dp(c, 14), GlassKit.dp(c, 10), GlassKit.dp(c, 14),
                 GlassKit.dp(c, 10));

@@ -23,10 +23,7 @@
         android:right="4dp"
         android:bottom="8dp">
         <shape android:shape="rectangle">
-            <gradient
-                android:angle="315"
-                android:endColor="@color/asc_glass_border"
-                android:startColor="@color/asc_glass_border_strong" />
+            <solid android:color="@color/asc_glass_light" />
             <corners android:radius="22dp" />
         </shape>
     </item>
@@ -53,7 +50,7 @@
         <shape android:shape="rectangle">
             <stroke
                 android:width="1dp"
-                android:color="@color/asc_glass_border_strong" />
+                android:color="@color/asc_glass_border" />
             <corners android:radius="22dp" />
         </shape>
     </item>

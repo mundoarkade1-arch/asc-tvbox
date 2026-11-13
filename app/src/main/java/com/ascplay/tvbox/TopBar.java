@@ -43,7 +43,7 @@ final class TopBar extends LinearLayout {
         inner.addView(icon, new LinearLayout.LayoutParams(GlassKit.dp(c, 16), GlassKit.dp(c, 16)));
         TextView hint = new TextView(c);
         hint.setText("Buscar canais, filmes e séries");
-        hint.setTextSize(13);
+        hint.setTextSize(GlassKit.sp(13));
         hint.setSingleLine(true);
         hint.setEllipsize(TextUtils.TruncateAt.END);
         hint.setTextColor(GlassKit.color(c, R.color.asc_text_secondary));
@@ -54,7 +54,7 @@ final class TopBar extends LinearLayout {
         search.addView(inner, new FrameLayout.LayoutParams(
                 LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT));
         GlassKit.focusScale(search, 1.05f, null);
-        addView(search, new LinearLayout.LayoutParams(GlassKit.dp(c, 270), h));
+        addView(search, new LinearLayout.LayoutParams(GlassKit.dp(c, 240), h));
 
         // espaço
         android.view.View spacer = new android.view.View(c);
@@ -74,7 +74,7 @@ final class TopBar extends LinearLayout {
         sp.rightMargin = GlassKit.dp(c, 6);
         chipRow.addView(chipSpinner, sp);
         chipText = new TextView(c);
-        chipText.setTextSize(12);
+        chipText.setTextSize(GlassKit.sp(12));
         chipText.setSingleLine(true);
         chipText.setTypeface(chipText.getTypeface(), Typeface.BOLD);
         chipText.setTextColor(GlassKit.color(c, R.color.asc_text_primary));
@@ -92,7 +92,7 @@ final class TopBar extends LinearLayout {
         TextClock clock = new TextClock(c);
         clock.setFormat24Hour("HH:mm");
         clock.setFormat12Hour("HH:mm");
-        clock.setTextSize(14);
+        clock.setTextSize(GlassKit.sp(14));
         clock.setTypeface(clock.getTypeface(), Typeface.BOLD);
         clock.setTextColor(GlassKit.color(c, R.color.asc_text_primary));
         clock.setGravity(Gravity.CENTER);

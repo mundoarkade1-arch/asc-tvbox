@@ -60,7 +60,7 @@ class GlassSurface extends FrameLayout {
                     filled ? STYLE_FILLED : STYLE_GLASS, false);
             label = new TextView(context);
             label.setText(text);
-            label.setTextSize(14);
+            label.setTextSize(GlassKit.sp(14));
             label.setSingleLine(true);
             label.setGravity(Gravity.CENTER);
             label.setTextColor(GlassKit.color(context, R.color.asc_text_primary));
@@ -103,6 +103,7 @@ class GlassSurface extends FrameLayout {
         private final int sheenNormal;
         private final int accent;
         private final int accentTint;
+        private final int focusTint;
 
         private boolean selected = false;
         private boolean focused = false;
@@ -113,17 +114,21 @@ class GlassSurface extends FrameLayout {
             this.shadow = shadow;
             this.line = Math.max(1f, GlassKit.dp(c, 1));
 
-            glassHi = GlassKit.alpha(c, R.color.asc_text_primary, 0.16f);
-            glassLo = GlassKit.alpha(c, R.color.asc_text_primary, 0.05f);
-            selHi = GlassKit.alpha(c, R.color.asc_text_primary, 0.26f);
-            selLo = GlassKit.alpha(c, R.color.asc_text_primary, 0.11f);
-            focusHi = GlassKit.alpha(c, R.color.asc_text_primary, 0.24f);
-            focusLo = GlassKit.alpha(c, R.color.asc_text_primary, 0.10f);
-            borderNormal = GlassKit.alpha(c, R.color.asc_text_primary, 0.22f);
-            borderSelected = GlassKit.alpha(c, R.color.asc_focus, 0.70f);
-            sheenNormal = GlassKit.alpha(c, R.color.asc_text_primary, 0.38f);
+            // Cards e menus: cor de card do app (azul #12294D), um pouco mais clara que o fundo.
+            glassHi = GlassKit.alpha(c, R.color.asc_glass_light, 0.95f);
+            glassLo = GlassKit.alpha(c, R.color.asc_glass_light, 0.82f);
+            selHi = GlassKit.alpha(c, R.color.asc_glass_light, 1.0f);
+            selLo = GlassKit.alpha(c, R.color.asc_glass_light, 0.92f);
+            focusHi = selHi;
+            focusLo = selLo;
+            // borda de 1dp: branco com ~10% (bem sutil)
+            borderNormal = GlassKit.alpha(c, R.color.asc_text_primary, 0.10f);
+            borderSelected = GlassKit.alpha(c, R.color.asc_focus, 0.85f);
+            sheenNormal = GlassKit.alpha(c, R.color.asc_text_primary, 0.14f);
             accent = GlassKit.color(c, R.color.asc_accent);
-            accentTint = GlassKit.alpha(c, R.color.asc_accent, 0.30f);
+            // item selecionado = destaque (azul do app); foco = azul mais leve
+            accentTint = GlassKit.alpha(c, R.color.asc_accent, 0.42f);
+            focusTint = GlassKit.alpha(c, R.color.asc_accent, 0.24f);
 
             shadowPaint.setColor(GlassKit.color(c, R.color.asc_glass_shadow));
             borderPaint.setStyle(Paint.Style.STROKE);
@@ -204,8 +209,8 @@ class GlassSurface extends FrameLayout {
             rect.set(b.left, b.top, b.right, b.bottom - bottomGap);
             canvas.drawRoundRect(rect, corner, corner, fillPaint);
 
-            if (selected && style != STYLE_FILLED) {
-                tintPaint.setColor(accentTint);
+            if ((selected || focused) && style != STYLE_FILLED) {
+                tintPaint.setColor(selected ? accentTint : focusTint);
                 canvas.drawRoundRect(rect, corner, corner, tintPaint);
             }
 

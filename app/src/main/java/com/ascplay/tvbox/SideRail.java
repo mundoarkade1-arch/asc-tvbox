@@ -42,9 +42,10 @@ final class SideRail extends GlassSurface {
         logo.setImageResource(R.drawable.brand_icon);
         logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
         logo.setContentDescription(null);
+        GlassKit.roundClip(logo, GlassKit.dp(c, 10));
         LinearLayout.LayoutParams ll = new LinearLayout.LayoutParams(
-                GlassKit.dp(c, 32), GlassKit.dp(c, 32));
-        ll.bottomMargin = GlassKit.dp(c, 8);
+                GlassKit.dp(c, 40), GlassKit.dp(c, 40));
+        ll.bottomMargin = GlassKit.dp(c, 10);
         col.addView(logo, ll);
 
         home = item(c, col, R.drawable.ic_nav_home, "Início");
@@ -77,11 +78,11 @@ final class SideRail extends GlassSurface {
         icon.setImageResource(iconRes);
         icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
         icon.setDuplicateParentStateEnabled(true);
-        inner.addView(icon, new LinearLayout.LayoutParams(GlassKit.dp(c, 22), GlassKit.dp(c, 22)));
+        inner.addView(icon, new LinearLayout.LayoutParams(GlassKit.dp(c, 26), GlassKit.dp(c, 26)));
 
         TextView t = new TextView(c);
         t.setText(label);
-        t.setTextSize(12);
+        t.setTextSize(GlassKit.sp(12));
         t.setSingleLine(true);
         t.setEllipsize(TextUtils.TruncateAt.END);
         t.setGravity(Gravity.CENTER);
@@ -94,7 +95,7 @@ final class SideRail extends GlassSurface {
         inner.addView(t, tl);
 
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, GlassKit.dp(c, 46));
+                LayoutParams.MATCH_PARENT, GlassKit.dp(c, 54));
         lp.topMargin = GlassKit.dp(c, 3);
         lp.bottomMargin = GlassKit.dp(c, 3);
         parent.addView(s, lp);

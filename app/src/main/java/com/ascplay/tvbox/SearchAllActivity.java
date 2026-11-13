@@ -52,7 +52,7 @@ public class SearchAllActivity extends Activity {
         owner = HomeStore.ownerOf(creds);
 
         FrameLayout root = new FrameLayout(this);
-        root.addView(new GlassBackground(this), new FrameLayout.LayoutParams(
+        root.addView(new GlassBackground(this, 0.30f), new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 
         LinearLayout column = new LinearLayout(this);
@@ -64,7 +64,7 @@ public class SearchAllActivity extends Activity {
 
         TextView title = new TextView(this);
         title.setText("Resultados para \"" + query + "\"");
-        title.setTextSize(22);
+        title.setTextSize(GlassKit.sp(22));
         title.setTypeface(title.getTypeface(), Typeface.BOLD);
         title.setSingleLine(true);
         title.setTextColor(GlassKit.color(this, R.color.asc_text_primary));
