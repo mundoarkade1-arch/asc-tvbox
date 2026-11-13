@@ -300,6 +300,8 @@ public class HomeActivity extends Activity {
         tbl.leftMargin = GlassKit.dp(this, 16);
         tbl.rightMargin = GlassKit.dp(this, 24);
         column.addView(topBar, tbl);
+        // Garantia extra: a barra do topo fica SEMPRE na frente de qualquer card (maior que o 6dp do foco)
+        topBar.setTranslationZ(GlassKit.dp(this, 12));
 
         scroll = new ScrollView(this);
         scroll.setFocusable(false);
