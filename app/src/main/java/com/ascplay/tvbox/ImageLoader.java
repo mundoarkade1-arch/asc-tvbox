@@ -61,14 +61,24 @@ public final class ImageLoader {
 
     /** Mostra a imagem do endereço; se não houver imagem, deixa vazio (a letra do cartão aparece). */
     public static void load(final ImageView view, final String url) {
+        load(view, url, MAX_SIDE);
+    }
+
+    /**
+     * Igual ao load acima, mas com o lado maior da imagem limitado a "maxSide" pixels
+     * (usado só pelo banner de destaque, que é grande). Entre 64 e 768.
+     */
+    public static void load(final ImageView view, final String url, int requestedSide) {
+        final int maxSide = Math.max(64, Math.min(768, requestedSide));
         view.setImageDrawable(null);
         if (url == null || url.isEmpty() || !isHttp(url)) {
             WANTED.remove(view);
             return;
         }
-        WANTED.put(view, url);
+        final String key = maxSide == MAX_SIDE ? url : url + "#" + maxSide;
+        WANTED.put(view, key);
 
-        Bitmap cached = CACHE.get(url);
+        Bitmap cached = CACHE.get(key);
         if (cached != null) {
             view.setImageBitmap(cached);
             return;
@@ -81,7 +91,7 @@ public final class ImageLoader {
         POOL.execute(new Runnable() {
             @Override
             public void run() {
-                final Bitmap bmp = fetch(url);
+                final Bitmap bmp = fetch(url, maxSide);
                 MAIN.post(new Runnable() {
                     @Override
                     public void run() {
@@ -94,8 +104,8 @@ public final class ImageLoader {
                             }
                             return;
                         }
-                        CACHE.put(url, bmp);
-                        if (url.equals(WANTED.get(view))) {
+                        CACHE.put(key, bmp);
+                        if (key.equals(WANTED.get(view))) {
                             view.setImageBitmap(bmp);
                         }
                     }
@@ -114,7 +124,7 @@ public final class ImageLoader {
 
     // ---------- Download e redução ----------
 
-    private static Bitmap fetch(String address) {
+    private static Bitmap fetch(String address, int maxSide) {
         HttpURLConnection conn = null;
         try {
             conn = open(address);
@@ -131,7 +141,7 @@ public final class ImageLoader {
             if (data == null) {
                 return null;
             }
-            return decode(data);
+            return decode(data, maxSide);
         } catch (Throwable e) {
             return null;
         } finally {
@@ -141,7 +151,7 @@ public final class ImageLoader {
         }
     }
 
-    private static Bitmap decode(byte[] data) {
+    private static Bitmap decode(byte[] data, int maxSide) {
         BitmapFactory.Options bounds = new BitmapFactory.Options();
         bounds.inJustDecodeBounds = true;
         BitmapFactory.decodeByteArray(data, 0, data.length, bounds);
@@ -150,7 +160,7 @@ public final class ImageLoader {
         }
         int sample = 1;
         int longest = Math.max(bounds.outWidth, bounds.outHeight);
-        while (longest / (sample * 2) >= MAX_SIDE) {
+        while (longest / (sample * 2) >= maxSide) {
             sample *= 2;
         }
         BitmapFactory.Options opts = new BitmapFactory.Options();

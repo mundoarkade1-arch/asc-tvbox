@@ -83,6 +83,12 @@
             android:screenOrientation="landscape" />
 
         <activity
+            android:name=".SearchAllActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="false"
+            android:screenOrientation="landscape" />
+
+        <activity
             android:name=".ContinueActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="false"

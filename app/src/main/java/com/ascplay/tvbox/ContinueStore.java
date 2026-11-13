@@ -220,7 +220,7 @@ public final class ContinueStore {
 
     // ---------- Proteção dos valores ----------
 
-    private static String protect(String plain) {
+    static String protect(String plain) {
         byte[] data = plain.getBytes(StandardCharsets.UTF_8);
         if (Build.VERSION.SDK_INT >= 23) {
             try {
@@ -232,7 +232,7 @@ public final class ContinueStore {
         return PREFIX_PLAIN + Base64.encodeToString(data, Base64.NO_WRAP);
     }
 
-    private static String unprotect(String stored) throws Exception {
+    static String unprotect(String stored) throws Exception {
         if (stored.startsWith(PREFIX_PLAIN)) {
             byte[] data = Base64.decode(stored.substring(PREFIX_PLAIN.length()), Base64.NO_WRAP);
             return new String(data, StandardCharsets.UTF_8);

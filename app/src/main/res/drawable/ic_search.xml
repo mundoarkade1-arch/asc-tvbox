@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lupa de traço simples (mesmo estilo dos ícones do menu). Cor: texto secundário do app. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="20dp"
+    android:height="20dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="@color/asc_text_secondary"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M21 7 A14 14 0 1 1 21 35 A14 14 0 1 1 21 7 Z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="@color/asc_text_secondary"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M31 31 L42 42" />
+</vector>

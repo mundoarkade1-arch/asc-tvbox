@@ -2,60 +2,51 @@ package com.ascplay.tvbox;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.view.Gravity;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 /**
- * Página inicial: faixa "Continue assistindo" (se houver) e os 10 primeiros canais, filmes e séries.
- * Servidor com login (Xtream): busca só o começo de cada lista (nunca a lista inteira).
- * No fim de cada faixa há o cartão "Ver mais ›", que abre a navegação por categorias.
- * Nesse cartão, a seta para a direita não faz nada (R6): para mudar de faixa, só cima e baixo.
- * Nos canais ao vivo, cada cartão mostra o programa que passa agora (EPG por canal).
- * Não há caixinha de prévia nesta tela (pedido do dono, Rodada 1, R2).
- * A tela inicial usa cartões de pôster para filmes, séries e continuar assistindo, e
- * cartões largos para canais ao vivo. As abas continuam com o item_card normal.
- * Sobre um canal ao vivo (servidor), a tecla das três listras ou segurar o OK abre a janela
- * com a programação do canal (o que passa agora e os próximos programas).
- * Ao escolher uma série, abre a tela da série (temporadas e episódios), levando a capa do item.
- * Ao escolher um filme, abre a página do filme (MovieActivity), com capa e sinopse.
- * Ao escolher um canal ao vivo, o player pode trocar de canal com cima e baixo (R4):
- * esta tela manda EXTRA_QUEUE = true e nenhuma categoria (nula = todas as categorias).
+ * Página inicial, visual "Glass UI" (vidro): menu lateral flutuante (SideRail), barra superior
+ * (TopBar: busca, "Lista atualizada" e relógio), banner de destaque (HeroBanner) e as linhas
+ * (SectionRow): Continue assistindo e Minha lista (só aparecem se houver itens), Canais ao vivo,
+ * Filmes e Séries. Cada linha tem "Ver tudo", que abre a tela completa da seção.
  *
- * Faixa "Continue assistindo" (M6): lê a ContinueStore fora da thread principal e mostra até
- * 10 itens, do mais novo ao mais antigo. Se há mais de 10 itens visíveis, o fim da faixa tem o
- * cartão "Ver mais ›", que abre a ContinueActivity (lista simples com todos, até 25).
- * Cartão de filme abre a página do filme; cartão de
- * episódio abre a página da série (servidor: número da série tirado da chave guardada; lista
- * M3U: nome da série tirado do nome "Série - ep. N"). Lá a pessoa clica em "Continuar".
- * Controle parental ligado: itens com nome adulto não aparecem. A faixa é refeita no onResume.
+ * Só a interface mudou. Dados, login, player e reprodução continuam como antes: as mesmas chamadas
+ * (XtreamApi.items, M3uApi.sample, EpgCache, ContinueStore, ParentalStore, Updater) e as mesmas
+ * telas de destino (MovieActivity, SeriesActivity, M3uSeriesActivity, MainActivity, BrowseActivity,
+ * M3uBrowseActivity, ContinueActivity, SettingsActivity).
+ *
+ * Novidades da Home: busca geral (SearchAllActivity), Minha lista (FavoritesStore), destaque que
+ * troca a cada 8 s sem mexer no foco, card "AO VIVO AGORA" (último canal aberto, ou o primeiro),
+ * chip com a data/hora da última atualização (HomeStore) e relógio 24h.
+ *
+ * Controle remoto: direita/esquerda dentro das linhas; cima/baixo entre busca, destaque e linhas.
+ * O menu lateral é acessado pela esquerda (primeiro card de cada linha) e, apertando direita,
+ * devolve o foco ao último item que estava focado. Voltar do player mantém o foco onde estava.
+ *
+ * Tecla de menu (três listras) sobre um canal ao vivo do servidor, ou OK segurado: programação.
  * O endereço do vídeo e a chave da série NUNCA são mostrados nem registrados em log.
- *
- * Lista M3U: lê a lista aos poucos, só até achar 10 itens de cada tipo (M3uApi).
- * O cartão "Ver mais ›" abre a navegação por categorias da lista M3U (M3uBrowseActivity).
- * Ao escolher uma série, abre a tela da série da lista M3U (M3uSeriesActivity).
- * Por enquanto, sem guia de programação (chega em etapa própria).
- *
- * Com o controle parental ligado, itens com nome adulto não aparecem nas faixas. O controle
- * parental e a troca de lista ficam na aba Ajustes (SettingsActivity). Ao voltar de lá, esta
- * tela confere se o controle parental mudou e, se mudou, recarrega as faixas.
- *
- * A busca por nome NÃO fica aqui: cada aba (Canais, Filmes, Séries) tem o seu
- * botão "Pesquisar ..." (BrowseActivity e M3uBrowseActivity).
- *
- * Menu à esquerda (ícone e nome): Tela inicial, Canais, Filmes, Séries, Ajustes e Atualizar.
- * Canais, Filmes e Séries abrem a aba; Ajustes abre a SettingsActivity.
  */
 public class HomeActivity extends Activity {
 
@@ -66,68 +57,120 @@ public class HomeActivity extends Activity {
     public static final String EXTRA_SHOW_LOGIN = "show_login";
 
     private static final int LIMIT = 10;
-    private static final int COLOR_NEUTRAL = 0xFFB8C0CC;
-    private static final int COLOR_ERROR = 0xFFF28B82;
-    private static final int COLOR_OK = 0xFF5AA2FF;
-    private static final int COLOR_WHITE = 0xFFFFFFFF;
+    private static final int HERO_CANDIDATES = 8;
+    private static final int HERO_MAX = 5;
+    private static final long HERO_PERIOD_MS = 8000L;
+
+    // Ordem de prioridade do foco inicial (menor número = mais alto na tela)
+    private static final int RANK_HERO = 0;
+    private static final int RANK_CONTINUE = 1;
+    private static final int RANK_FAV = 2;
+    private static final int RANK_LIVE = 3;
+    private static final int RANK_MOVIE = 4;
+    private static final int RANK_SERIES = 5;
 
     private CredentialStore.Credentials creds;
+    private String owner = "";
 
-    private LinearLayout railContinue;
-    private View groupContinue;
-    private LinearLayout railLive;
-    private LinearLayout railMovie;
-    private LinearLayout railSeries;
-    private TextView stLive;
-    private TextView stMovie;
-    private TextView stSeries;
+    // Componentes
+    private SideRail rail;
+    private TopBar topBar;
+    private ScrollView scroll;
+    private HeroBanner hero;
+    private SectionRow rowContinue;
+    private SectionRow rowFav;
+    private SectionRow rowLive;
+    private SectionRow rowMovie;
+    private SectionRow rowSeries;
 
-    // Menu à esquerda (ícone e nome)
-    private View navHome;
-    private View navLive;
-    private View navMovie;
-    private View navSeries;
-    private View navSettings;
-    private View navRefresh;
+    // Aviso de atualização do app
+    private GlassSurface updateBar;
+    private TextView tvUpdate;
+    private GlassSurface.Button btnUpdateNow;
+    private GlassSurface.Button btnUpdateLater;
+    private Updater.Info pendingUpdate;
+    private boolean downloading = false;
 
-    // Para ignorar respostas antigas quando as faixas são recarregadas
+    // Ignorar respostas antigas
     private int railGen = 0;
-
-    // Para ignorar respostas antigas da faixa "Continue assistindo"
     private int continueGen = 0;
+    private int favGen = 0;
+    private int liveGen = 0;
+    private volatile int heroGen = 0;
 
     // Estado do controle parental na última vez que as faixas foram montadas
     private boolean parentalSeen = false;
 
-    private View groupUpdate;
-    private TextView tvUpdate;
-    private Button btnUpdateNow;
-    private Button btnUpdateLater;
-    private Updater.Info pendingUpdate;
-    private boolean downloading = false;
+    // Atualização da lista: quantas faixas ainda faltam responder, e se alguma deu certo
+    private int railsPending = 0;
+    private boolean railsOk = false;
 
-    // Canal ao vivo (servidor) que está com o foco agora; vazio quando o foco está em outro lugar.
-    // Serve só para a tecla de menu abrir a programação do canal.
+    // Foco
+    private boolean userNavigated = false;
+    private int autoFocusRank = Integer.MAX_VALUE;
+    private View lastContentFocus;
+    private int navHomeId = View.NO_ID;
+    // Canal ao vivo (servidor) com o foco agora; só para a tecla de menu abrir a programação
     private XtreamApi.Item focusedLive;
 
-    private final View.OnFocusChangeListener clearLiveOnFocus = new View.OnFocusChangeListener() {
+    // Dados das faixas (já filtrados pelo controle parental)
+    private final List<XtreamApi.Item> liveItems = new ArrayList<>();
+    private final List<XtreamApi.Item> movieItems = new ArrayList<>();
+    private final List<XtreamApi.Item> seriesItems = new ArrayList<>();
+    private volatile Map<String, String> catNames = new HashMap<>();
+    private final Map<String, PosterCard> posterByKey = new HashMap<>();
+    private final Set<String> favKeys = new HashSet<>();
+
+    // Destaque
+    private static final class HeroInfo {
+        String metaChip = "";
+        String rating = "";
+        double value = 0d;
+        String cover = "";
+    }
+
+    private static final class HeroEntry {
+        final XtreamApi.Item item;
+        final HeroInfo info;
+
+        HeroEntry(XtreamApi.Item item, HeroInfo info) {
+            this.item = item;
+            this.info = info;
+        }
+    }
+
+    private final Map<String, HeroInfo> detailCache =
+            Collections.synchronizedMap(new HashMap<String, HeroInfo>());
+    private List<HeroEntry> heroEntries = new ArrayList<>();
+    private int heroIndex = 0;
+    private XtreamApi.Item currentHero;
+    private XtreamApi.Item heroLive;
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private boolean resumed = false;
+
+    private final Runnable heroTick = new Runnable() {
         @Override
-        public void onFocusChange(View v, boolean hasFocus) {
-            if (hasFocus) {
-                focusedLive = null;
+        public void run() {
+            if (resumed && !isFinishing() && !isDestroyed()) {
+                // Só troca se a pessoa não está com o foco no banner (não rouba nem muda o alvo)
+                if (heroEntries.size() > 1 && !hero.hasFocusInside()) {
+                    showHero((heroIndex + 1) % heroEntries.size());
+                }
+                handler.postDelayed(this, HERO_PERIOD_MS);
             }
         }
     };
 
-    // Foco inicial: vai para o primeiro cartão da faixa mais alta da tela (Continue, Canais,
-    // Filmes, Séries), mesmo que uma faixa de baixo carregue antes. Só vale enquanto a pessoa
-    // ainda não apertou nenhuma seta.
-    private static final int RANK_CONTINUE = 0;
-    private static final int RANK_LIVE = 1;
-    private static final int RANK_MOVIE = 2;
-    private static final int RANK_SERIES = 3;
-    private boolean userNavigated = false;
-    private int autoFocusRank = Integer.MAX_VALUE;
+    private final Runnable heroBuild = new Runnable() {
+        @Override
+        public void run() {
+            buildHero();
+        }
+    };
+
+    // ---------------------------------------------------------------------------------
+    // Ciclo de vida
+    // ---------------------------------------------------------------------------------
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -139,58 +182,16 @@ public class HomeActivity extends Activity {
             finish();
             return;
         }
-
+        owner = HomeStore.ownerOf(creds);
         parentalSeen = ParentalStore.isEnabled(this);
 
-        setContentView(R.layout.activity_home);
+        buildUi();
+        wireFocus();
+        wireClicks();
 
-        groupContinue = findViewById(R.id.group_continue);
-        railContinue = findViewById(R.id.rail_continue);
-        railLive = findViewById(R.id.rail_live);
-        railMovie = findViewById(R.id.rail_movie);
-        railSeries = findViewById(R.id.rail_series);
-        stLive = findViewById(R.id.st_live);
-        stMovie = findViewById(R.id.st_movie);
-        stSeries = findViewById(R.id.st_series);
-
-        navHome = findViewById(R.id.nav_home);
-        navHome.setSelected(true);
-        navLive = findViewById(R.id.nav_live);
-        navMovie = findViewById(R.id.nav_movie);
-        navSeries = findViewById(R.id.nav_series);
-        navSettings = findViewById(R.id.nav_settings);
-        navRefresh = findViewById(R.id.nav_refresh);
-
-        groupUpdate = findViewById(R.id.group_update);
-        tvUpdate = findViewById(R.id.tv_update);
-        btnUpdateNow = findViewById(R.id.btn_update_now);
-        btnUpdateLater = findViewById(R.id.btn_update_later);
-
-        btnUpdateNow.setOnFocusChangeListener(clearLiveOnFocus);
-        btnUpdateLater.setOnFocusChangeListener(clearLiveOnFocus);
-
-        navHome.setOnFocusChangeListener(clearLiveOnFocus);
-        navLive.setOnFocusChangeListener(clearLiveOnFocus);
-        navMovie.setOnFocusChangeListener(clearLiveOnFocus);
-        navSeries.setOnFocusChangeListener(clearLiveOnFocus);
-        navSettings.setOnFocusChangeListener(clearLiveOnFocus);
-        navRefresh.setOnFocusChangeListener(clearLiveOnFocus);
-
-        btnUpdateNow.setOnClickListener(v -> startUpdate());
-        btnUpdateLater.setOnClickListener(v -> dismissUpdate());
-
-        navHome.setOnClickListener(v -> goToFirstCard());
-        navLive.setOnClickListener(v -> openSection(XtreamApi.Kind.LIVE));
-        navMovie.setOnClickListener(v -> openSection(XtreamApi.Kind.MOVIE));
-        navSeries.setOnClickListener(v -> openSection(XtreamApi.Kind.SERIES));
-        navSettings.setOnClickListener(v -> startActivity(new Intent(this, SettingsActivity.class)));
-        navRefresh.setOnClickListener(v -> {
-            Toast.makeText(this, "Atualizando a lista...", Toast.LENGTH_SHORT).show();
-            reloadRails();
-        });
-
+        topBar.setUpdatedText(updatedText(HomeStore.lastUpdated(this, owner)));
         loadAllRails();
-
+        loadFavorites();
         checkForUpdate();
     }
 
@@ -200,19 +201,35 @@ public class HomeActivity extends Activity {
         if (creds == null) {
             return;
         }
+        resumed = true;
+        handler.removeCallbacks(heroTick);
+        handler.postDelayed(heroTick, HERO_PERIOD_MS);
+        topBar.setUpdatedText(updatedText(HomeStore.lastUpdated(this, owner)));
+
         // Voltou de outra tela (por exemplo, Ajustes): se o controle parental mudou, recarrega
         if (ParentalStore.isEnabled(this) != parentalSeen) {
             parentalSeen = ParentalStore.isEnabled(this);
             reloadRails();
         } else {
-            // A lista do "Continue assistindo" pode ter mudado depois do player
+            // O "Continue assistindo", a Minha lista e o último canal podem ter mudado
             loadContinue();
+            loadFavorites();
+            refreshLiveCard();
         }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        resumed = false;
+        handler.removeCallbacks(heroTick);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        handler.removeCallbacksAndMessages(null);
+        heroGen++;
         focusedLive = null;
     }
 
@@ -245,36 +262,770 @@ public class HomeActivity extends Activity {
         return super.dispatchKeyEvent(event);
     }
 
-    /** Abre a janela da programação de um canal (só login por servidor). */
-    private void openSchedule(XtreamApi.Item item) {
-        if (!isXtream() || item == null || item.kind != XtreamApi.Kind.LIVE) {
-            return;
-        }
-        EpgDialog.show(this, creds.server, creds.user, creds.pass, item.id, item.name);
+    // ---------------------------------------------------------------------------------
+    // Montagem da tela
+    // ---------------------------------------------------------------------------------
+
+    private void buildUi() {
+        FrameLayout root = new FrameLayout(this);
+        root.addView(new GlassBackground(this), new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+
+        LinearLayout main = new LinearLayout(this);
+        main.setOrientation(LinearLayout.HORIZONTAL);
+        main.setClipChildren(false);
+        root.addView(main, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+
+        // Menu lateral flutuante: 32px das bordas no desenho = 16dp
+        rail = new SideRail(this);
+        LinearLayout.LayoutParams rl = new LinearLayout.LayoutParams(
+                GlassKit.dp(this, 68), LinearLayout.LayoutParams.MATCH_PARENT);
+        rl.leftMargin = GlassKit.dp(this, 16);
+        rl.topMargin = GlassKit.dp(this, 16);
+        rl.bottomMargin = GlassKit.dp(this, 16);
+        main.addView(rail, rl);
+
+        // Coluna de conteúdo: margem de segurança (overscan) de 48px = 24dp
+        LinearLayout column = new LinearLayout(this);
+        column.setOrientation(LinearLayout.VERTICAL);
+        column.setClipChildren(false);
+        column.setPadding(GlassKit.dp(this, 16), GlassKit.dp(this, 20), GlassKit.dp(this, 24), 0);
+        main.addView(column, new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.MATCH_PARENT, 1f));
+
+        topBar = new TopBar(this);
+        column.addView(topBar, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+
+        scroll = new ScrollView(this);
+        scroll.setFocusable(false);
+        scroll.setVerticalScrollBarEnabled(false);
+        scroll.setClipChildren(false);
+        scroll.setClipToPadding(false);
+        column.addView(scroll, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
+
+        LinearLayout body = new LinearLayout(this);
+        body.setOrientation(LinearLayout.VERTICAL);
+        body.setClipChildren(false);
+        body.setClipToPadding(false);
+        body.setPadding(0, GlassKit.dp(this, 10), 0, GlassKit.dp(this, 28));
+        scroll.addView(body, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
+
+        buildUpdateBar(body);
+
+        hero = new HeroBanner(this);
+        body.addView(hero, HeroBanner.params(this));
+
+        rowContinue = addRow(body, "Continue assistindo");
+        rowContinue.setVisibility(View.GONE);
+        rowFav = addRow(body, "Minha lista");
+        rowFav.setVisibility(View.GONE);
+        rowFav.viewAllButton().setVisibility(View.GONE);
+        rowLive = addRow(body, "Canais ao vivo");
+        rowMovie = addRow(body, "Filmes");
+        rowSeries = addRow(body, "Séries");
+
+        setContentView(root);
     }
 
-    // ---------- Menu à esquerda ----------
+    private SectionRow addRow(LinearLayout body, String title) {
+        SectionRow row = new SectionRow(this, title);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.topMargin = GlassKit.dp(this, 8);
+        body.addView(row, lp);
+        return row;
+    }
 
-    /** Tela inicial: leva o foco para o primeiro cartão (continue assistindo, canal, filme ou série). */
+    private void buildUpdateBar(LinearLayout body) {
+        updateBar = new GlassSurface(this, GlassKit.dp(this, 16), false,
+                GlassSurface.STYLE_GLASS, true);
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(GlassKit.dp(this, 14), GlassKit.dp(this, 8), GlassKit.dp(this, 10),
+                GlassKit.dp(this, 10));
+        updateBar.addView(row, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
+
+        tvUpdate = new TextView(this);
+        tvUpdate.setTextSize(15);
+        tvUpdate.setTypeface(tvUpdate.getTypeface(), Typeface.BOLD);
+        tvUpdate.setTextColor(GlassKit.color(this, R.color.asc_focus));
+        row.addView(tvUpdate, new LinearLayout.LayoutParams(0,
+                LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+        btnUpdateNow = new GlassSurface.Button(this, getString(R.string.btn_update_now), true);
+        row.addView(btnUpdateNow, new LinearLayout.LayoutParams(
+                GlassKit.dp(this, 96), GlassKit.dp(this, 34)));
+        btnUpdateLater = new GlassSurface.Button(this, getString(R.string.btn_update_later), false);
+        LinearLayout.LayoutParams ll = new LinearLayout.LayoutParams(
+                GlassKit.dp(this, 84), GlassKit.dp(this, 34));
+        ll.leftMargin = GlassKit.dp(this, 10);
+        row.addView(btnUpdateLater, ll);
+
+        updateBar.setVisibility(View.GONE);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.bottomMargin = GlassKit.dp(this, 8);
+        body.addView(updateBar, lp);
+    }
+
+    /** Foco: esquerda leva ao menu; direita no menu volta ao último item focado. */
+    private void wireFocus() {
+        navHomeId = GlassKit.ensureId(rail.home);
+
+        topBar.searchPill().setNextFocusLeftId(navHomeId);
+        hero.playButton().setNextFocusLeftId(navHomeId);
+        hero.playButton().setNextFocusUpId(GlassKit.ensureId(topBar.searchPill()));
+        topBar.searchPill().setNextFocusDownId(GlassKit.ensureId(hero.playButton()));
+        SectionRow[] rows = {rowContinue, rowFav, rowLive, rowMovie, rowSeries};
+        for (SectionRow r : rows) {
+            r.viewAllButton().setNextFocusLeftId(navHomeId);
+        }
+
+        // acompanhar o foco do topo e do banner (guarda o último item e rola para o topo)
+        final View.OnFocusChangeListener heroTrack = new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    lastContentFocus = v;
+                    focusedLive = (v == hero.liveCard()) ? heroLive : null;
+                    scroll.smoothScrollTo(0, 0);
+                }
+            }
+        };
+        GlassKit.focusScale(topBar.searchPill(), 1.05f, heroTrack);
+        GlassKit.focusScale(hero.playButton(), 1.08f, heroTrack);
+        GlassKit.focusScale(hero.listButton(), 1.08f, heroTrack);
+        GlassKit.focusScale(hero.liveCard(), 1.06f, heroTrack);
+
+        for (SectionRow r : rows) {
+            final SectionRow row = r;
+            GlassKit.focusScale(r.viewAllButton(), 1.08f, track(row, null));
+        }
+        GlassKit.focusScale(btnUpdateNow, 1.08f, null);
+        GlassKit.focusScale(btnUpdateLater, 1.08f, null);
+
+        rail.setOnRight(new Runnable() {
+            @Override
+            public void run() {
+                View target = lastContentFocus;
+                if (target == null || !target.isAttachedToWindow() || !target.isShown()
+                        || !target.isFocusable()) {
+                    target = hero.playButton().isFocusable() ? hero.playButton()
+                            : topBar.searchPill();
+                }
+                target.requestFocus();
+            }
+        });
+    }
+
+    private void wireClicks() {
+        rail.home.setOnClickListener(v -> goToFirstCard());
+        rail.live.setOnClickListener(v -> openSection(XtreamApi.Kind.LIVE));
+        rail.movie.setOnClickListener(v -> openSection(XtreamApi.Kind.MOVIE));
+        rail.series.setOnClickListener(v -> openSection(XtreamApi.Kind.SERIES));
+        rail.settings.setOnClickListener(v -> startActivity(new Intent(this, SettingsActivity.class)));
+        rail.refresh.setOnClickListener(v -> reloadRails());
+
+        topBar.searchPill().setOnClickListener(v -> openSearch());
+
+        hero.playButton().setOnClickListener(v -> {
+            if (currentHero != null) {
+                openItem(currentHero);
+            }
+        });
+        hero.listButton().setOnClickListener(v -> toggleHeroFavorite());
+        hero.liveCard().setOnClickListener(v -> {
+            if (heroLive != null) {
+                openItem(heroLive);
+            }
+        });
+        hero.liveCard().setOnLongClickListener(v -> {
+            openSchedule(heroLive);
+            return heroLive != null && isXtream();
+        });
+
+        rowContinue.viewAllButton().setOnClickListener(
+                v -> startActivity(new Intent(this, ContinueActivity.class)));
+        rowLive.viewAllButton().setOnClickListener(v -> openBrowse(XtreamApi.Kind.LIVE));
+        rowMovie.viewAllButton().setOnClickListener(v -> openBrowse(XtreamApi.Kind.MOVIE));
+        rowSeries.viewAllButton().setOnClickListener(v -> openBrowse(XtreamApi.Kind.SERIES));
+
+        btnUpdateNow.setOnClickListener(v -> startUpdate());
+        btnUpdateLater.setOnClickListener(v -> dismissUpdate());
+    }
+
+    /** Guarda o último foco do conteúdo e garante que a linha apareça inteira ao subir. */
+    private View.OnFocusChangeListener track(final SectionRow row, final XtreamApi.Item live) {
+        return new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    lastContentFocus = v;
+                    focusedLive = live;
+                    if (row != null) {
+                        ensureRowVisible(row);
+                    }
+                }
+            }
+        };
+    }
+
+    private void ensureRowVisible(final SectionRow row) {
+        scroll.post(new Runnable() {
+            @Override
+            public void run() {
+                int top = row.getTop() - GlassKit.dp(HomeActivity.this, 8);
+                if (scroll.getScrollY() > top) {
+                    scroll.smoothScrollTo(0, Math.max(0, top));
+                }
+            }
+        });
+    }
+
+    /** Foco inicial automático: só sobe (para algo mais alto na tela), nunca desce. */
+    private void autoFocus(int rank, View target) {
+        if (target == null || userNavigated || rank >= autoFocusRank
+                || updateBar.getVisibility() == View.VISIBLE || !target.isFocusable()) {
+            return;
+        }
+        autoFocusRank = rank;
+        target.requestFocus();
+    }
+
+    /** Início: leva o foco ao destaque (ou ao primeiro card) e rola para o topo. */
     private void goToFirstCard() {
-        LinearLayout[] rails = {railContinue, railLive, railMovie, railSeries};
-        for (LinearLayout rail : rails) {
-            if (rail.getChildCount() > 0) {
-                rail.getChildAt(0).requestFocus();
+        scroll.smoothScrollTo(0, 0);
+        if (hero.playButton().isFocusable() && hero.playButton().getVisibility() == View.VISIBLE) {
+            hero.playButton().requestFocus();
+            return;
+        }
+        SectionRow[] rows = {rowContinue, rowFav, rowLive, rowMovie, rowSeries};
+        for (SectionRow r : rows) {
+            if (r.getVisibility() == View.VISIBLE && r.hasCards()) {
+                r.firstCard().requestFocus();
                 return;
             }
         }
+        topBar.searchPill().requestFocus();
     }
 
-    /** Canais, Filmes e Séries: abrem a aba daquele tipo. */
-    private void openSection(XtreamApi.Kind kind) {
+    // ---------------------------------------------------------------------------------
+    // Tipo de login
+    // ---------------------------------------------------------------------------------
+
+    private boolean isXtream() {
+        return creds != null && CredentialStore.MODE_XTREAM.equals(creds.mode);
+    }
+
+    private boolean isM3u() {
+        return creds != null && CredentialStore.MODE_M3U.equals(creds.mode);
+    }
+
+    // ---------------------------------------------------------------------------------
+    // Faixas de canais, filmes e séries
+    // ---------------------------------------------------------------------------------
+
+    /** Busca as três faixas, de acordo com o tipo de login. */
+    private void loadAllRails() {
+        if (isXtream()) {
+            beginRefreshState(3);
+            loadRail(XtreamApi.Kind.LIVE, rowLive);
+            loadRail(XtreamApi.Kind.MOVIE, rowMovie);
+            loadRail(XtreamApi.Kind.SERIES, rowSeries);
+        } else if (isM3u()) {
+            beginRefreshState(3);
+            loadM3uRails();
+        } else {
+            rowLive.showError("Login não reconhecido. Abra Ajustes e use \"Trocar de lista\".");
+            rowMovie.setVisibility(View.GONE);
+            rowSeries.setVisibility(View.GONE);
+            rail.settings.requestFocus();
+        }
+    }
+
+    private void beginRefreshState(int pending) {
+        railsPending = pending;
+        railsOk = false;
+        topBar.setUpdating(true);
+        rail.setRefreshing(true);
+    }
+
+    /** Uma faixa respondeu. Quando as três responderam: guarda a hora e apaga o indicador. */
+    private void railDone(boolean ok) {
+        if (ok) {
+            railsOk = true;
+        }
+        railsPending--;
+        if (railsPending <= 0) {
+            railsPending = 0;
+            if (railsOk) {
+                HomeStore.markUpdated(this, owner);
+            }
+            topBar.setUpdating(false);
+            rail.setRefreshing(false);
+            topBar.setUpdatedText(updatedText(HomeStore.lastUpdated(this, owner)));
+        }
+    }
+
+    private void loadRail(final XtreamApi.Kind kind, final SectionRow row) {
+        final String server = creds.server;
+        final String user = creds.user;
+        final String pass = creds.pass;
+        final int gen = railGen;
+        new Thread(() -> {
+            List<XtreamApi.Item> items = null;
+            try {
+                items = XtreamApi.items(server, user, pass, kind, null, LIMIT);
+            } catch (Exception e) {
+                // sem rede, servidor fora do ar ou resposta estranha: mostra aviso abaixo
+            }
+            if (kind == XtreamApi.Kind.LIVE && items != null) {
+                // nomes das categorias (para mostrar no card quando não há guia de programação)
+                try {
+                    Map<String, String> map = new HashMap<>();
+                    for (XtreamApi.Category c : XtreamApi.categories(server, user, pass, kind)) {
+                        map.put(c.id, c.name);
+                    }
+                    catNames = map;
+                } catch (Exception e) {
+                    // sem nomes: o card mostra "Ao vivo"
+                }
+            }
+            final List<XtreamApi.Item> result = items;
+            runOnUiThread(() -> {
+                if (gen == railGen) {
+                    showRail(kind, result, row);
+                }
+            });
+        }).start();
+    }
+
+    /** Lista M3U: uma única leitura da lista traz os 10 primeiros de cada tipo. */
+    private void loadM3uRails() {
+        final String url = creds.m3uUrl;
+        final boolean hideAdult = ParentalStore.isEnabled(this);
+        final int gen = railGen;
+        new Thread(() -> {
+            M3uApi.Sample sample = null;
+            try {
+                sample = M3uApi.sample(url, LIMIT, hideAdult);
+            } catch (Exception e) {
+                // sem rede, endereço inválido ou lista estranha: mostra aviso abaixo
+            }
+            final M3uApi.Sample result = sample;
+            runOnUiThread(() -> {
+                if (gen != railGen) {
+                    return;
+                }
+                showRail(XtreamApi.Kind.LIVE, result == null ? null : result.live, rowLive);
+                showRail(XtreamApi.Kind.MOVIE, result == null ? null : result.movie, rowMovie);
+                showRail(XtreamApi.Kind.SERIES, result == null ? null : result.series, rowSeries);
+            });
+        }).start();
+    }
+
+    /** Apaga as faixas e busca tudo de novo (Atualizar, ou quando o controle parental muda). */
+    private void reloadRails() {
         if (!isXtream() && !isM3u()) {
             return;
         }
-        openBrowse(kind);
+        if (railsPending > 0) {
+            return; // já está atualizando
+        }
+        railGen++;
+        heroGen++;
+        handler.removeCallbacks(heroBuild);
+        userNavigated = true; // não tira o foco de onde a pessoa está
+        focusedLive = null;
+        detailCache.clear();
+        posterByKey.clear();
+        liveItems.clear();
+        movieItems.clear();
+        seriesItems.clear();
+        SectionRow[] rows = {rowLive, rowMovie, rowSeries};
+        for (SectionRow r : rows) {
+            r.rail().removeAllViews();
+            r.showLoading();
+        }
+        loadAllRails();
+        loadContinue();
+        loadFavorites();
     }
 
-    // ---------- Faixa "Continue assistindo" ----------
+    private void showRail(final XtreamApi.Kind kind, List<XtreamApi.Item> items, SectionRow row) {
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
+        if (items == null) {
+            row.showError("Sem conexão. Confira a internet e a lista, e tente Atualizar.");
+            railDone(false);
+            return;
+        }
+        // Controle parental ligado: tira o que tem nome adulto
+        if (ParentalStore.isEnabled(this)) {
+            List<XtreamApi.Item> allowed = new ArrayList<>();
+            for (XtreamApi.Item it : items) {
+                if (!ParentalStore.isAdultName(it.name)) {
+                    allowed.add(it);
+                }
+            }
+            items = allowed;
+        }
+        if (items.isEmpty()) {
+            row.showMessage("Nada encontrado nesta seção.");
+            railDone(true);
+            storeItems(kind, items);
+            afterRail(kind);
+            return;
+        }
+        storeItems(kind, items);
+
+        final LinearLayout railView = row.rail();
+        railView.removeAllViews();
+        final boolean xtream = isXtream();
+        View first = null;
+        for (final XtreamApi.Item item : items) {
+            View card;
+            if (kind == XtreamApi.Kind.LIVE) {
+                ChannelCard cc = new ChannelCard(this,
+                        track(row, xtream ? item : null));
+                cc.bind(item.name, liveSubtitle(item), item.icon);
+                if (xtream) {
+                    loadNow(item, cc);
+                    // OK segurado: segunda via para abrir a programação do canal
+                    cc.setOnLongClickListener(v -> {
+                        openSchedule(item);
+                        return true;
+                    });
+                }
+                railView.addView(cc, ChannelCard.params(this));
+                card = cc;
+            } else {
+                PosterCard pc = new PosterCard(this, track(row, null));
+                pc.bind(item.name, kind == XtreamApi.Kind.MOVIE ? "Filme" : "Série", item.icon);
+                posterByKey.put(FavoritesStore.identity(item), pc);
+                railView.addView(pc, PosterCard.params(this));
+                card = pc;
+            }
+            card.setOnClickListener(v -> openItem(item));
+            if (first == null) {
+                first = card;
+            }
+        }
+        first.setNextFocusLeftId(navHomeId);
+
+        row.setCount(kind == XtreamApi.Kind.LIVE
+                ? items.size() + (items.size() == 1 ? " canal" : " canais")
+                : items.size() + " em destaque");
+        row.showItems();
+
+        autoFocus(kind == XtreamApi.Kind.LIVE ? RANK_LIVE
+                : kind == XtreamApi.Kind.MOVIE ? RANK_MOVIE : RANK_SERIES, first);
+        railDone(true);
+        afterRail(kind);
+    }
+
+    private void storeItems(XtreamApi.Kind kind, List<XtreamApi.Item> items) {
+        List<XtreamApi.Item> target = kind == XtreamApi.Kind.LIVE ? liveItems
+                : kind == XtreamApi.Kind.MOVIE ? movieItems : seriesItems;
+        target.clear();
+        target.addAll(items);
+    }
+
+    private void afterRail(XtreamApi.Kind kind) {
+        if (kind == XtreamApi.Kind.LIVE) {
+            refreshLiveCard();
+        } else {
+            // espera um instante para as duas faixas (filmes e séries) chegarem
+            handler.removeCallbacks(heroBuild);
+            handler.postDelayed(heroBuild, 400L);
+        }
+    }
+
+    /** Texto de baixo do canal quando não há guia: a categoria (ou "Ao vivo"). */
+    private String liveSubtitle(XtreamApi.Item it) {
+        String g = it.categoryId == null ? "" : it.categoryId.trim();
+        if (isXtream()) {
+            String n = catNames.get(g);
+            return n != null && !n.trim().isEmpty() ? n.trim() : "Ao vivo";
+        }
+        return g.isEmpty() ? "Ao vivo" : g;
+    }
+
+    /** Pede ao servidor o programa de agora e escreve no card (com a barra de progresso). */
+    private void loadNow(final XtreamApi.Item item, final ChannelCard card) {
+        EpgCache.get(creds.server, creds.user, creds.pass, item.id, epg -> {
+            if (isFinishing() || isDestroyed()) {
+                return;
+            }
+            if (epg == null) {
+                card.setSubtitle(liveSubtitle(item));
+                card.setProgressFraction(-1f);
+            } else {
+                card.setSubtitle(epg.title);
+                card.setProgressFraction(progressOf(epg));
+            }
+        });
+    }
+
+    private static float progressOf(XtreamApi.Epg epg) {
+        long span = epg.end - epg.start;
+        if (span <= 0) {
+            return -1f;
+        }
+        return (float) (System.currentTimeMillis() - epg.start) / (float) span;
+    }
+
+    // ---------------------------------------------------------------------------------
+    // Destaque (hero)
+    // ---------------------------------------------------------------------------------
+
+    private static boolean hasArt(XtreamApi.Item it) {
+        String s = it.icon == null ? "" : it.icon.toLowerCase();
+        return s.startsWith("http://") || s.startsWith("https://");
+    }
+
+    /**
+     * Escolhe o destaque entre os filmes e séries das faixas (com capa). Servidor: pede os
+     * detalhes (nota, gênero, ano) de até 8 itens, um de cada vez, e põe o melhor avaliado na
+     * frente. Lista M3U: não há nota; usa os primeiros com capa.
+     */
+    private void buildHero() {
+        if (creds == null || isFinishing() || isDestroyed()) {
+            return;
+        }
+        final int gen = ++heroGen;
+        final List<XtreamApi.Item> cand = new ArrayList<>();
+        int max = Math.max(movieItems.size(), seriesItems.size());
+        for (int i = 0; i < max && cand.size() < HERO_CANDIDATES; i++) {
+            if (i < movieItems.size() && hasArt(movieItems.get(i))) {
+                cand.add(movieItems.get(i));
+            }
+            if (cand.size() < HERO_CANDIDATES && i < seriesItems.size()
+                    && hasArt(seriesItems.get(i))) {
+                cand.add(seriesItems.get(i));
+            }
+        }
+        if (cand.isEmpty()) {
+            applyHero(gen, new ArrayList<HeroEntry>());
+            return;
+        }
+        final boolean xtream = isXtream();
+        final String server = creds.server;
+        final String user = creds.user;
+        final String pass = creds.pass;
+        new Thread(() -> {
+            List<HeroEntry> acc = new ArrayList<>();
+            for (XtreamApi.Item it : cand) {
+                if (gen != heroGen || isFinishing()) {
+                    return;
+                }
+                String key = FavoritesStore.identity(it);
+                HeroInfo info = detailCache.get(key);
+                if (info == null) {
+                    info = new HeroInfo();
+                    if (xtream) {
+                        try {
+                            XtreamApi.Details d = XtreamApi.details(server, user, pass, it.kind, it.id);
+                            fillInfo(info, d);
+                        } catch (Exception e) {
+                            // sem detalhes: o item entra sem nota
+                        }
+                    }
+                    detailCache.put(key, info);
+                }
+                acc.add(new HeroEntry(it, info));
+                final List<HeroEntry> snapshot = topEntries(acc);
+                runOnUiThread(() -> applyHero(gen, snapshot));
+            }
+        }).start();
+    }
+
+    /** Ordena por nota (maiores primeiro; sem nota ficam depois, na ordem original). */
+    private static List<HeroEntry> topEntries(List<HeroEntry> acc) {
+        List<HeroEntry> copy = new ArrayList<>(acc);
+        Collections.sort(copy, new Comparator<HeroEntry>() {
+            @Override
+            public int compare(HeroEntry a, HeroEntry b) {
+                return Double.compare(b.info.value, a.info.value);
+            }
+        });
+        if (copy.size() > HERO_MAX) {
+            return new ArrayList<>(copy.subList(0, HERO_MAX));
+        }
+        return copy;
+    }
+
+    /** Tira de "Ação • 2021 • 1:45:00 • Nota 7.5" o gênero/ano e a nota. */
+    private static void fillInfo(HeroInfo info, XtreamApi.Details d) {
+        info.cover = d.cover == null ? "" : d.cover;
+        List<String> parts = new ArrayList<>();
+        String meta = d.meta == null ? "" : d.meta;
+        for (String p : meta.split(" \u2022 ")) {
+            String t = p.trim();
+            if (t.isEmpty()) {
+                continue;
+            }
+            if (t.startsWith("Nota ")) {
+                info.rating = t.substring(5).trim();
+                try {
+                    info.value = Double.parseDouble(info.rating.replace(',', '.'));
+                } catch (Exception e) {
+                    info.value = 0d;
+                }
+            } else if (!t.matches("\\d+(:\\d+)+") && !t.toLowerCase(Locale.ROOT).endsWith("min")) {
+                parts.add(t);
+            }
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < parts.size() && i < 2; i++) {
+            if (i > 0) {
+                sb.append(" \u00B7 ");
+            }
+            sb.append(parts.get(i));
+        }
+        info.metaChip = sb.toString();
+    }
+
+    private void applyHero(int gen, List<HeroEntry> list) {
+        if (gen != heroGen || isFinishing() || isDestroyed()) {
+            return;
+        }
+        String currentKey = null;
+        if (heroIndex >= 0 && heroIndex < heroEntries.size()) {
+            currentKey = FavoritesStore.identity(heroEntries.get(heroIndex).item);
+        }
+        heroEntries = list;
+
+        // nota e gênero/ano também nos pôsteres das faixas
+        for (HeroEntry e : list) {
+            PosterCard pc = posterByKey.get(FavoritesStore.identity(e.item));
+            if (pc != null) {
+                pc.setRating(e.info.rating);
+                if (!e.info.metaChip.isEmpty()) {
+                    pc.setSubtitle(e.info.metaChip);
+                }
+            }
+        }
+
+        if (list.isEmpty()) {
+            currentHero = null;
+            heroIndex = 0;
+            hero.showLoading();
+            return;
+        }
+        int idx = 0;
+        if (currentKey != null) {
+            for (int i = 0; i < list.size(); i++) {
+                if (FavoritesStore.identity(list.get(i).item).equals(currentKey)) {
+                    idx = i;
+                    break;
+                }
+            }
+        }
+        showHero(idx);
+    }
+
+    /** Mostra o destaque "index". Nunca pede foco (só o foco inicial, uma vez). */
+    private void showHero(int index) {
+        if (index < 0 || index >= heroEntries.size()) {
+            return;
+        }
+        HeroEntry e = heroEntries.get(index);
+        heroIndex = index;
+        currentHero = e.item;
+        hero.showEntry(e.item.name,
+                e.item.kind == XtreamApi.Kind.MOVIE ? "Filme" : "Série",
+                e.info.metaChip, e.info.rating,
+                e.info.cover.isEmpty() ? e.item.icon : e.info.cover,
+                favKeys.contains(FavoritesStore.identity(e.item)));
+        autoFocus(RANK_HERO, hero.playButton());
+    }
+
+    private void toggleHeroFavorite() {
+        final XtreamApi.Item it = currentHero;
+        if (it == null) {
+            return;
+        }
+        new Thread(() -> {
+            final boolean nowIn = FavoritesStore.toggle(this, owner, it);
+            runOnUiThread(() -> {
+                if (isFinishing() || isDestroyed()) {
+                    return;
+                }
+                String k = FavoritesStore.identity(it);
+                if (nowIn) {
+                    favKeys.add(k);
+                } else {
+                    favKeys.remove(k);
+                }
+                if (currentHero != null && FavoritesStore.identity(currentHero).equals(k)) {
+                    hero.setInList(nowIn);
+                }
+                Toast.makeText(this, nowIn ? "Adicionado à Minha lista" : "Removido da Minha lista",
+                        Toast.LENGTH_SHORT).show();
+                loadFavorites();
+            });
+        }).start();
+    }
+
+    // ---------------------------------------------------------------------------------
+    // Card "AO VIVO AGORA"
+    // ---------------------------------------------------------------------------------
+
+    /** Último canal aberto (ou o primeiro da lista). Lê o Keystore fora da thread principal. */
+    private void refreshLiveCard() {
+        if (creds == null) {
+            return;
+        }
+        final int gen = ++liveGen;
+        new Thread(() -> {
+            final XtreamApi.Item saved = HomeStore.loadLastLive(this, owner);
+            runOnUiThread(() -> applyLiveCard(gen, saved));
+        }).start();
+    }
+
+    private void applyLiveCard(int gen, XtreamApi.Item saved) {
+        if (gen != liveGen || isFinishing() || isDestroyed()) {
+            return;
+        }
+        XtreamApi.Item chosen = saved;
+        if (chosen != null && ParentalStore.isEnabled(this)
+                && ParentalStore.isAdultName(chosen.name)) {
+            chosen = null;
+        }
+        if (chosen == null && !liveItems.isEmpty()) {
+            chosen = liveItems.get(0);
+        }
+        if (chosen == null) {
+            heroLive = null;
+            hero.hideLive();
+            return;
+        }
+        heroLive = chosen;
+        hero.setLive(chosen.name, liveSubtitle(chosen), -1f, chosen.icon);
+        if (isXtream()) {
+            final XtreamApi.Item target = chosen;
+            EpgCache.get(creds.server, creds.user, creds.pass, target.id, epg -> {
+                if (isFinishing() || isDestroyed() || heroLive != target) {
+                    return;
+                }
+                if (epg != null) {
+                    hero.setLiveProgress(epg.title, progressOf(epg));
+                }
+            });
+        }
+    }
+
+    // ---------------------------------------------------------------------------------
+    // Faixa "Continue assistindo"
+    // ---------------------------------------------------------------------------------
 
     /** Lê a ContinueStore fora da thread principal e monta a faixa. */
     private void loadContinue() {
@@ -302,11 +1053,10 @@ public class HomeActivity extends Activity {
         if (isFinishing() || isDestroyed()) {
             return;
         }
-        boolean hadFocus = railContinue.hasFocus();
-        railContinue.removeAllViews();
+        boolean hadFocus = rowContinue.rail().hasFocus();
+        rowContinue.rail().removeAllViews();
 
-        // Controle parental ligado: tira o que tem nome adulto.
-        // Fica com no máximo 10 na faixa; total conta todos os visíveis (para o "Ver mais").
+        // Controle parental ligado: tira o que tem nome adulto. No máximo 10 na faixa.
         boolean hideAdult = ParentalStore.isEnabled(this);
         List<ContinueStore.Saved> shown = new ArrayList<>();
         int total = 0;
@@ -326,66 +1076,32 @@ public class HomeActivity extends Activity {
         }
 
         if (shown.isEmpty()) {
-            groupContinue.setVisibility(View.GONE);
+            rowContinue.setVisibility(View.GONE);
             if (hadFocus) {
-                navHome.requestFocus();
+                hero.playButton().requestFocus();
             }
             return;
         }
 
-        groupContinue.setVisibility(View.VISIBLE);
-        LayoutInflater inflater = LayoutInflater.from(this);
+        rowContinue.setVisibility(View.VISIBLE);
         View first = null;
-        View last = null;
         for (final ContinueStore.Saved s : shown) {
-            View card = inflater.inflate(R.layout.item_home_poster, railContinue, false);
-            TextView initial = card.findViewById(R.id.tv_initial);
-            TextView name = card.findViewById(R.id.tv_name);
-            ImageView logo = card.findViewById(R.id.iv_logo);
-            TextView now = card.findViewById(R.id.tv_now);
-            ProgressBar progress = card.findViewById(R.id.pb_progress);
-
-            name.setText(s.name);
-            initial.setText(firstLetter(s.name));
-            ImageLoader.load(logo, s.icon);
+            PosterCard card = new PosterCard(this, track(rowContinue, null));
+            card.bind(s.name, "Parou em " + clock(s.posMs), s.icon);
             if (s.durMs > 0 && s.posMs > 0) {
-                int progressValue = (int) Math.max(0, Math.min(1000,
-                        Math.round((double) s.posMs * 1000d / s.durMs)));
-                progress.setProgress(progressValue);
-                progress.setVisibility(View.VISIBLE);
+                card.setProgressFraction(Math.max(0f, Math.min(1f, (float) s.posMs / (float) s.durMs)));
             }
-            now.setText("Parou em " + clock(s.posMs));
-            now.setVisibility(View.VISIBLE);
-
-            setHomeCardFocus(card, clearLiveOnFocus);
             card.setOnClickListener(v -> openContinue(s));
-            railContinue.addView(card);
+            rowContinue.rail().addView(card, PosterCard.params(this));
             if (first == null) {
                 first = card;
             }
-            last = card;
         }
+        first.setNextFocusLeftId(navHomeId);
+        rowContinue.setCount(total + (total == 1 ? " item" : " itens"));
+        rowContinue.showItems();
 
-        // Cartão "Ver mais ›" só se há mais itens do que cabem na faixa
-        if (total > LIMIT) {
-            View more = inflater.inflate(R.layout.item_home_poster, railContinue, false);
-            TextView moreInitial = more.findViewById(R.id.tv_initial);
-            TextView moreName = more.findViewById(R.id.tv_name);
-            moreName.setText("Ver mais ›");
-            moreInitial.setText("›");
-            setHomeCardFocus(more, clearLiveOnFocus);
-            more.setOnClickListener(v -> startActivity(new Intent(this, ContinueActivity.class)));
-            railContinue.addView(more);
-            last = more;
-        }
-
-        // Último cartão: seta para a direita não faz nada (igual ao "Ver mais" das outras faixas)
-        if (last != null) {
-            last.setId(View.generateViewId());
-            last.setNextFocusRightId(last.getId());
-        }
-
-        if (hadFocus && first != null) {
+        if (hadFocus) {
             first.requestFocus();
         } else {
             autoFocus(RANK_CONTINUE, first);
@@ -469,242 +1185,141 @@ public class HomeActivity extends Activity {
         return String.format(Locale.US, "%d:%02d", m, sec);
     }
 
-    // ---------- Faixas de canais, filmes e séries ----------
+    // ---------------------------------------------------------------------------------
+    // Faixa "Minha lista"
+    // ---------------------------------------------------------------------------------
 
-    private boolean isXtream() {
-        return creds != null && CredentialStore.MODE_XTREAM.equals(creds.mode);
-    }
-
-    private boolean isM3u() {
-        return creds != null && CredentialStore.MODE_M3U.equals(creds.mode);
-    }
-
-    /** Busca as três faixas, de acordo com o tipo de login. */
-    private void loadAllRails() {
-        if (isXtream()) {
-            loadRail(XtreamApi.Kind.LIVE, railLive, stLive);
-            loadRail(XtreamApi.Kind.MOVIE, railMovie, stMovie);
-            loadRail(XtreamApi.Kind.SERIES, railSeries, stSeries);
-        } else if (isM3u()) {
-            loadM3uRails();
-        } else {
-            stLive.setTextColor(COLOR_ERROR);
-            stLive.setText("Login não reconhecido. Abra Ajustes e use \"Trocar de lista\".");
-            stMovie.setVisibility(View.GONE);
-            stSeries.setVisibility(View.GONE);
-            navSettings.requestFocus();
-        }
-    }
-
-    private void loadRail(final XtreamApi.Kind kind, final LinearLayout rail, final TextView status) {
-        final String server = creds.server;
-        final String user = creds.user;
-        final String pass = creds.pass;
-        final int gen = railGen;
-        new Thread(() -> {
-            List<XtreamApi.Item> items = null;
-            try {
-                items = XtreamApi.items(server, user, pass, kind, null, LIMIT);
-            } catch (Exception e) {
-                // sem rede, servidor fora do ar ou resposta estranha: mostra aviso abaixo
-            }
-            final List<XtreamApi.Item> result = items;
-            runOnUiThread(() -> {
-                if (gen == railGen) {
-                    showRail(kind, result, rail, status);
-                }
-            });
-        }).start();
-    }
-
-    /** Lista M3U: uma única leitura da lista traz os 10 primeiros de cada tipo. */
-    private void loadM3uRails() {
-        final String url = creds.m3uUrl;
-        final boolean hideAdult = ParentalStore.isEnabled(this);
-        final int gen = railGen;
-        new Thread(() -> {
-            M3uApi.Sample sample = null;
-            try {
-                sample = M3uApi.sample(url, LIMIT, hideAdult);
-            } catch (Exception e) {
-                // sem rede, endereço inválido ou lista estranha: mostra aviso abaixo
-            }
-            final M3uApi.Sample result = sample;
-            runOnUiThread(() -> {
-                if (gen != railGen) {
-                    return;
-                }
-                showRail(XtreamApi.Kind.LIVE, result == null ? null : result.live,
-                        railLive, stLive);
-                showRail(XtreamApi.Kind.MOVIE, result == null ? null : result.movie,
-                        railMovie, stMovie);
-                showRail(XtreamApi.Kind.SERIES, result == null ? null : result.series,
-                        railSeries, stSeries);
-            });
-        }).start();
-    }
-
-    /** Apaga as faixas e busca tudo de novo (Atualizar, ou quando o controle parental muda). */
-    private void reloadRails() {
-        if (!isXtream() && !isM3u()) {
+    private void loadFavorites() {
+        if (creds == null) {
             return;
         }
-        railGen++;
-        userNavigated = true; // não tira o foco de onde a pessoa está
-        focusedLive = null;
-        LinearLayout[] rails = {railLive, railMovie, railSeries};
-        TextView[] states = {stLive, stMovie, stSeries};
-        for (int i = 0; i < rails.length; i++) {
-            rails[i].removeAllViews();
-            states[i].setTextColor(COLOR_NEUTRAL);
-            states[i].setText("Carregando...");
-            states[i].setVisibility(View.VISIBLE);
-        }
-        loadAllRails();
-        loadContinue();
+        final int gen = ++favGen;
+        new Thread(() -> {
+            final List<XtreamApi.Item> all = FavoritesStore.list(this, owner);
+            runOnUiThread(() -> {
+                if (gen == favGen) {
+                    showFavorites(all);
+                }
+            });
+        }).start();
     }
 
-    private void showRail(final XtreamApi.Kind kind, List<XtreamApi.Item> items,
-                          LinearLayout rail, TextView status) {
+    private void showFavorites(List<XtreamApi.Item> all) {
         if (isFinishing() || isDestroyed()) {
             return;
         }
-        if (items == null) {
-            status.setTextColor(COLOR_ERROR);
-            status.setText("Não foi possível carregar. Confira a internet e o servidor.");
-            return;
-        }
-        // Controle parental ligado: tira o que tem nome adulto
-        if (ParentalStore.isEnabled(this)) {
-            List<XtreamApi.Item> allowed = new ArrayList<>();
-            for (XtreamApi.Item it : items) {
-                if (!ParentalStore.isAdultName(it.name)) {
-                    allowed.add(it);
-                }
+        boolean hadFocus = rowFav.rail().hasFocus();
+        rowFav.rail().removeAllViews();
+
+        boolean hideAdult = ParentalStore.isEnabled(this);
+        List<XtreamApi.Item> shown = new ArrayList<>();
+        favKeys.clear();
+        for (XtreamApi.Item it : all) {
+            favKeys.add(FavoritesStore.identity(it));
+            if (hideAdult && ParentalStore.isAdultName(it.name)) {
+                continue;
             }
-            items = allowed;
+            shown.add(it);
         }
-        if (items.isEmpty()) {
-            status.setTextColor(COLOR_NEUTRAL);
-            status.setText("Nada encontrado nesta seção.");
+        // o botão do destaque acompanha a lista
+        if (currentHero != null) {
+            hero.setInList(favKeys.contains(FavoritesStore.identity(currentHero)));
+        }
+
+        if (shown.isEmpty()) {
+            rowFav.setVisibility(View.GONE);
+            if (hadFocus) {
+                hero.listButton().requestFocus();
+            }
             return;
         }
-        status.setVisibility(View.GONE);
-        final boolean xtream = isXtream();
-        LayoutInflater inflater = LayoutInflater.from(this);
+
+        rowFav.setVisibility(View.VISIBLE);
         View first = null;
-        for (final XtreamApi.Item item : items) {
-            View card = inflater.inflate(item.kind == XtreamApi.Kind.LIVE
-                    ? R.layout.item_home_channel : R.layout.item_home_poster, rail, false);
-            TextView initial = card.findViewById(R.id.tv_initial);
-            TextView name = card.findViewById(R.id.tv_name);
-            ImageView logo = card.findViewById(R.id.iv_logo);
-
-            name.setText(item.name);
-            initial.setText(firstLetter(item.name));
-            ImageLoader.load(logo, item.icon);
-
-            if (item.kind == XtreamApi.Kind.LIVE && xtream) {
-                TextView now = card.findViewById(R.id.tv_now);
-                now.setText("");
-                now.setVisibility(View.VISIBLE);
-                loadNow(item, now);
-                setHomeCardFocus(card, (v, hasFocus) -> {
-                    if (hasFocus) {
-                        focusedLive = item;
-                    }
-                });
-                // OK segurado: segunda via para abrir a programação do canal
-                card.setOnLongClickListener(v -> {
-                    openSchedule(item);
-                    return true;
-                });
-            } else {
-                if (item.kind == XtreamApi.Kind.LIVE) {
-                    // Lista M3U: ainda sem guia de programação
-                    TextView now = card.findViewById(R.id.tv_now);
-                    now.setText("");
-                    now.setVisibility(View.GONE);
-                }
-                setHomeCardFocus(card, clearLiveOnFocus);
-            }
-
+        for (final XtreamApi.Item item : shown) {
+            PosterCard card = new PosterCard(this, track(rowFav, null));
+            card.bind(item.name, item.kind == XtreamApi.Kind.MOVIE ? "Filme" : "Série", item.icon);
             card.setOnClickListener(v -> openItem(item));
-            rail.addView(card);
+            // OK segurado: tira da lista
+            card.setOnLongClickListener(v -> {
+                removeFavorite(item);
+                return true;
+            });
+            rowFav.rail().addView(card, PosterCard.params(this));
             if (first == null) {
                 first = card;
             }
         }
+        first.setNextFocusLeftId(navHomeId);
+        rowFav.setCount(shown.size() + " na lista \u00B7 segure OK para tirar");
+        rowFav.showItems();
 
-        // Cartão "Ver mais ›" no fim da faixa (login por servidor e por lista M3U)
-        if (xtream || isM3u()) {
-            View more = inflater.inflate(kind == XtreamApi.Kind.LIVE
-                    ? R.layout.item_home_channel : R.layout.item_home_poster, rail, false);
-            TextView moreInitial = more.findViewById(R.id.tv_initial);
-            TextView moreName = more.findViewById(R.id.tv_name);
-            moreName.setText("Ver mais ›");
-            moreInitial.setText("›");
-            setHomeCardFocus(more, clearLiveOnFocus);
-            more.setOnClickListener(v -> openBrowse(kind));
-            // R6: seta para a direita no "Ver mais" não faz nada (o foco fica no próprio cartão).
-            // Para mudar de faixa, só cima e baixo.
-            more.setId(View.generateViewId());
-            more.setNextFocusRightId(more.getId());
-            rail.addView(more);
+        if (hadFocus) {
+            first.requestFocus();
+        } else {
+            autoFocus(RANK_FAV, first);
         }
-
-        autoFocus(kind == XtreamApi.Kind.LIVE ? RANK_LIVE
-                : kind == XtreamApi.Kind.MOVIE ? RANK_MOVIE : RANK_SERIES, first);
     }
 
-    /** Foco inicial automático: só sobe (para uma faixa mais alta), nunca desce. */
-    private void autoFocus(int rank, View card) {
-        if (card == null || userNavigated || rank >= autoFocusRank
-                || groupUpdate.getVisibility() == View.VISIBLE) {
+    private void removeFavorite(final XtreamApi.Item item) {
+        new Thread(() -> {
+            if (FavoritesStore.contains(this, owner, item)) {
+                FavoritesStore.toggle(this, owner, item);
+            }
+            runOnUiThread(() -> {
+                if (isFinishing() || isDestroyed()) {
+                    return;
+                }
+                Toast.makeText(this, "Removido da Minha lista", Toast.LENGTH_SHORT).show();
+                loadFavorites();
+            });
+        }).start();
+    }
+
+    // ---------------------------------------------------------------------------------
+    // Abrir telas
+    // ---------------------------------------------------------------------------------
+
+    /** Abre a janela da programação de um canal (só login por servidor). */
+    private void openSchedule(XtreamApi.Item item) {
+        if (!isXtream() || item == null || item.kind != XtreamApi.Kind.LIVE) {
             return;
         }
-        autoFocusRank = rank;
-        card.requestFocus();
+        EpgDialog.show(this, creds.server, creds.user, creds.pass, item.id, item.name);
     }
 
-    private void setHomeCardFocus(View card, View.OnFocusChangeListener listener) {
-        card.setOnFocusChangeListener((view, hasFocus) -> {
-            view.animate().cancel();
-            view.animate()
-                    .scaleX(hasFocus ? 1.05f : 1f)
-                    .scaleY(hasFocus ? 1.05f : 1f)
-                    .setDuration(120)
-                    .start();
-            if (listener != null) {
-                listener.onFocusChange(view, hasFocus);
-            }
-        });
-    }
-
-    /** Pede ao servidor o programa de agora e escreve na linha do cartão. */
-    private void loadNow(XtreamApi.Item item, final TextView now) {
-        EpgCache.get(creds.server, creds.user, creds.pass, item.id, epg -> {
-            if (isFinishing() || isDestroyed()) {
-                return;
-            }
-            if (epg == null) {
-                now.setText("Programação indisponível");
-            } else {
-                now.setText("Agora: " + epg.title);
-            }
-        });
-    }
-
-    private static String firstLetter(String name) {
-        String s = name == null ? "" : name.trim();
-        if (s.isEmpty()) {
-            return "?";
+    private void openSearch() {
+        if (!isXtream() && !isM3u()) {
+            return;
         }
-        return new String(Character.toChars(s.codePointAt(0))).toUpperCase();
+        SearchKeyboard.show(this, "Buscar canais, filmes e séries", new SearchKeyboard.Listener() {
+            @Override
+            public void onSearch(String text) {
+                Intent i = new Intent(HomeActivity.this, SearchAllActivity.class);
+                i.putExtra(SearchActivity.EXTRA_QUERY, text);
+                startActivity(i);
+            }
+
+            @Override
+            public void onCancel() {
+                // nada a fazer
+            }
+        });
+    }
+
+    /** Canais, Filmes e Séries: abrem a aba daquele tipo. */
+    private void openSection(XtreamApi.Kind kind) {
+        if (!isXtream() && !isM3u()) {
+            return;
+        }
+        openBrowse(kind);
     }
 
     /** Abre a aba: a tela do servidor ou a da lista M3U, conforme o login. */
     private void openBrowse(XtreamApi.Kind kind) {
+        if (!isXtream() && !isM3u()) {
+            return;
+        }
         Intent i;
         if (isM3u()) {
             i = new Intent(this, M3uBrowseActivity.class);
@@ -715,7 +1330,10 @@ public class HomeActivity extends Activity {
         startActivity(i);
     }
 
-    private void openItem(XtreamApi.Item item) {
+    private void openItem(final XtreamApi.Item item) {
+        if (item == null) {
+            return;
+        }
         if (item.kind == XtreamApi.Kind.SERIES) {
             // Lista M3U: a série é achada pelo título; servidor: pelo número
             Intent s = new Intent(this, isM3u() ? M3uSeriesActivity.class : SeriesActivity.class);
@@ -738,6 +1356,9 @@ public class HomeActivity extends Activity {
         if (item.kind == XtreamApi.Kind.LIVE) {
             // R4: o player troca de canal com cima e baixo. Categoria não enviada = todas.
             i.putExtra(MainActivity.EXTRA_QUEUE, true);
+            // lembra o canal para o card "AO VIVO AGORA"
+            final String ownerNow = owner;
+            new Thread(() -> HomeStore.saveLastLive(getApplicationContext(), ownerNow, item)).start();
         }
         if (isM3u()) {
             i.putExtra(MainActivity.EXTRA_URL, item.url);
@@ -745,7 +1366,39 @@ public class HomeActivity extends Activity {
         startActivity(i);
     }
 
-    // ---------- Atualização automática ----------
+    // ---------------------------------------------------------------------------------
+    // Chip "Lista atualizada"
+    // ---------------------------------------------------------------------------------
+
+    private static boolean sameDay(Calendar a, Calendar b) {
+        return a.get(Calendar.YEAR) == b.get(Calendar.YEAR)
+                && a.get(Calendar.DAY_OF_YEAR) == b.get(Calendar.DAY_OF_YEAR);
+    }
+
+    private static String updatedText(long ms) {
+        if (ms <= 0L) {
+            return "Lista ainda não atualizada";
+        }
+        Calendar then = Calendar.getInstance();
+        then.setTimeInMillis(ms);
+        String time = String.format(Locale.US, "%02d:%02d",
+                then.get(Calendar.HOUR_OF_DAY), then.get(Calendar.MINUTE));
+        Calendar today = Calendar.getInstance();
+        if (sameDay(today, then)) {
+            return "Lista atualizada hoje, " + time;
+        }
+        Calendar yesterday = Calendar.getInstance();
+        yesterday.add(Calendar.DAY_OF_YEAR, -1);
+        if (sameDay(yesterday, then)) {
+            return "Lista atualizada ontem, " + time;
+        }
+        return String.format(Locale.US, "Lista atualizada %02d/%02d, %s",
+                then.get(Calendar.DAY_OF_MONTH), then.get(Calendar.MONTH) + 1, time);
+    }
+
+    // ---------------------------------------------------------------------------------
+    // Atualização automática do app
+    // ---------------------------------------------------------------------------------
 
     private void checkForUpdate() {
         Updater.checkAsync(this, new Updater.CheckListener() {
@@ -755,9 +1408,9 @@ public class HomeActivity extends Activity {
                     return;
                 }
                 pendingUpdate = info;
-                tvUpdate.setTextColor(COLOR_OK);
+                tvUpdate.setTextColor(GlassKit.color(HomeActivity.this, R.color.asc_focus));
                 tvUpdate.setText(getString(R.string.update_available, info.name));
-                groupUpdate.setVisibility(View.VISIBLE);
+                updateBar.setVisibility(View.VISIBLE);
                 btnUpdateNow.requestFocus();
             }
 
@@ -775,7 +1428,7 @@ public class HomeActivity extends Activity {
         downloading = true;
         btnUpdateNow.setEnabled(false);
         btnUpdateLater.setEnabled(false);
-        tvUpdate.setTextColor(COLOR_WHITE);
+        tvUpdate.setTextColor(GlassKit.color(this, R.color.asc_text_primary));
         tvUpdate.setText(R.string.msg_downloading_unknown);
 
         Updater.downloadAndInstallAsync(this, pendingUpdate, new Updater.InstallListener() {
@@ -808,7 +1461,7 @@ public class HomeActivity extends Activity {
                 if (isFinishing() || isDestroyed()) {
                     return;
                 }
-                tvUpdate.setTextColor(COLOR_ERROR);
+                tvUpdate.setTextColor(GlassKit.color(HomeActivity.this, R.color.asc_text_primary));
                 tvUpdate.setText(message);
                 btnUpdateNow.setEnabled(true);
                 btnUpdateLater.setEnabled(true);
@@ -821,7 +1474,7 @@ public class HomeActivity extends Activity {
         if (downloading) {
             return;
         }
-        groupUpdate.setVisibility(View.GONE);
-        navHome.requestFocus();
+        updateBar.setVisibility(View.GONE);
+        hero.playButton().requestFocus();
     }
 }

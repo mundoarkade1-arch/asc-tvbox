@@ -1,14 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Menu lateral: cor secundária (#12294D) com linha sutil à direita -->
+<!--
+  Menu lateral das abas (Canais, Filmes, Séries, Ajustes): cápsula de vidro flutuante.
+  Só usa cores que o app já tem (branco translúcido de asc_glass_border / asc_glass_border_strong,
+  sheen e accent_tint). Nenhuma cor nova.
+-->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item>
+    <!-- sombra suave -->
+    <item
+        android:left="4dp"
+        android:top="10dp"
+        android:right="4dp"
+        android:bottom="6dp">
         <shape android:shape="rectangle">
-            <solid android:color="#F212294D" />
+            <solid android:color="@color/asc_glass_shadow" />
+            <corners android:radius="22dp" />
         </shape>
     </item>
-    <item android:left="79dp">
+    <!-- vidro: degradê diagonal translúcido -->
+    <item
+        android:left="4dp"
+        android:top="8dp"
+        android:right="4dp"
+        android:bottom="8dp">
         <shape android:shape="rectangle">
-            <solid android:color="@color/asc_glass_border_strong" />
+            <gradient
+                android:angle="315"
+                android:endColor="@color/asc_glass_border"
+                android:startColor="@color/asc_glass_border_strong" />
+            <corners android:radius="22dp" />
+        </shape>
+    </item>
+    <!-- brilho interno no topo -->
+    <item
+        android:left="4dp"
+        android:top="8dp"
+        android:right="4dp"
+        android:bottom="8dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:endColor="@color/asc_glass_sheen_end"
+                android:startColor="@color/asc_glass_sheen" />
+            <corners android:radius="22dp" />
+        </shape>
+    </item>
+    <!-- borda de 1dp -->
+    <item
+        android:left="4dp"
+        android:top="8dp"
+        android:right="4dp"
+        android:bottom="8dp">
+        <shape android:shape="rectangle">
+            <stroke
+                android:width="1dp"
+                android:color="@color/asc_glass_border_strong" />
+            <corners android:radius="22dp" />
         </shape>
     </item>
 </layer-list>
