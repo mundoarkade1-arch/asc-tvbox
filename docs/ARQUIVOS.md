@@ -7,7 +7,7 @@ Outros: res/values/strings.xml, res/xml/file_paths.xml, AndroidManifest.xml, app
 ## Fundos e cores (identidade ASC lite)
 - res/drawable/bg_gradient.xml: fundo #09070A com dois brilhos radiais vermelhos discretos. Usado nas telas que já tinham o fundo comum, inclusive activity_login.xml; o login também mostra banner_bg com bg_banner_fade.
 - O PLAYER (activity_main.xml) continua PRETO, de propósito. A barra do player usa a cor vermelha ASC e controles claros.
-- Paleta principal: fundo #09070A, cartão #161214, cartão em foco #1E181B, texto #F7F3F4, cinza #A99FA3 e vermelho #FF2A3D. Botão principal: degradê #FF3B4E para #D3091B.
+- Paleta ASC Play (tema escuro azul, valores em res/values/asc_glass.xml): fundo #0A1A33 (70%), cards/menus/botões secundários #12294D (20%), destaque #1F6FEB (10%: botão principal, item selecionado, barra de progresso), foco e brilho #5AA2FF, texto #FFFFFF e #B8C0CC. Cards com borda branca 8%. Fundo: drawable-nodpi/asc_bg.jpg; Glass.java escurece 30% nas telas com listas e 0% na Home. Ícones do menu: linha fina de um traço só, colorida por res/color/nav_text.xml.
 - bg_button.xml, bg_card.xml e bg_field.xml mantêm seus estados. O foco usa borda branca de 3dp e contorno vermelho luminoso; cartões têm cantos de 16dp e botões/campos de 14dp.
 - bg_poster.xml é o fundo das capas em item_card.xml, item_continue.xml, activity_movie.xml e activity_series.xml.
 - bg_nav.xml dá fundo escuro próprio ao menu e tem uma linha clara à direita. Telas com menu não dependem mais de fundo transparente.

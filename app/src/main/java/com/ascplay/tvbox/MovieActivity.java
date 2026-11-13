@@ -33,7 +33,7 @@ public class MovieActivity extends Activity {
     /** Endereço da capa do item (já conhecido da lista). Pode vir vazio. */
     public static final String EXTRA_ICON = "icon";
 
-    private static final int COLOR_NEUTRAL = 0xFFA8A8A8;
+    private static final int COLOR_NEUTRAL = 0xFFB8C0CC;
 
     private ImageView ivCover;
     private TextView tvTitle;
@@ -210,7 +210,7 @@ public class MovieActivity extends Activity {
         if (d.plot.isEmpty()) {
             tvPlot.setText("Sem sinopse para este filme.");
         } else {
-            tvPlot.setTextColor(0xFFA8A8A8);
+            tvPlot.setTextColor(0xFFB8C0CC);
             tvPlot.setText(d.plot);
         }
     }

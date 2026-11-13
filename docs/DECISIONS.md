@@ -534,3 +534,11 @@
 - Botão principal é branco com texto #101010 (drawable/bg_button_primary.xml). Os outros botões são escuros e ganham borda e brilho verde-limão no foco.
 - Mensagens de erro continuam vermelhas (#FF6B78) de propósito: erro precisa ser diferente do destaque.
 - Episódio visto agora é cinza (#8A8A8A); episódio atual é verde-limão.
+
+## 13/11/2026: Visual ASC Play (tema escuro azul)
+- Decisão: paleta nova. Fundo #0A1A33, cards e menus #12294D, destaque #1F6FEB, foco/brilho #5AA2FF, textos #FFFFFF e #B8C0CC. Substitui o verde-limão. Motivo: pedido do dono (confiança, tecnologia, estabilidade; sem neon).
+- Decisão: o foco (#5AA2FF) é uma cor separada do destaque (#1F6FEB, que marca item selecionado, botão principal e progresso). Nova cor asc_focus em asc_glass.xml.
+- Decisão: fundo = imagem 02_ASC_Play_fundo (asc_bg.jpg). Home sem escurecer; as outras telas com 30% de preto (Glass.java escolhe pelo tipo da tela). Motivo: pedido do dono.
+- Decisão: ícones do menu viraram linha fina de um traço, tingidos por nav_text.xml (cinza-claro, azul-claro quando selecionado). Ícone do app, brand_icon e banner da TV refeitos com o ícone novo. Nome do app: ASC Play.
+- Decisão: cards sem transparência (#12294D) e borda de 1dp com 8% de branco; cantos de 14 a 16dp. Texto de erro mais suave (#F28B82).
+

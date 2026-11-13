@@ -1,16 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Menu lateral: cor secundária (#12294D) com linha sutil à direita -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#CC101010" />
-        </shape>
-    </item>
-    <item>
-        <shape android:shape="rectangle">
-            <gradient
-                android:angle="0"
-                android:endColor="@color/asc_glass_sheen_end"
-                android:startColor="@color/asc_glass_sheen" />
+            <solid android:color="#F212294D" />
         </shape>
     </item>
     <item android:left="79dp">

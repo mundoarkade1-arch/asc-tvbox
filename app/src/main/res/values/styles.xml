@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="AppTheme" parent="android:Theme.Material.NoActionBar">
-        <item name="android:windowBackground">#101010</item>
-        <item name="android:colorAccent">#C8FF00</item>
+        <item name="android:windowBackground">#0A1A33</item>
+        <item name="android:colorAccent">#5AA2FF</item>
         <item name="android:alertDialogTheme">@style/AscDialog</item>
     </style>
 
-    <!-- Janelas de confirmação com vidro intenso -->
+    <!-- Janelas de confirmação (card #12294D com borda sutil) -->
     <style name="AscDialog" parent="android:Theme.Material.Dialog.Alert">
         <item name="android:windowBackground">@drawable/glass_strong</item>
-        <item name="android:colorAccent">#C8FF00</item>
+        <item name="android:colorAccent">#5AA2FF</item>
         <item name="android:textColorPrimary">#FFFFFF</item>
-        <item name="android:textColorSecondary">#A8A8A8</item>
+        <item name="android:textColorSecondary">#B8C0CC</item>
     </style>
 </resources>

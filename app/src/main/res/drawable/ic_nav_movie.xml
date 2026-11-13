@@ -1,19 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Ícone de linha fina (traço único). A cor vem de @color/nav_text. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="28dp"
     android:height="28dp"
+    android:tint="@color/nav_text"
     android:viewportWidth="48"
     android:viewportHeight="48">
     <path
-        android:fillColor="#C8FF00"
-        android:pathData="M6 20 H42 V38 A3 3 0 0 1 39 41 H9 A3 3 0 0 1 6 38 Z" />
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M6 19 H42 V37 A3 3 0 0 1 39 40 H9 A3 3 0 0 1 6 37 Z" />
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M5 10 H43 V19 H5 Z" />
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M6 9 H42 V19 H6 Z" />
     <path
-        android:fillColor="#C8FF00"
-        android:pathData="M12 10 H18 L14 19 H8 Z M24 10 H30 L26 19 H20 Z M36 10 H42 L38 19 H32 Z" />
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M16 9 L12 19 M27 9 L23 19 M38 9 L34 19" />
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M20 25 V36 L30 30.5 Z" />
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M20 25 V35 L29 30 Z" />
 </vector>

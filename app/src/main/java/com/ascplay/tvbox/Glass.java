@@ -9,8 +9,9 @@ import android.widget.ImageView;
 
 /**
  * Fundo global do app (imagem + camada escura) em UM só lugar.
- * A imagem é res/drawable-nodpi/asc_bg.jpg e a camada escura é a cor asc_bg_scrim
- * (res/values/asc_glass.xml). Só visual: não mexe em lógica, rede nem navegação.
+ * A imagem é res/drawable-nodpi/asc_bg.jpg (02_ASC_Play_fundo). A camada escura vem de
+ * res/values/asc_glass.xml: tela inicial sem escurecer (asc_bg_scrim_home) e telas com
+ * listas 30% mais escuras (asc_bg_scrim). Só visual: não mexe em lógica, rede nem navegação.
  */
 final class Glass {
 
@@ -28,7 +29,9 @@ final class Glass {
         if (content == null || content.findViewWithTag(TAG) != null) {
             return;
         }
-        content.addView(layer(activity, R.color.asc_bg_scrim), 0,
+        int scrim = (activity instanceof HomeActivity)
+                ? R.color.asc_bg_scrim_home : R.color.asc_bg_scrim;
+        content.addView(layer(activity, scrim), 0,
                 new FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
     }

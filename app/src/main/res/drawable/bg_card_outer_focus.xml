@@ -17,7 +17,7 @@
         android:right="-3dp"
         android:bottom="-3dp">
         <shape android:shape="rectangle">
-            <stroke android:width="3dp" android:color="@color/asc_accent" />
+            <stroke android:width="2dp" android:color="@color/asc_focus" />
             <corners android:radius="19dp" />
         </shape>
     </item>

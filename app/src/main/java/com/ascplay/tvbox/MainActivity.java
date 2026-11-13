@@ -434,7 +434,7 @@ public class MainActivity extends Activity {
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xCC101010);
         bg.setCornerRadius(dp(6));
-        bg.setStroke(dp(1), 0xFFC8FF00);
+        bg.setStroke(dp(1), 0xFF5AA2FF);
         skipButton.setBackground(bg);
         skipButton.setFocusable(false);
         skipButton.setVisibility(View.GONE);
@@ -455,7 +455,7 @@ public class MainActivity extends Activity {
         episodeLabel = new TextView(this);
         episodeLabel.setTextColor(0xFFFFFFFF);
         episodeLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
-        episodeLabel.setShadowLayer(6f, 0f, 0f, 0xFF101010);
+        episodeLabel.setShadowLayer(6f, 0f, 0f, 0xFF0A1A33);
         episodeLabel.setSingleLine(true);
         episodeLabel.setFocusable(false);
         episodeLabel.setVisibility(View.GONE);
@@ -475,7 +475,7 @@ public class MainActivity extends Activity {
         diagLabel = new TextView(this);
         diagLabel.setTextColor(0xFFFFFFFF);
         diagLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-        diagLabel.setShadowLayer(6f, 0f, 0f, 0xFF101010);
+        diagLabel.setShadowLayer(6f, 0f, 0f, 0xFF0A1A33);
         diagLabel.setGravity(Gravity.END);
         diagLabel.setFocusable(false);
         diagLabel.setVisibility(View.GONE);

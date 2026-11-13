@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Botão principal: azul de destaque (#1F6FEB). No foco ganha anel #5AA2FF e brilho suave. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_focused="true">
         <layer-list>
             <item>
                 <shape android:shape="rectangle">
-                    <stroke android:width="6dp" android:color="#59C8FF00" />
+                    <stroke android:width="6dp" android:color="@color/asc_accent_glow" />
                     <corners android:radius="17dp" />
                 </shape>
             </item>
             <item android:left="3dp" android:top="3dp" android:right="3dp" android:bottom="3dp">
                 <shape android:shape="rectangle">
-                    <solid android:color="#C8FF00" />
-                    <stroke android:width="3dp" android:color="#FFFFFF" />
+                    <solid android:color="@color/asc_accent" />
+                    <stroke android:width="2dp" android:color="@color/asc_focus" />
                     <corners android:radius="14dp" />
                 </shape>
             </item>
@@ -21,14 +22,14 @@
         <layer-list>
             <item>
                 <shape android:shape="rectangle">
-                    <stroke android:width="6dp" android:color="#59C8FF00" />
+                    <stroke android:width="6dp" android:color="@color/asc_accent_glow" />
                     <corners android:radius="17dp" />
                 </shape>
             </item>
             <item android:left="3dp" android:top="3dp" android:right="3dp" android:bottom="3dp">
                 <shape android:shape="rectangle">
-                    <solid android:color="#C8FF00" />
-                    <stroke android:width="3dp" android:color="#FFFFFF" />
+                    <solid android:color="@color/asc_accent" />
+                    <stroke android:width="2dp" android:color="@color/asc_focus" />
                     <corners android:radius="14dp" />
                 </shape>
             </item>
@@ -36,7 +37,7 @@
     </item>
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#C8FF00" />
+            <solid android:color="@color/asc_accent" />
             <corners android:radius="14dp" />
         </shape>
     </item>

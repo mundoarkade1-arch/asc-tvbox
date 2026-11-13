@@ -1,31 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  CENTRAL DO VIDRO (Glassmorphism) E DO FUNDO.
-  Mude AQUI para ajustar o visual do app inteiro. Nenhuma tela precisa ser editada.
+  CENTRAL DO VISUAL (ASC Play: tema escuro azul). Mude AQUI para ajustar o app inteiro.
 
-  FUNDO: para trocar a imagem, substitua drawable-nodpi/asc_bg.jpg (mesmo nome).
-  ESCURECIMENTO DO FUNDO: asc_bg_scrim (os dois primeiros dígitos = opacidade; 00 = sem camada, FF = tudo preto).
+  REGRA DAS CORES: 70% fundo (#0A1A33), 20% secundária (#12294D: cards, barras, menus),
+  10% destaque (#1F6FEB: botão principal, item selecionado, barra de progresso).
+  Foco e brilho suave: #5AA2FF. Texto: #FFFFFF (principal) e #B8C0CC (secundário).
+
+  FUNDO: imagem drawable-nodpi/asc_bg.jpg (02_ASC_Play_fundo).
+  ESCURECIMENTO (os dois primeiros dígitos = opacidade; 00 = nada, FF = tudo):
+    asc_bg_scrim_home  = tela inicial (sem escurecer)
+    asc_bg_scrim       = telas com listas (30% mais escuro)
+    asc_bg_scrim_dialog = janelas cheias (teclado de busca, PIN)
 -->
 <resources>
-    <color name="asc_bg_scrim">#B3101010</color>
-    <color name="asc_bg_scrim_dialog">#E0101010</color>
+    <color name="asc_bg_scrim_home">#00000000</color>
+    <color name="asc_bg_scrim">#4D000000</color>
+    <color name="asc_bg_scrim_dialog">#E60A1A33</color>
 
-    <!-- Vidro: leve (secundário), intermediário (cards, menus), intenso (painéis, modais) -->
-    <color name="asc_glass_light">#661A1A1A</color>
-    <color name="asc_glass_mid">#8C1A1A1A</color>
-    <color name="asc_glass_strong">#D9141414</color>
-    <color name="asc_glass_field">#99101010</color>
-    <color name="asc_glass_focus">#CC262626</color>
+    <!-- Superfícies (cards, menus, botões secundários, campos, janelas) -->
+    <color name="asc_glass_light">#FF12294D</color>
+    <color name="asc_glass_mid">#FF12294D</color>
+    <color name="asc_glass_strong">#FF12294D</color>
+    <color name="asc_glass_field">#FF0E2142</color>
+    <color name="asc_glass_focus">#FF1B3B6C</color>
 
-    <!-- Detalhes do vidro -->
-    <color name="asc_glass_border">#2EFFFFFF</color>
-    <color name="asc_glass_border_strong">#3DFFFFFF</color>
-    <color name="asc_glass_sheen">#26FFFFFF</color>
+    <!-- Detalhes: borda branca 8% (12% nas janelas), brilho do topo quase invisível, sombra suave -->
+    <color name="asc_glass_border">#14FFFFFF</color>
+    <color name="asc_glass_border_strong">#1FFFFFFF</color>
+    <color name="asc_glass_sheen">#08FFFFFF</color>
     <color name="asc_glass_sheen_end">#00FFFFFF</color>
-    <color name="asc_glass_shadow">#40000000</color>
+    <color name="asc_glass_shadow">#33000000</color>
 
-    <!-- Verde-limão oficial e seus brilhos -->
-    <color name="asc_accent">#C8FF00</color>
-    <color name="asc_accent_glow">#59C8FF00</color>
-    <color name="asc_accent_tint">#26C8FF00</color>
+    <!-- Destaque (botão principal, item selecionado, barra de progresso) -->
+    <color name="asc_accent">#FF1F6FEB</color>
+    <color name="asc_accent_tint">#331F6FEB</color>
+
+    <!-- Foco e brilho suave -->
+    <color name="asc_focus">#FF5AA2FF</color>
+    <color name="asc_accent_glow">#455AA2FF</color>
+
+    <!-- Textos -->
+    <color name="asc_text_primary">#FFFFFFFF</color>
+    <color name="asc_text_secondary">#FFB8C0CC</color>
 </resources>

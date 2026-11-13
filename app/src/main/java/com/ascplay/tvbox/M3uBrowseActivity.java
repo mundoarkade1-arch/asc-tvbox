@@ -57,8 +57,8 @@ public class M3uBrowseActivity extends Activity {
     private static final int PAGE = 40;
     private static final int MAX_ITEMS = 5000;
     private static final int LOAD_AHEAD = 12;
-    private static final int COLOR_NEUTRAL = 0xFFA8A8A8;
-    private static final int COLOR_ERROR = 0xFFFF6B78;
+    private static final int COLOR_NEUTRAL = 0xFFB8C0CC;
+    private static final int COLOR_ERROR = 0xFFF28B82;
     private static final String LOCK = "\uD83D\uDD12 ";
 
     private CredentialStore.Credentials creds;

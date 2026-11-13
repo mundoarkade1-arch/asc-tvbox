@@ -48,8 +48,8 @@ public class SettingsActivity extends Activity {
     private static final int ROW_COUNT = 6;
 
     private static final int COLOR_WHITE = 0xFFFFFFFF;
-    private static final int COLOR_ERROR = 0xFFFF6B78;
-    private static final int COLOR_OK = 0xFFC8FF00;
+    private static final int COLOR_ERROR = 0xFFF28B82;
+    private static final int COLOR_OK = 0xFF5AA2FF;
 
     private ListView lvSettings;
     private TextView tvDetail;

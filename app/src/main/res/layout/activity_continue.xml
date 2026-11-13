@@ -13,7 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Continue assistindo"
-        android:textColor="#C8FF00"
+        android:textColor="#5AA2FF"
         android:textSize="26sp"
         android:textStyle="bold" />
 
@@ -23,7 +23,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="Carregando..."
-        android:textColor="#A8A8A8"
+        android:textColor="#B8C0CC"
         android:textSize="18sp" />
 
     <ListView

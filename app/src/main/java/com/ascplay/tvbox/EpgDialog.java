@@ -32,12 +32,12 @@ import java.util.Locale;
  */
 public final class EpgDialog {
 
-    private static final int COLOR_PANEL = 0xFF1A1A1A;
-    private static final int COLOR_BORDER = 0xFF2A2A2A;
+    private static final int COLOR_PANEL = 0xFF12294D;
+    private static final int COLOR_BORDER = 0xFF253A5B;
     private static final int COLOR_WHITE = 0xFFFFFFFF;
-    private static final int COLOR_NEUTRAL = 0xFFA8A8A8;
-    private static final int COLOR_ERROR = 0xFFFF6B78;
-    private static final int COLOR_NOW = 0xFFC8FF00;
+    private static final int COLOR_NEUTRAL = 0xFFB8C0CC;
+    private static final int COLOR_ERROR = 0xFFF28B82;
+    private static final int COLOR_NOW = 0xFF5AA2FF;
 
     private EpgDialog() {
     }
