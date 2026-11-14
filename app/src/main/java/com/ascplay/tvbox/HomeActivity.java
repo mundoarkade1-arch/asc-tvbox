@@ -595,7 +595,21 @@ public class HomeActivity extends Activity {
         new Thread(() -> {
             List<XtreamApi.Item> items = null;
             try {
-                items = XtreamApi.items(server, user, pass, kind, null, LIMIT);
+                items = XtreamApi.items(server, user, pass, kind, null, 0, LIMIT);
+                if (kind != XtreamApi.Kind.LIVE && items != null && !items.isEmpty()) {
+                    // Filmes e séries: se o servidor trouxe novidade, mostra na hora; senão,
+                    // toda segunda-feira passa para os 10 seguintes da lista
+                    int idx = WeeklyRotation.decide(getApplicationContext(), owner, kind, items);
+                    if (idx > 0) {
+                        List<XtreamApi.Item> window = XtreamApi.items(server, user, pass, kind,
+                                null, idx * WeeklyRotation.WINDOW, LIMIT);
+                        if (window != null && !window.isEmpty()) {
+                            items = window;
+                        } else {
+                            WeeklyRotation.reset(getApplicationContext(), owner, kind, items);
+                        }
+                    }
+                }
             } catch (Exception e) {
                 // sem rede, servidor fora do ar ou resposta estranha: mostra aviso abaixo
             }
@@ -632,6 +646,21 @@ public class HomeActivity extends Activity {
             } catch (Exception e) {
                 // sem rede, endereço inválido ou lista estranha: mostra aviso abaixo
             }
+            if (sample != null) {
+                // Filmes e séries: novidade na lista aparece na hora; senão troca toda segunda
+                try {
+                    List<XtreamApi.Item> newMovies = new ArrayList<>(
+                            rotateM3u(url, XtreamApi.Kind.MOVIE, sample.movie, hideAdult));
+                    List<XtreamApi.Item> newSeries = new ArrayList<>(
+                            rotateM3u(url, XtreamApi.Kind.SERIES, sample.series, hideAdult));
+                    sample.movie.clear();
+                    sample.movie.addAll(newMovies);
+                    sample.series.clear();
+                    sample.series.addAll(newSeries);
+                } catch (Exception e) {
+                    // fica com os 10 primeiros
+                }
+            }
             final M3uApi.Sample result = sample;
             runOnUiThread(() -> {
                 if (gen != railGen) {
@@ -642,6 +671,26 @@ public class HomeActivity extends Activity {
                 showRail(XtreamApi.Kind.SERIES, result == null ? null : result.series, rowSeries);
             });
         }).start();
+    }
+
+    /** Lista M3U: escolhe a janela da semana (fora da thread principal). */
+    private List<XtreamApi.Item> rotateM3u(String url, XtreamApi.Kind kind,
+                                           List<XtreamApi.Item> head, boolean hideAdult)
+            throws java.io.IOException {
+        if (head == null || head.isEmpty()) {
+            return new ArrayList<>();
+        }
+        int idx = WeeklyRotation.decide(getApplicationContext(), owner, kind, head);
+        if (idx <= 0) {
+            return head;
+        }
+        List<XtreamApi.Item> window = M3uApi.page(url, kind, null,
+                idx * WeeklyRotation.WINDOW, LIMIT, hideAdult);
+        if (window == null || window.isEmpty()) {
+            WeeklyRotation.reset(getApplicationContext(), owner, kind, head);
+            return head;
+        }
+        return window;
     }
 
     /** Apaga as faixas e busca tudo de novo (Atualizar, ou quando o controle parental muda). */
