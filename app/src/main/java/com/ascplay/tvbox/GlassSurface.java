@@ -265,6 +265,7 @@ class GlassSurface extends FrameLayout {
         private final float corner;
         private final float ringW;
         private final float glowW;
+        private final float pad; // folga entre o anel e a borda da view (evita corte nas pontas)
         private final Paint ringPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final Paint glowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final RectF rect = new RectF();
@@ -287,6 +288,7 @@ class GlassSurface extends FrameLayout {
             idlePaint.setColor(GlassKit.alpha(c, R.color.asc_text_primary, 0.22f));
             this.ringW = GlassKit.dp(c, 2.5f);
             this.glowW = GlassKit.dp(c, 6f);
+            this.pad = GlassKit.dp(c, 2f);
             ringPaint.setStyle(Paint.Style.STROKE);
             ringPaint.setStrokeWidth(ringW);
             ringPaint.setColor(GlassKit.alpha(c, R.color.asc_gold, 0.95f)); // anel dourado
@@ -329,10 +331,10 @@ class GlassSurface extends FrameLayout {
                 }
                 return;
             }
-            float g = glowW / 2f;
+            float g = glowW / 2f + pad;
             rect.set(b.left + g, b.top + g, b.right - g, b.bottom - g);
             canvas.drawRoundRect(rect, Math.max(0f, corner - g), Math.max(0f, corner - g), glowPaint);
-            float r = ringW / 2f;
+            float r = ringW / 2f + pad;
             rect.set(b.left + r, b.top + r, b.right - r, b.bottom - r);
             canvas.drawRoundRect(rect, Math.max(0f, corner - r), Math.max(0f, corner - r), ringPaint);
         }

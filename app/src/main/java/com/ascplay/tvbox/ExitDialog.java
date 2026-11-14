@@ -27,13 +27,18 @@ final class ExitDialog {
         d.setCancelable(true);
 
         FrameLayout root = new FrameLayout(activity);
+        root.setClipChildren(false);
+        root.setClipToPadding(false);
 
         GlassSurface card = new GlassSurface(activity, GlassKit.dp(activity, 28), false,
                 GlassSurface.STYLE_CLEAR, true);
+        card.setClipChildren(false);
+        card.setClipToPadding(false);
         LinearLayout col = new LinearLayout(activity);
         col.setOrientation(LinearLayout.VERTICAL);
         col.setGravity(Gravity.CENTER_HORIZONTAL);
         col.setClipChildren(false);
+        col.setClipToPadding(false);
         col.setPadding(GlassKit.dp(activity, 30), GlassKit.dp(activity, 30),
                 GlassKit.dp(activity, 30), GlassKit.dp(activity, 30));
         card.addView(col, new FrameLayout.LayoutParams(
@@ -54,10 +59,14 @@ final class ExitDialog {
         LinearLayout.LayoutParams yl = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, GlassKit.dp(activity, 54));
         yl.topMargin = GlassKit.dp(activity, 24);
+        yl.leftMargin = GlassKit.dp(activity, 6);
+        yl.rightMargin = GlassKit.dp(activity, 6);
         col.addView(yes, yl);
         LinearLayout.LayoutParams nl = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, GlassKit.dp(activity, 54));
         nl.topMargin = GlassKit.dp(activity, 12);
+        nl.leftMargin = GlassKit.dp(activity, 6);
+        nl.rightMargin = GlassKit.dp(activity, 6);
         col.addView(no, nl);
 
         // foco: Sim em cima, Não embaixo; os extremos não escapam
@@ -105,7 +114,7 @@ final class ExitDialog {
         b.addView(t, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT,
                 Gravity.CENTER));
-        GlassKit.focusScale(b, 1.05f, null);
+        GlassKit.focusScale(b, 1.03f, null);
         return b;
     }
 }
