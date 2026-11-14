@@ -557,3 +557,11 @@
 - Decisão: barras de progresso (filmes, séries, programação do canal, barra do player) em dourado (#C9A55C): GlassKit.Bar, bg_home_progress.xml e pb_nowbar em activity_main.xml.
 - Decisão (vale esta, substitui a anterior): barra do topo (busca, "Lista atualizada", relógio) fica no começo da página e ROLA junto com o conteúdo (primeiro item do corpo da rolagem). Para pesquisar, o dono sobe até o topo. Motivo: pedido do dono (não quer a barra acompanhando a tela).
 - Decisão: botões do banner (Assistir, Minha lista) com largura pelo texto e sem corte do anel de foco (clipChildren/clipToPadding desligados no painel).
+
+## 14/11/2026: Várias listas, Ajustes em vidro e saída com confirmação
+- Decisão: o app guarda várias listas (CredentialStore, arquivo asc_lists, criptografado), mas só a selecionada é carregada. O resto do app continua usando CredentialStore.load(), que devolve a lista em uso: nenhuma outra tela precisou mudar. Motivo: pedido do dono (aceitar mais de uma lista, carregar só a selecionada).
+- Decisão: trocar a lista em uso limpa o "Continue assistindo" e os caches de imagem e programação (eram da lista anterior). Favoritos e cache da Home já são por lista. O índice de busca não é limpo (é por servidor e usuário). Motivo: não misturar histórico de listas diferentes.
+- Decisão: lista nova do login ou da lista remota (DeviceLink) entra na coleção e passa a ser a em uso; se for a mesma lista (mesmo servidor e usuário, ou mesmo link M3U), só atualiza. As listas antigas NÃO são apagadas; o dono remove em Ajustes > Listas.
+- Decisão: Ajustes foi refeito em código, no visual Glass da Home: SideRail, cards de vidro (GlassSurface) e painel de vidro. Fundo com 30% de escurecimento (tela de lista). Motivo: pedido do dono.
+- Decisão: Voltar na Home pergunta "Deseja sair do ASC Play?", com foco em Sim. Voltar no login aberto por "Adicionar lista" volta à Home. Motivo: pedido do dono.
+

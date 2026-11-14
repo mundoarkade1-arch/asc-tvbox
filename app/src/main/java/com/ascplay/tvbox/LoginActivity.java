@@ -169,6 +169,22 @@ public class LoginActivity extends Activity {
         scrollLogin.postDelayed(doScroll, 450);
     }
 
+    /**
+     * Login aberto por "Adicionar lista" (já existe lista em uso): Voltar desiste e volta para a
+     * Home, em vez de fechar o app. Sem lista salva, Voltar fecha o app como sempre.
+     */
+    @Override
+    public void onBackPressed() {
+        if (forceLogin && CredentialStore.load(this) != null) {
+            Intent home = new Intent(this, HomeActivity.class);
+            home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(home);
+            finish();
+            return;
+        }
+        super.onBackPressed();
+    }
+
     // ---------- Código do aparelho ----------
 
     @Override

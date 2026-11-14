@@ -4,56 +4,76 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.StatFs;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
-import android.view.LayoutInflater;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.ListView;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.List;
 import java.util.Locale;
 
 /**
- * Aba Ajustes (menu à esquerda, lista de opções no meio, informações à direita).
+ * Aba Ajustes no visual "Glass": menu flutuante à esquerda (SideRail), cards de vidro com as
+ * opções no meio e um painel de vidro à direita com o conteúdo da opção que está em foco.
+ * Tela montada em código (como a Home), com o fundo da imagem 30% mais escuro (lista).
  *
  * Opções:
- * - Controle parental: ativar, trocar a senha ou desativar (igual ao botão que ficava na
- *   página inicial).
- * - Trocar de lista: apaga a lista do "Continue assistindo" (M6) e volta para a tela de login.
+ * - Listas: o app aceita VÁRIAS listas salvas, mas carrega só a selecionada. OK em uma lista:
+ *   usar, remover ou voltar. "Adicionar lista" abre a tela de login. (CredentialStore guarda.)
+ * - Controle parental: ativar, trocar a senha ou desativar.
+ * - Atualização: procura uma versão nova. Se achar, OK instala.
  * - Sobre o dispositivo: modelo, Android, memória, espaço livre e tela.
  * - Sobre o aplicativo: versão instalada.
- * - Verificar atualização: procura uma versão nova. Se achar, a mesma linha passa a
- *   "Instalar atualização" e OK instala.
- * - Apagar dados: limpa histórico, progresso e caches; preserva o login e o controle parental.
+ * - Apagar dados: limpa histórico, progresso e caches; preserva as listas e o controle parental.
  *
- * A lista controla o foco (as linhas ficam com setFocusable(false)), como nas outras telas.
+ * Foco: seta para a direita no menu volta à última opção; seta para a direita numa opção entra
+ * nos cards do painel (quando há, como em Listas).
  */
 public class SettingsActivity extends Activity {
 
-    private static final int ROW_PARENTAL = 0;
-    private static final int ROW_LOGIN = 1;
-    private static final int ROW_DEVICE = 2;
-    private static final int ROW_APP = 3;
-    private static final int ROW_UPDATE = 4;
+    private static final int ROW_LISTS = 0;
+    private static final int ROW_PARENTAL = 1;
+    private static final int ROW_UPDATE = 2;
+    private static final int ROW_DEVICE = 3;
+    private static final int ROW_APP = 4;
     private static final int ROW_CLEAR_DATA = 5;
     private static final int ROW_COUNT = 6;
 
+    private static final int MATCH = ViewGroup.LayoutParams.MATCH_PARENT;
+    private static final int WRAP = ViewGroup.LayoutParams.WRAP_CONTENT;
+
     private static final int COLOR_WHITE = 0xFFFFFFFF;
+    private static final int COLOR_NEUTRAL = 0xFFB8C0CC;
     private static final int COLOR_ERROR = 0xFFF28B82;
     private static final int COLOR_OK = 0xFF5AA2FF;
 
-    private ListView lvSettings;
-    private TextView tvDetail;
-    private RowAdapter adapter;
+    /** Card de opção (coluna do meio). */
+    private static final class OptionCard {
+        GlassSurface view;
+        TextView sub;
+    }
+
+    private SideRail rail;
+    private final OptionCard[] cards = new OptionCard[ROW_COUNT];
+    private TextView panelTitle;
+    private LinearLayout panelBody;
+    private ScrollView panelScroll;
+    private int currentRow = -1;
+    private View lastOptionFocus;
 
     private PinDialog pinDialog;
 
@@ -61,6 +81,8 @@ public class SettingsActivity extends Activity {
     private Updater.Info pendingUpdate;
     private boolean checking = false;
     private boolean downloading = false;
+    private String updateText = null;
+    private int updateColor = COLOR_WHITE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,19 +94,26 @@ public class SettingsActivity extends Activity {
             return;
         }
 
-        setContentView(R.layout.activity_settings);
-        lvSettings = findViewById(R.id.lv_settings);
-        tvDetail = findViewById(R.id.tv_detail);
+        buildUi();
 
-        lvSettings.setDividerHeight(dp(6));
+        // Menu à esquerda: Início, Ao vivo, Filmes e Séries levam à tela certa. Aqui não há o
+        // que atualizar, então o botão Atualizar fica escondido.
+        NavBar.bindRail(this, rail, NavBar.SETTINGS);
+        rail.setOnRight(() -> {
+            View target = lastOptionFocus != null ? lastOptionFocus : cards[0].view;
+            target.requestFocus();
+        });
 
-        // Menu à esquerda (só ícones). Aqui o ícone Atualizar não tem o que recarregar.
-        NavBar.bind(this, NavBar.SETTINGS, null);
+        showPanel(ROW_LISTS, true);
+        cards[ROW_LISTS].view.requestFocus();
+    }
 
-        adapter = new RowAdapter();
-        lvSettings.setAdapter(adapter);
-        lvSettings.setOnItemClickListener((parent, view, position, id) -> onRowClick(position));
-        lvSettings.requestFocus();
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (cards[0] != null) {
+            refreshSubtitles();
+        }
     }
 
     @Override
@@ -96,47 +125,453 @@ public class SettingsActivity extends Activity {
         }
     }
 
-    // ---------- Linhas ----------
+    // ---------- Montagem da tela ----------
 
-    private String rowLabel(int position) {
-        switch (position) {
+    private void buildUi() {
+        FrameLayout root = new FrameLayout(this);
+        // fundo: a imagem do app, 30% mais escura (tela com lista)
+        root.addView(new GlassBackground(this, 0.30f), new FrameLayout.LayoutParams(MATCH, MATCH));
+
+        LinearLayout main = new LinearLayout(this);
+        main.setOrientation(LinearLayout.HORIZONTAL);
+        main.setClipChildren(false);
+        root.addView(main, new FrameLayout.LayoutParams(MATCH, MATCH));
+
+        // Menu lateral flutuante (igual ao da Home), com Ajustes selecionado
+        rail = new SideRail(this);
+        rail.home.setSelected(false);
+        rail.settings.setSelected(true);
+        rail.refresh.setVisibility(View.GONE);
+        LinearLayout.LayoutParams rl = new LinearLayout.LayoutParams(GlassKit.dp(this, 76), MATCH);
+        rl.leftMargin = GlassKit.dp(this, 16);
+        rl.topMargin = GlassKit.dp(this, 16);
+        rl.bottomMargin = GlassKit.dp(this, 16);
+        main.addView(rail, rl);
+
+        LinearLayout column = new LinearLayout(this);
+        column.setOrientation(LinearLayout.VERTICAL);
+        column.setClipChildren(false);
+        column.setClipToPadding(false);
+        column.setPadding(GlassKit.dp(this, 16), GlassKit.dp(this, 20),
+                GlassKit.dp(this, 24), GlassKit.dp(this, 16));
+        main.addView(column, new LinearLayout.LayoutParams(0, MATCH, 1f));
+
+        column.addView(titleRow("Ajustes", 24), new LinearLayout.LayoutParams(MATCH, WRAP));
+
+        LinearLayout body = new LinearLayout(this);
+        body.setOrientation(LinearLayout.HORIZONTAL);
+        body.setClipChildren(false);
+        LinearLayout.LayoutParams bl = new LinearLayout.LayoutParams(MATCH, 0, 1f);
+        bl.topMargin = GlassKit.dp(this, 10);
+        column.addView(body, bl);
+
+        // Coluna das opções (cards de vidro)
+        ScrollView optScroll = new ScrollView(this);
+        optScroll.setFocusable(false);
+        optScroll.setVerticalScrollBarEnabled(false);
+        optScroll.setClipChildren(false);
+        optScroll.setClipToPadding(false);
+        optScroll.setPadding(GlassKit.dp(this, 8), GlassKit.dp(this, 8),
+                GlassKit.dp(this, 8), GlassKit.dp(this, 8));
+        LinearLayout optList = new LinearLayout(this);
+        optList.setOrientation(LinearLayout.VERTICAL);
+        optList.setClipChildren(false);
+        optScroll.addView(optList, new FrameLayout.LayoutParams(MATCH, WRAP));
+        body.addView(optScroll, new LinearLayout.LayoutParams(GlassKit.dp(this, 230), MATCH));
+
+        cards[ROW_LISTS] = makeOption(optList, ROW_LISTS, "Listas");
+        cards[ROW_PARENTAL] = makeOption(optList, ROW_PARENTAL, "Controle parental");
+        cards[ROW_UPDATE] = makeOption(optList, ROW_UPDATE, "Atualização");
+        cards[ROW_DEVICE] = makeOption(optList, ROW_DEVICE, "Sobre o dispositivo");
+        cards[ROW_APP] = makeOption(optList, ROW_APP, "Sobre o aplicativo");
+        cards[ROW_CLEAR_DATA] = makeOption(optList, ROW_CLEAR_DATA, "Apagar dados");
+        refreshSubtitles();
+
+        // Painel de vidro com o conteúdo
+        GlassSurface panel = new GlassSurface(this, GlassKit.dp(this, 20), false,
+                GlassSurface.STYLE_GLASS, true);
+        LinearLayout.LayoutParams pl = new LinearLayout.LayoutParams(0, MATCH, 1f);
+        pl.leftMargin = GlassKit.dp(this, 10);
+        pl.topMargin = GlassKit.dp(this, 8);
+        pl.bottomMargin = GlassKit.dp(this, 8);
+        body.addView(panel, pl);
+
+        LinearLayout panelCol = new LinearLayout(this);
+        panelCol.setOrientation(LinearLayout.VERTICAL);
+        panelCol.setClipChildren(false);
+        panelCol.setPadding(GlassKit.dp(this, 20), GlassKit.dp(this, 18),
+                GlassKit.dp(this, 20), GlassKit.dp(this, 14));
+        panel.addView(panelCol, new FrameLayout.LayoutParams(MATCH, MATCH));
+
+        LinearLayout panelHead = titleRow("", 20);
+        panelTitle = (TextView) panelHead.getChildAt(1);
+        panelCol.addView(panelHead, new LinearLayout.LayoutParams(MATCH, WRAP));
+
+        panelScroll = new ScrollView(this);
+        panelScroll.setFocusable(false);
+        panelScroll.setVerticalScrollBarEnabled(false);
+        panelScroll.setClipChildren(false);
+        panelScroll.setClipToPadding(false);
+        panelScroll.setPadding(GlassKit.dp(this, 8), GlassKit.dp(this, 6),
+                GlassKit.dp(this, 8), GlassKit.dp(this, 6));
+        panelBody = new LinearLayout(this);
+        panelBody.setOrientation(LinearLayout.VERTICAL);
+        panelBody.setClipChildren(false);
+        panelScroll.addView(panelBody, new FrameLayout.LayoutParams(MATCH, WRAP));
+        LinearLayout.LayoutParams sl = new LinearLayout.LayoutParams(MATCH, 0, 1f);
+        sl.topMargin = GlassKit.dp(this, 8);
+        panelCol.addView(panelScroll, sl);
+
+        setContentView(root);
+    }
+
+    /** Título com o traço dourado ao lado (igual às faixas da Home). */
+    private LinearLayout titleRow(String text, float sizeSp) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setClipChildren(false);
+
+        View mark = new View(this);
+        GradientDrawable g = new GradientDrawable();
+        g.setColor(GlassKit.alpha(this, R.color.asc_gold, 0.90f));
+        g.setCornerRadius(GlassKit.dp(this, 2));
+        mark.setBackground(g);
+        LinearLayout.LayoutParams ml = new LinearLayout.LayoutParams(
+                GlassKit.dp(this, 3), GlassKit.dp(this, sizeSp));
+        ml.leftMargin = GlassKit.dp(this, 6);
+        ml.rightMargin = GlassKit.dp(this, 8);
+        row.addView(mark, ml);
+
+        TextView t = new TextView(this);
+        t.setText(text);
+        t.setTextSize(GlassKit.sp(sizeSp));
+        t.setTypeface(t.getTypeface(), Typeface.BOLD);
+        t.setTextColor(GlassKit.color(this, R.color.asc_text_primary));
+        t.setSingleLine(true);
+        row.addView(t, new LinearLayout.LayoutParams(WRAP, WRAP));
+        return row;
+    }
+
+    private OptionCard makeOption(LinearLayout parent, final int row, String title) {
+        OptionCard oc = new OptionCard();
+        GlassSurface s = new GlassSurface(this, GlassKit.dp(this, 16), true,
+                GlassSurface.STYLE_GLASS, true);
+
+        LinearLayout inner = new LinearLayout(this);
+        inner.setOrientation(LinearLayout.VERTICAL);
+        inner.setPadding(GlassKit.dp(this, 14), GlassKit.dp(this, 10),
+                GlassKit.dp(this, 14), GlassKit.dp(this, 12));
+        s.addView(inner, new FrameLayout.LayoutParams(MATCH, WRAP));
+
+        TextView t = new TextView(this);
+        t.setText(title);
+        t.setTextSize(GlassKit.sp(15));
+        t.setTypeface(t.getTypeface(), Typeface.BOLD);
+        t.setTextColor(GlassKit.color(this, R.color.asc_text_primary));
+        t.setSingleLine(true);
+        t.setEllipsize(TextUtils.TruncateAt.END);
+        inner.addView(t, new LinearLayout.LayoutParams(MATCH, WRAP));
+
+        TextView sub = new TextView(this);
+        sub.setTextSize(GlassKit.sp(12));
+        sub.setTextColor(GlassKit.color(this, R.color.asc_text_secondary));
+        sub.setSingleLine(true);
+        sub.setEllipsize(TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams subLp = new LinearLayout.LayoutParams(MATCH, WRAP);
+        subLp.topMargin = GlassKit.dp(this, 2);
+        inner.addView(sub, subLp);
+
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(MATCH, WRAP);
+        lp.topMargin = GlassKit.dp(this, 4);
+        lp.bottomMargin = GlassKit.dp(this, 4);
+        parent.addView(s, lp);
+
+        s.setOnClickListener(v -> onRowClick(row));
+        GlassKit.focusScale(s, 1.04f, (v, hasFocus) -> {
+            if (hasFocus) {
+                lastOptionFocus = v;
+                showPanel(row, false);
+            }
+        });
+
+        oc.view = s;
+        oc.sub = sub;
+        return oc;
+    }
+
+    /** Texto pequeno embaixo do nome de cada opção. */
+    private void refreshSubtitles() {
+        int n = CredentialStore.lists(this).size();
+        cards[ROW_LISTS].sub.setText(n == 1 ? "1 lista salva" : n + " listas salvas");
+        cards[ROW_PARENTAL].sub.setText(ParentalStore.isEnabled(this) ? "Ativo" : "Desativado");
+        cards[ROW_UPDATE].sub.setText(
+                pendingUpdate != null ? "Nova versão disponível" : "Verificar agora");
+        String model = Build.MODEL == null ? "" : Build.MODEL;
+        cards[ROW_DEVICE].sub.setText(model.isEmpty() ? "Modelo e memória" : model);
+        cards[ROW_APP].sub.setText("Versão instalada");
+        cards[ROW_CLEAR_DATA].sub.setText("Histórico e progresso");
+    }
+
+    // ---------- Painel ----------
+
+    private void showPanel(int row, boolean force) {
+        if (row == currentRow && !force) {
+            return;
+        }
+        currentRow = row;
+        for (int i = 0; i < ROW_COUNT; i++) {
+            if (cards[i] != null) {
+                cards[i].view.setSelected(i == row);
+            }
+        }
+        panelBody.removeAllViews();
+        panelScroll.scrollTo(0, 0);
+        switch (row) {
+            case ROW_LISTS:
+                panelTitle.setText("Listas");
+                buildLists();
+                break;
             case ROW_PARENTAL:
-                return "Controle parental";
-            case ROW_LOGIN:
-                return "Trocar de lista";
+                panelTitle.setText("Controle parental");
+                setPanelText(parentalText(), COLOR_WHITE);
+                break;
+            case ROW_UPDATE:
+                panelTitle.setText("Atualização");
+                setPanelText(updateText != null ? updateText : updateDefaultText(), updateColor);
+                break;
             case ROW_DEVICE:
-                return "Sobre o dispositivo";
+                panelTitle.setText("Sobre o dispositivo");
+                setPanelText(deviceText(), COLOR_WHITE);
+                break;
             case ROW_APP:
-                return "Sobre o aplicativo";
-            case ROW_CLEAR_DATA:
-                return "Apagar dados";
+                panelTitle.setText("Sobre o aplicativo");
+                setPanelText(appText(), COLOR_WHITE);
+                break;
             default:
-                return pendingUpdate != null ? "Instalar atualização" : "Verificar atualização";
+                panelTitle.setText("Apagar dados");
+                setPanelText("Apaga o \"Continue assistindo\" e o que você já assistiu. "
+                        + "As listas salvas e o controle parental não são apagados."
+                        + "\n\nAperte OK para apagar.", COLOR_NEUTRAL);
+                break;
         }
     }
 
-    private void onRowClick(int position) {
-        switch (position) {
+    private void setPanelText(String text, int color) {
+        panelBody.removeAllViews();
+        TextView tv = new TextView(this);
+        tv.setText(text);
+        tv.setTextColor(color);
+        tv.setTextSize(GlassKit.sp(15));
+        tv.setLineSpacing(0f, 1.15f);
+        panelBody.addView(tv, new LinearLayout.LayoutParams(MATCH, WRAP));
+    }
+
+    private String parentalText() {
+        return (ParentalStore.isEnabled(this)
+                ? "O controle parental está ATIVO."
+                : "O controle parental está desativado.")
+                + "\n\nAperte OK para ativar, trocar a senha ou desativar.";
+    }
+
+    private String updateDefaultText() {
+        if (pendingUpdate != null) {
+            return getString(R.string.update_available, pendingUpdate.name)
+                    + "\n\nAperte OK para instalar.";
+        }
+        return "Aperte OK para procurar uma versão nova do aplicativo.";
+    }
+
+    private void onRowClick(int row) {
+        switch (row) {
+            case ROW_LISTS:
+                focusFirstInPanel();
+                break;
             case ROW_PARENTAL:
                 openParentalMenu();
                 break;
-            case ROW_LOGIN:
-                changeLogin();
-                break;
-            case ROW_DEVICE:
-                showDetail(deviceText(), COLOR_WHITE);
-                break;
-            case ROW_APP:
-                showDetail(appText(), COLOR_WHITE);
+            case ROW_UPDATE:
+                checkOrInstallUpdate();
                 break;
             case ROW_CLEAR_DATA:
                 confirmClearData();
                 break;
             default:
-                checkOrInstallUpdate();
                 break;
         }
     }
+
+    private void focusFirstInPanel() {
+        for (int i = 0; i < panelBody.getChildCount(); i++) {
+            View c = panelBody.getChildAt(i);
+            if (c.isFocusable()) {
+                c.requestFocus();
+                return;
+            }
+        }
+    }
+
+    // ---------- Listas ----------
+
+    private void buildLists() {
+        TextView hint = new TextView(this);
+        hint.setText("O app carrega só a lista selecionada. "
+                + "Aperte OK em uma lista para usar ou remover.");
+        hint.setTextSize(GlassKit.sp(13));
+        hint.setTextColor(GlassKit.color(this, R.color.asc_text_secondary));
+        LinearLayout.LayoutParams hl = new LinearLayout.LayoutParams(MATCH, WRAP);
+        hl.bottomMargin = GlassKit.dp(this, 8);
+        panelBody.addView(hint, hl);
+
+        List<CredentialStore.SavedList> all = CredentialStore.lists(this);
+        for (CredentialStore.SavedList l : all) {
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(MATCH, WRAP);
+            lp.topMargin = GlassKit.dp(this, 4);
+            lp.bottomMargin = GlassKit.dp(this, 4);
+            panelBody.addView(listCard(l), lp);
+        }
+
+        GlassSurface.Button add = new GlassSurface.Button(this, "+ Adicionar lista", true);
+        add.setOnClickListener(v -> addList());
+        LinearLayout.LayoutParams al = new LinearLayout.LayoutParams(WRAP, GlassKit.dp(this, 40));
+        al.topMargin = GlassKit.dp(this, 10);
+        panelBody.addView(add, al);
+    }
+
+    private View listCard(final CredentialStore.SavedList l) {
+        GlassSurface s = new GlassSurface(this, GlassKit.dp(this, 16), true,
+                GlassSurface.STYLE_GLASS, true);
+        s.setSelected(l.active);
+
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(GlassKit.dp(this, 16), GlassKit.dp(this, 12),
+                GlassKit.dp(this, 16), GlassKit.dp(this, 14));
+        s.addView(row, new FrameLayout.LayoutParams(MATCH, WRAP));
+
+        LinearLayout texts = new LinearLayout(this);
+        texts.setOrientation(LinearLayout.VERTICAL);
+        row.addView(texts, new LinearLayout.LayoutParams(0, WRAP, 1f));
+
+        TextView title = new TextView(this);
+        title.setText("Lista " + l.number);
+        title.setTextSize(GlassKit.sp(16));
+        title.setTypeface(title.getTypeface(), Typeface.BOLD);
+        title.setTextColor(GlassKit.color(this, R.color.asc_text_primary));
+        title.setSingleLine(true);
+        texts.addView(title, new LinearLayout.LayoutParams(MATCH, WRAP));
+
+        TextView sub = new TextView(this);
+        sub.setText(CredentialStore.describe(l.creds));
+        sub.setTextSize(GlassKit.sp(12));
+        sub.setTextColor(GlassKit.color(this, R.color.asc_text_secondary));
+        sub.setSingleLine(true);
+        sub.setEllipsize(TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams sl = new LinearLayout.LayoutParams(MATCH, WRAP);
+        sl.topMargin = GlassKit.dp(this, 2);
+        texts.addView(sub, sl);
+
+        if (l.active) {
+            TextView badge = new TextView(this);
+            badge.setText("EM USO");
+            badge.setTextSize(GlassKit.sp(11));
+            badge.setTypeface(badge.getTypeface(), Typeface.BOLD);
+            badge.setPadding(GlassKit.dp(this, 10), GlassKit.dp(this, 4),
+                    GlassKit.dp(this, 10), GlassKit.dp(this, 4));
+            GlassKit.chip(badge, GlassKit.dp(this, 10), R.color.asc_accent, 0.60f,
+                    R.color.asc_text_primary);
+            LinearLayout.LayoutParams bl = new LinearLayout.LayoutParams(WRAP, WRAP);
+            bl.leftMargin = GlassKit.dp(this, 10);
+            row.addView(badge, bl);
+        }
+
+        s.setOnClickListener(v -> openListMenu(l));
+        GlassKit.focusScale(s, 1.02f, null);
+        return s;
+    }
+
+    private void openListMenu(final CredentialStore.SavedList l) {
+        final String use = "Usar esta lista";
+        final String remove = "Remover esta lista";
+        final String back = "Voltar";
+        final String[] items = l.active
+                ? new String[]{remove, back}
+                : new String[]{use, remove, back};
+        new AlertDialog.Builder(this, R.style.AscDialog)
+                .setTitle("Lista " + l.number + (l.active ? " (em uso)" : ""))
+                .setItems(items, (d, which) -> {
+                    String chosen = items[which];
+                    if (use.equals(chosen)) {
+                        useList(l);
+                    } else if (remove.equals(chosen)) {
+                        confirmRemove(l);
+                    }
+                })
+                .show();
+    }
+
+    /** Passa a usar a lista e reabre a Home do zero, para carregar só ela. */
+    private void useList(CredentialStore.SavedList l) {
+        if (!CredentialStore.select(this, l.id)) {
+            Toast.makeText(this, "Essa lista não existe mais.", Toast.LENGTH_SHORT).show();
+            showPanel(ROW_LISTS, true);
+            return;
+        }
+        Toast.makeText(this, "Lista " + l.number + " selecionada. Carregando...",
+                Toast.LENGTH_SHORT).show();
+        restartHome();
+    }
+
+    private void confirmRemove(final CredentialStore.SavedList l) {
+        AlertDialog dialog = new AlertDialog.Builder(this, R.style.AscDialog)
+                .setMessage("Remover a Lista " + l.number + "? Para usar de novo, será preciso "
+                        + "adicionar a lista outra vez.")
+                .setNegativeButton("Cancelar", (d, which) -> d.dismiss())
+                .setPositiveButton("Remover", (d, which) -> removeList(l))
+                .create();
+        dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_NEGATIVE).requestFocus());
+        dialog.show();
+    }
+
+    private void removeList(CredentialStore.SavedList l) {
+        CredentialStore.remove(this, l.id);
+        if (CredentialStore.load(this) == null) {
+            // não sobrou nenhuma lista: volta para a tela de login
+            Intent i = new Intent(this, LoginActivity.class);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(i);
+            finish();
+            return;
+        }
+        if (l.active) {
+            // a lista em uso mudou: reabre a Home para carregar a nova
+            Toast.makeText(this, "Lista removida.", Toast.LENGTH_SHORT).show();
+            restartHome();
+            return;
+        }
+        Toast.makeText(this, "Lista removida.", Toast.LENGTH_SHORT).show();
+        refreshSubtitles();
+        showPanel(ROW_LISTS, true);
+        focusFirstInPanel();
+    }
+
+    private void addList() {
+        Intent i = new Intent(this, LoginActivity.class);
+        i.putExtra(HomeActivity.EXTRA_SHOW_LOGIN, true);
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(i);
+        finish();
+    }
+
+    private void restartHome() {
+        Intent home = new Intent(this, HomeActivity.class);
+        home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(home);
+        finish();
+    }
+
+    // ---------- Apagar dados ----------
 
     private void confirmClearData() {
         AlertDialog dialog = new AlertDialog.Builder(this, R.style.AscDialog)
@@ -161,26 +596,6 @@ public class SettingsActivity extends Activity {
         Intent home = new Intent(this, HomeActivity.class);
         home.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         startActivity(home);
-        finish();
-    }
-
-    private void showDetail(String text, int color) {
-        tvDetail.setTextColor(color);
-        tvDetail.setText(text);
-    }
-
-    // ---------- Trocar de lista ----------
-
-    /**
-     * Apaga a lista do "Continue assistindo" (era da lista antiga), abre a tela de login e
-     * fecha as telas de antes (a página inicial, as abas e esta).
-     */
-    private void changeLogin() {
-        ContinueStore.clear(this);
-        Intent i = new Intent(this, LoginActivity.class);
-        i.putExtra(HomeActivity.EXTRA_SHOW_LOGIN, true);
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(i);
         finish();
     }
 
@@ -235,15 +650,16 @@ public class SettingsActivity extends Activity {
         return "ASC Play\n\nVersão instalada: " + name + " (número " + code + ")";
     }
 
-    private static String megaOrGiga(long bytes) {
-        double mb = bytes / (1024.0 * 1024.0);
-        if (mb >= 1024) {
-            return String.format(Locale.US, "%.1f GB", mb / 1024.0);
-        }
-        return String.format(Locale.US, "%d MB", Math.round(mb));
-    }
-
     // ---------- Atualização ----------
+
+    /** Guarda a mensagem da atualização e, se o painel dela está aberto, mostra na hora. */
+    private void showUpdate(String text, int color) {
+        updateText = text;
+        updateColor = color;
+        if (currentRow == ROW_UPDATE) {
+            setPanelText(text, color);
+        }
+    }
 
     private void checkOrInstallUpdate() {
         if (checking || downloading) {
@@ -254,7 +670,7 @@ public class SettingsActivity extends Activity {
             return;
         }
         checking = true;
-        showDetail("Procurando atualização...", COLOR_WHITE);
+        showUpdate("Procurando atualização...", COLOR_WHITE);
         Updater.checkAsync(this, new Updater.CheckListener() {
             @Override
             public void onUpdateAvailable(Updater.Info info) {
@@ -263,9 +679,9 @@ public class SettingsActivity extends Activity {
                     return;
                 }
                 pendingUpdate = info;
-                adapter.notifyDataSetChanged();
-                showDetail(getString(R.string.update_available, info.name)
-                        + "\n\nAperte OK em \"Instalar atualização\" para instalar.", COLOR_OK);
+                refreshSubtitles();
+                showUpdate(getString(R.string.update_available, info.name)
+                        + "\n\nAperte OK para instalar.", COLOR_OK);
             }
 
             @Override
@@ -274,7 +690,7 @@ public class SettingsActivity extends Activity {
                 if (isFinishing() || isDestroyed()) {
                     return;
                 }
-                showDetail("Nenhuma atualização encontrada agora.", COLOR_WHITE);
+                showUpdate("Nenhuma atualização encontrada agora.", COLOR_WHITE);
             }
         });
     }
@@ -284,7 +700,7 @@ public class SettingsActivity extends Activity {
             return;
         }
         downloading = true;
-        showDetail(getString(R.string.msg_downloading_unknown), COLOR_WHITE);
+        showUpdate(getString(R.string.msg_downloading_unknown), COLOR_WHITE);
 
         Updater.downloadAndInstallAsync(this, pendingUpdate, new Updater.InstallListener() {
             @Override
@@ -293,9 +709,9 @@ public class SettingsActivity extends Activity {
                     return;
                 }
                 if (percent >= 0) {
-                    showDetail(getString(R.string.msg_downloading, percent), COLOR_WHITE);
+                    showUpdate(getString(R.string.msg_downloading, percent), COLOR_WHITE);
                 } else {
-                    showDetail(getString(R.string.msg_downloading_unknown), COLOR_WHITE);
+                    showUpdate(getString(R.string.msg_downloading_unknown), COLOR_WHITE);
                 }
             }
 
@@ -305,7 +721,7 @@ public class SettingsActivity extends Activity {
                 if (isFinishing() || isDestroyed()) {
                     return;
                 }
-                showDetail(getString(R.string.msg_installer_opened), COLOR_WHITE);
+                showUpdate(getString(R.string.msg_installer_opened), COLOR_WHITE);
             }
 
             @Override
@@ -314,7 +730,7 @@ public class SettingsActivity extends Activity {
                 if (isFinishing() || isDestroyed()) {
                     return;
                 }
-                showDetail(message, COLOR_ERROR);
+                showUpdate(message, COLOR_ERROR);
             }
         });
     }
@@ -327,42 +743,36 @@ public class SettingsActivity extends Activity {
         if (on) {
             b.setTitle("Controle parental: ativo");
             b.setItems(new CharSequence[]{"Trocar senha", "Desativar controle parental", "Voltar"},
-                    new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            if (which == 0) {
-                                askCurrentPin("Digite a senha atual", new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        createPin();
-                                    }
-                                });
-                            } else if (which == 1) {
-                                askCurrentPin("Digite a senha para desativar", new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        ParentalStore.disable(SettingsActivity.this);
-                                        Toast.makeText(SettingsActivity.this,
-                                                "Controle parental desativado.",
-                                                Toast.LENGTH_SHORT).show();
-                                    }
-                                });
-                            }
+                    (dialog, which) -> {
+                        if (which == 0) {
+                            askCurrentPin("Digite a senha atual", () -> createPin());
+                        } else if (which == 1) {
+                            askCurrentPin("Digite a senha para desativar", () -> {
+                                ParentalStore.disable(SettingsActivity.this);
+                                Toast.makeText(SettingsActivity.this,
+                                        "Controle parental desativado.",
+                                        Toast.LENGTH_SHORT).show();
+                                parentalChanged();
+                            });
                         }
                     });
         } else {
             b.setTitle("Controle parental: desativado");
             b.setItems(new CharSequence[]{"Ativar controle parental", "Voltar"},
-                    new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            if (which == 0) {
-                                createPin();
-                            }
+                    (dialog, which) -> {
+                        if (which == 0) {
+                            createPin();
                         }
                     });
         }
         b.show();
+    }
+
+    private void parentalChanged() {
+        refreshSubtitles();
+        if (currentRow == ROW_PARENTAL) {
+            showPanel(ROW_PARENTAL, true);
+        }
     }
 
     /** Pede a senha nova (4 números). Depois pede para repetir. */
@@ -396,6 +806,7 @@ public class SettingsActivity extends Activity {
                 if (ParentalStore.enable(SettingsActivity.this, pin)) {
                     Toast.makeText(SettingsActivity.this,
                             "Controle parental ativado.", Toast.LENGTH_SHORT).show();
+                    parentalChanged();
                 } else {
                     Toast.makeText(SettingsActivity.this,
                             "Não foi possível guardar a senha.", Toast.LENGTH_SHORT).show();
@@ -441,42 +852,11 @@ public class SettingsActivity extends Activity {
 
     // ---------- Ajudas ----------
 
-    private int dp(int value) {
-        return Math.round(value * getResources().getDisplayMetrics().density);
-    }
-
-    // ---------- Adaptador (reaproveita as linhas ao rolar) ----------
-
-    private final class RowAdapter extends BaseAdapter {
-        @Override
-        public int getCount() {
-            return ROW_COUNT;
+    private static String megaOrGiga(long bytes) {
+        double mb = bytes / (1024.0 * 1024.0);
+        if (mb >= 1024) {
+            return String.format(Locale.US, "%.1f GB", mb / 1024.0);
         }
-
-        @Override
-        public Object getItem(int position) {
-            return rowLabel(position);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            TextView tv;
-            if (convertView == null) {
-                tv = (TextView) LayoutInflater.from(SettingsActivity.this)
-                        .inflate(R.layout.item_category, parent, false);
-                // Quem controla a seleção e o clique é a própria lista.
-                tv.setFocusable(false);
-                tv.setClickable(false);
-            } else {
-                tv = (TextView) convertView;
-            }
-            tv.setText(rowLabel(position));
-            return tv;
-        }
+        return String.format(Locale.US, "%d MB", Math.round(mb));
     }
 }

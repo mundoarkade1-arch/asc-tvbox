@@ -22,8 +22,9 @@ final class Glass {
 
     /** Põe o fundo atrás de toda a tela da Activity (uma vez só). O player fica de fora. */
     static void attach(Activity activity) {
-        if (activity instanceof MainActivity || activity instanceof HomeActivity) {
-            return; // o player fica preto; a Home desenha o próprio fundo (GlassBackground)
+        if (activity instanceof MainActivity || activity instanceof HomeActivity
+                || activity instanceof SettingsActivity) {
+            return; // o player fica preto; Home e Ajustes desenham o próprio fundo (GlassBackground)
         }
         ViewGroup content = activity.findViewById(android.R.id.content);
         if (content == null || content.findViewWithTag(TAG) != null) {

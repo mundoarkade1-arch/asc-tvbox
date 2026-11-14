@@ -91,6 +91,19 @@ final class NavBar {
         });
     }
 
+    /**
+     * Liga os itens do menu flutuante (SideRail) das telas montadas em código (Ajustes).
+     * "current" é a aba em que a tela está (a própria aba não faz nada).
+     */
+    static void bindRail(final Activity activity, SideRail rail, final int current) {
+        rail.home.setOnClickListener(v -> goHome(activity));
+        rail.live.setOnClickListener(v -> goTab(activity, current, LIVE, XtreamApi.Kind.LIVE));
+        rail.movie.setOnClickListener(v -> goTab(activity, current, MOVIE, XtreamApi.Kind.MOVIE));
+        rail.series.setOnClickListener(
+                v -> goTab(activity, current, SERIES, XtreamApi.Kind.SERIES));
+        rail.settings.setOnClickListener(v -> goSettings(activity, current));
+    }
+
     private static void click(Activity activity, int id, View.OnClickListener listener) {
         View v = activity.findViewById(id);
         if (v != null) {

@@ -1,6 +1,7 @@
 package com.ascplay.tvbox;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -74,6 +75,7 @@ public class HomeActivity extends Activity {
 
     // Componentes
     private SideRail rail;
+    private AlertDialog exitDialog;
     private TopBar topBar;
     private ScrollView scroll;
     private HeroBanner hero;
@@ -222,9 +224,29 @@ public class HomeActivity extends Activity {
         handler.removeCallbacks(heroTick);
     }
 
+    /** Voltar na página inicial = querer sair do app: pergunta antes de fechar. */
+    @Override
+    public void onBackPressed() {
+        if (exitDialog != null && exitDialog.isShowing()) {
+            return;
+        }
+        exitDialog = new AlertDialog.Builder(this, R.style.AscDialog)
+                .setMessage("Deseja sair do ASC Play?")
+                .setNegativeButton("Não", (d, which) -> d.dismiss())
+                .setPositiveButton("Sim", (d, which) -> finishAffinity())
+                .create();
+        exitDialog.setOnShowListener(d ->
+                exitDialog.getButton(AlertDialog.BUTTON_POSITIVE).requestFocus());
+        exitDialog.show();
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (exitDialog != null) {
+            exitDialog.dismiss();
+            exitDialog = null;
+        }
         handler.removeCallbacksAndMessages(null);
         heroGen++;
         focusedLive = null;
