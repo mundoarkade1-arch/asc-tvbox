@@ -58,7 +58,7 @@ public class SearchAllActivity extends Activity {
         LinearLayout column = new LinearLayout(this);
         column.setOrientation(LinearLayout.VERTICAL);
         column.setClipChildren(false);
-        column.setPadding(GlassKit.dp(this, 24), GlassKit.dp(this, 20), GlassKit.dp(this, 24), 0);
+        column.setPadding(GlassKit.dp(this, 24), GlassKit.dp(this, 20), 0, 0);
         root.addView(column, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 

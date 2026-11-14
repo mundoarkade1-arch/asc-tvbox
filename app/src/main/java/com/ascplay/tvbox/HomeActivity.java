@@ -323,8 +323,8 @@ public class HomeActivity extends Activity {
         body.setOrientation(LinearLayout.VERTICAL);
         body.setClipChildren(false);
         body.setClipToPadding(false);
-        body.setPadding(GlassKit.dp(this, 16), GlassKit.dp(this, 10), GlassKit.dp(this, 24),
-                GlassKit.dp(this, 28));
+        // sem folga à direita: as linhas de cards vão até a borda da tela (sem faixa/linha)
+        body.setPadding(GlassKit.dp(this, 16), GlassKit.dp(this, 10), 0, GlassKit.dp(this, 28));
         scroll.addView(body, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
 
@@ -333,13 +333,14 @@ public class HomeActivity extends Activity {
         LinearLayout.LayoutParams tbl = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         tbl.bottomMargin = GlassKit.dp(this, 8);
+        tbl.rightMargin = GlassKit.dp(this, 24);
         body.addView(topBar, tbl);
 
         buildUpdateBar(body);
 
         hero = new HeroBanner(this);
         // O banner vai até a borda direita da tela (sem a faixa de margem da coluna)
-        body.addView(hero, HeroBanner.params(this, GlassKit.dp(this, 24)));
+        body.addView(hero, HeroBanner.params(this, 0));
 
         rowContinue = addRow(body, "Continue assistindo");
         rowContinue.setVisibility(View.GONE);
@@ -393,6 +394,7 @@ public class HomeActivity extends Activity {
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         lp.bottomMargin = GlassKit.dp(this, 8);
+        lp.rightMargin = GlassKit.dp(this, 24);
         body.addView(updateBar, lp);
     }
 

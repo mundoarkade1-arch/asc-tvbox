@@ -37,8 +37,10 @@ final class SectionRow extends LinearLayout {
         header.setOrientation(HORIZONTAL);
         header.setGravity(Gravity.CENTER_VERTICAL);
         header.setClipChildren(false);
-        addView(header, new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, GlassKit.dp(c, 32)));
+        LinearLayout.LayoutParams hp = new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, GlassKit.dp(c, 32));
+        hp.rightMargin = GlassKit.dp(c, 24); // o botão "Ver tudo" não encosta na borda
+        addView(header, hp);
 
         // traço dourado discreto ao lado do título
         View mark = new View(c);
@@ -93,7 +95,8 @@ final class SectionRow extends LinearLayout {
         scroll.setClipChildren(false);
         scroll.setClipToPadding(false);
         scroll.setFillViewport(false);
-        scroll.setPadding(GlassKit.dp(c, 6), GlassKit.dp(c, 9), GlassKit.dp(c, 6), GlassKit.dp(c, 9));
+        // a fileira vai até a borda da tela; só o último card ganha folga para respirar
+        scroll.setPadding(GlassKit.dp(c, 6), GlassKit.dp(c, 9), GlassKit.dp(c, 30), GlassKit.dp(c, 9));
         // fade nas bordas (a direita esmaece enquanto houver mais itens)
         scroll.setHorizontalFadingEdgeEnabled(true);
         scroll.setFadingEdgeLength(GlassKit.dp(c, 36));
