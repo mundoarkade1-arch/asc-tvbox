@@ -1,7 +1,7 @@
 package com.ascplay.tvbox;
 
 import android.app.Activity;
-import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -75,7 +75,7 @@ public class HomeActivity extends Activity {
 
     // Componentes
     private SideRail rail;
-    private AlertDialog exitDialog;
+    private Dialog exitDialog;
     private TopBar topBar;
     private ScrollView scroll;
     private HeroBanner hero;
@@ -230,14 +230,7 @@ public class HomeActivity extends Activity {
         if (exitDialog != null && exitDialog.isShowing()) {
             return;
         }
-        exitDialog = new AlertDialog.Builder(this, R.style.AscDialog)
-                .setMessage("Deseja sair do ASC Play?")
-                .setNegativeButton("Não", (d, which) -> d.dismiss())
-                .setPositiveButton("Sim", (d, which) -> finishAffinity())
-                .create();
-        exitDialog.setOnShowListener(d ->
-                exitDialog.getButton(AlertDialog.BUTTON_POSITIVE).requestFocus());
-        exitDialog.show();
+        exitDialog = ExitDialog.show(this, () -> finishAffinity());
     }
 
     @Override

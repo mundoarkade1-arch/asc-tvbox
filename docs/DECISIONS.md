@@ -564,4 +564,6 @@
 - Decisão: lista nova do login ou da lista remota (DeviceLink) entra na coleção e passa a ser a em uso; se for a mesma lista (mesmo servidor e usuário, ou mesmo link M3U), só atualiza. As listas antigas NÃO são apagadas; o dono remove em Ajustes > Listas.
 - Decisão: Ajustes foi refeito em código, no visual Glass da Home: SideRail, cards de vidro (GlassSurface) e painel de vidro. Fundo com 30% de escurecimento (tela de lista). Motivo: pedido do dono.
 - Decisão: Voltar na Home pergunta "Deseja sair do ASC Play?", com foco em Sim. Voltar no login aberto por "Adicionar lista" volta à Home. Motivo: pedido do dono.
+- Decisão: o foco do menu lateral (SideRail) é fixo, ícone por ícone, parando nos extremos. Motivo: o Android escolhia o "mais perto" e, pelo espaço entre Séries e Atualizar, pulava para os cards da tela (bug visto no TX9).
+- Decisão: "Deseja sair?" virou janela própria em vidro bem transparente (ExitDialog), título grande, "Sim" em cima e "Não" embaixo, foco inicial em Sim. Motivo: pedido do dono.
 

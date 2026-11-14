@@ -23,6 +23,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -141,7 +142,7 @@ public class SettingsActivity extends Activity {
         rail = new SideRail(this);
         rail.home.setSelected(false);
         rail.settings.setSelected(true);
-        rail.refresh.setVisibility(View.GONE);
+        rail.hideRefresh();
         LinearLayout.LayoutParams rl = new LinearLayout.LayoutParams(GlassKit.dp(this, 76), MATCH);
         rl.leftMargin = GlassKit.dp(this, 16);
         rl.topMargin = GlassKit.dp(this, 16);
@@ -186,6 +187,7 @@ public class SettingsActivity extends Activity {
         cards[ROW_APP] = makeOption(optList, ROW_APP, "Sobre o aplicativo");
         cards[ROW_CLEAR_DATA] = makeOption(optList, ROW_CLEAR_DATA, "Apagar dados");
         refreshSubtitles();
+        linkOptionCards();
 
         // Painel de vidro com o conteúdo
         GlassSurface panel = new GlassSurface(this, GlassKit.dp(this, 20), false,
@@ -298,6 +300,23 @@ public class SettingsActivity extends Activity {
         oc.view = s;
         oc.sub = sub;
         return oc;
+    }
+
+    /**
+     * Ordem fixa do foco nas opções: cima/baixo só entre elas (os extremos param) e esquerda
+     * volta ao menu. A direita das opções sem cards no painel não vai a lugar nenhum.
+     */
+    private void linkOptionCards() {
+        int railId = GlassKit.ensureId(rail.settings);
+        for (int i = 0; i < ROW_COUNT; i++) {
+            GlassSurface v = cards[i].view;
+            GlassSurface up = i > 0 ? cards[i - 1].view : v;
+            GlassSurface down = i < ROW_COUNT - 1 ? cards[i + 1].view : v;
+            v.setNextFocusUpId(GlassKit.ensureId(up));
+            v.setNextFocusDownId(GlassKit.ensureId(down));
+            v.setNextFocusLeftId(railId);
+            v.setNextFocusRightId(GlassKit.ensureId(v));
+        }
     }
 
     /** Texto pequeno embaixo do nome de cada opção. */
@@ -436,6 +455,34 @@ public class SettingsActivity extends Activity {
         LinearLayout.LayoutParams al = new LinearLayout.LayoutParams(WRAP, GlassKit.dp(this, 40));
         al.topMargin = GlassKit.dp(this, 10);
         panelBody.addView(add, al);
+        linkPanelCards();
+    }
+
+    /**
+     * Ordem fixa do foco no painel de Listas: cima/baixo só entre os cards (os extremos
+     * param) e esquerda volta à opção "Listas". A direita da opção "Listas" entra no 1º card.
+     */
+    private void linkPanelCards() {
+        List<View> items = new ArrayList<>();
+        for (int i = 0; i < panelBody.getChildCount(); i++) {
+            View c = panelBody.getChildAt(i);
+            if (c.isFocusable()) {
+                items.add(c);
+            }
+        }
+        int listsId = GlassKit.ensureId(cards[ROW_LISTS].view);
+        for (int i = 0; i < items.size(); i++) {
+            View v = items.get(i);
+            View up = i > 0 ? items.get(i - 1) : v;
+            View down = i < items.size() - 1 ? items.get(i + 1) : v;
+            v.setNextFocusUpId(GlassKit.ensureId(up));
+            v.setNextFocusDownId(GlassKit.ensureId(down));
+            v.setNextFocusLeftId(listsId);
+            v.setNextFocusRightId(GlassKit.ensureId(v));
+        }
+        if (!items.isEmpty()) {
+            cards[ROW_LISTS].view.setNextFocusRightId(GlassKit.ensureId(items.get(0)));
+        }
     }
 
     private View listCard(final CredentialStore.SavedList l) {

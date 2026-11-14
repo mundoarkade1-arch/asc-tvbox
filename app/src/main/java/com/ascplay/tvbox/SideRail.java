@@ -11,6 +11,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Menu lateral flutuante: cápsula de vidro à esquerda. Logo no topo; Início, Ao vivo, Filmes e
  * Séries; e, ancorados embaixo, Atualizar e Ajustes. O item ativo tem vidro mais claro, borda
@@ -66,6 +69,7 @@ final class SideRail extends GlassSurface {
         settings = item(c, col, R.drawable.ic_nav_settings, "Ajustes");
 
         home.setSelected(true);
+        relink();
     }
 
     private GlassSurface item(Context c, LinearLayout parent, int iconRes, String label) {
@@ -133,9 +137,38 @@ final class SideRail extends GlassSurface {
         }
     }
 
+    /** Esconde o botão Atualizar (telas que não têm o que atualizar, como Ajustes). */
+    void hideRefresh() {
+        refresh.setVisibility(GONE);
+        relink();
+    }
+
+    /**
+     * Ordem FIXA do foco: seta para baixo vai ao próximo ícone, seta para cima ao anterior.
+     * No primeiro e no último o foco para (não escapa para o conteúdo). Sem isto o Android
+     * escolhia "o mais perto" e, por causa do espaço entre Séries e Atualizar, pulava para os
+     * cards da tela. Só entram na ordem os ícones visíveis e ativos.
+     */
+    private void relink() {
+        List<GlassSurface> act = new ArrayList<>();
+        for (GlassSurface s : items()) {
+            if (s.getVisibility() == VISIBLE && s.isEnabled()) {
+                act.add(s);
+            }
+        }
+        for (int i = 0; i < act.size(); i++) {
+            GlassSurface s = act.get(i);
+            GlassSurface up = i > 0 ? act.get(i - 1) : s;
+            GlassSurface down = i < act.size() - 1 ? act.get(i + 1) : s;
+            s.setNextFocusUpId(GlassKit.ensureId(up));
+            s.setNextFocusDownId(GlassKit.ensureId(down));
+        }
+    }
+
     /** Durante a atualização o ícone fica mais fraco (indicador discreto). */
     void setRefreshing(boolean refreshing) {
         refreshIcon.setAlpha(refreshing ? 0.4f : 1f);
         refresh.setEnabled(!refreshing);
+        relink();
     }
 }

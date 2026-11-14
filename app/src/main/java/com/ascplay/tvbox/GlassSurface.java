@@ -31,6 +31,8 @@ class GlassSurface extends FrameLayout {
 
     static final int STYLE_GLASS = 0;
     static final int STYLE_FILLED = 1;
+    /** Vidro bem transparente (janelas sobre a imagem de fundo, como "Deseja sair?"). */
+    static final int STYLE_CLEAR = 2;
 
     private final Fill fill;
 
@@ -104,6 +106,10 @@ class GlassSurface extends FrameLayout {
         private final int accent;
         private final int accentTint;
         private final int focusTint;
+        private final int clearHi;
+        private final int clearLo;
+        private final int clearFocusHi;
+        private final int clearFocusLo;
 
         private boolean selected = false;
         private boolean focused = false;
@@ -119,6 +125,10 @@ class GlassSurface extends FrameLayout {
             glassLo = GlassKit.alpha(c, R.color.asc_glass_light, 0.82f);
             selHi = GlassKit.alpha(c, R.color.asc_glass_light, 1.0f);
             selLo = GlassKit.alpha(c, R.color.asc_glass_light, 0.92f);
+            clearHi = GlassKit.alpha(c, R.color.asc_glass_light, 0.52f);
+            clearLo = GlassKit.alpha(c, R.color.asc_glass_light, 0.34f);
+            clearFocusHi = GlassKit.alpha(c, R.color.asc_glass_light, 0.72f);
+            clearFocusLo = GlassKit.alpha(c, R.color.asc_glass_light, 0.54f);
             focusHi = selHi;
             focusLo = selLo;
             // borda de 1dp: branco com ~10% (bem sutil)
@@ -179,6 +189,9 @@ class GlassSurface extends FrameLayout {
             if (style == STYLE_FILLED) {
                 hi = accent;
                 lo = accent;
+            } else if (style == STYLE_CLEAR) {
+                hi = focused ? clearFocusHi : clearHi;
+                lo = focused ? clearFocusLo : clearLo;
             } else if (selected) {
                 hi = selHi;
                 lo = selLo;
