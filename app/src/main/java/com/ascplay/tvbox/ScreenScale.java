@@ -117,6 +117,9 @@ final class ScreenScale {
             lastTriedDpi = 0;
             return;
         }
+        if (Math.abs(want - have) < have * 0.10f) {
+            return; // diferença pequena (barras do sistema etc.): não vale refazer a tela
+        }
         if (want == lastTriedDpi) {
             return; // já tentou esta densidade; se o sistema não aceitou, não fica em laço
         }

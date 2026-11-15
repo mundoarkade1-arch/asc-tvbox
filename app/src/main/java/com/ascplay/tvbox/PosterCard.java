@@ -107,12 +107,17 @@ final class PosterCard extends GlassSurface {
 
     /** Medidas e margem do card dentro da linha. */
     static LinearLayout.LayoutParams params(Context c) {
-        // Tamanho calculado pela largura da tela: aparecem no máximo 6 cards por vez.
+        return params(c, 6);
+    }
+
+    /** Igual ao params, mas com "visible" cards por vez na tela (menos cards = cards maiores). */
+    static LinearLayout.LayoutParams params(Context c, int visible) {
+        // Tamanho calculado pela largura da tela: aparecem no máximo "visible" cards por vez.
         // O resto da linha se vê rolando para a direita.
         int screenW = c.getResources().getDisplayMetrics().widthPixels;
         int overhead = GlassKit.dp(c, 16 + 76 + 16 + 24 + 12); // menu, margens e folgas
         int gap = GlassKit.d(c, 20);
-        int w = (screenW - overhead - gap * 6) / 6;
+        int w = (screenW - overhead - gap * visible) / visible;
         int h = Math.round(w * 1.5f); // proporção 2:3
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(w, h);
         lp.rightMargin = gap;

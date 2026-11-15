@@ -582,3 +582,8 @@
 - Decisão: SideRail.FitColumn mede a altura disponível e, se não couber, encolhe botões, margens e ícones na mesma proporção; abaixo de 80% esconde os nomes (fica só o ícone); se ainda faltar, esconde o logo. Volta ao normal quando há espaço. Tamanhos naturais guardados em tags (res/values/ids.xml).
 - ScreenScale agora usa o MENOR entre a tela real e a área que o app recebe (descontando barras e recortes).
 
+## 15/11/2026 (3) - Cards, canais e tela em branco ao atualizar
+- Aba Ao vivo: 3 cards por linha no mínimo (cartão de ~250 dp) e imagem do cartão de 120 para 100 dp (item_card_live.xml).
+- Início: filmes e séries mostram 5 cards por vez (antes 6): PosterCard.params(c, 5). Continue assistindo e Minha lista seguem com 6.
+- Tela só com o fundo ao atualizar: ScreenScale.recheck não roda mais no onResume (recriar a Activity dentro do onResume podia deixar a tela vazia) e só refaz a tela em mudança de configuração com diferença de densidade maior que 10%. Em HomeActivity.reloadRails, o estado "atualizando" preso expira em 45 s e as faixas voltam a ficar visíveis.
+

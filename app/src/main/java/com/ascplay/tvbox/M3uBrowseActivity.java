@@ -122,8 +122,8 @@ public class M3uBrowseActivity extends AscActivity {
         gvItems.setVerticalSpacing(dp(10));
         // Colunas automáticas pela largura da tela (referência 1280x720 dp: canais 3, resto 4).
         gvItems.setNumColumns(kind == XtreamApi.Kind.LIVE ? 3 : 4);
-        ScreenScale.autoColumns(gvItems, kind == XtreamApi.Kind.LIVE ? 290 : 215,
-                kind == XtreamApi.Kind.LIVE ? 2 : 3, kind == XtreamApi.Kind.LIVE ? 6 : 8);
+        ScreenScale.autoColumns(gvItems, kind == XtreamApi.Kind.LIVE ? 250 : 215,
+                kind == XtreamApi.Kind.LIVE ? 3 : 3, kind == XtreamApi.Kind.LIVE ? 6 : 8);
 
         // Botão "Pesquisar" fixo: sempre à vista, acima da lista de categorias (R4-1).
         // Foco: do botão, baixo vai à lista; do alto da lista, cima volta ao botão.

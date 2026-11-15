@@ -48,7 +48,6 @@ public class AscApp extends Application {
             @Override
             public void onActivityResumed(Activity activity) {
                 current = new WeakReference<>(activity);
-                ScreenScale.recheck(activity);
                 Glass.attach(activity);
             }
 

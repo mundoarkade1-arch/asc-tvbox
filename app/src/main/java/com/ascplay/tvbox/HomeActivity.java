@@ -104,6 +104,7 @@ public class HomeActivity extends AscActivity {
 
     // Atualização da lista: quantas faixas ainda faltam responder, e se alguma deu certo
     private int railsPending = 0;
+    private long railsStartMs = 0;
     private boolean railsOk = false;
 
     // Foco
@@ -565,6 +566,7 @@ public class HomeActivity extends AscActivity {
 
     private void beginRefreshState(int pending) {
         railsPending = pending;
+        railsStartMs = System.currentTimeMillis();
         railsOk = false;
         topBar.setUpdating(true);
         rail.setRefreshing(true);
@@ -698,9 +700,10 @@ public class HomeActivity extends AscActivity {
         if (!isXtream() && !isM3u()) {
             return;
         }
-        if (railsPending > 0) {
-            return; // já está atualizando
+        if (railsPending > 0 && System.currentTimeMillis() - railsStartMs < 45000) {
+            return; // já está atualizando (depois de 45 s considera travado e refaz)
         }
+        railsPending = 0;
         railGen++;
         heroGen++;
         handler.removeCallbacks(heroBuild);
@@ -714,6 +717,7 @@ public class HomeActivity extends AscActivity {
         SectionRow[] rows = {rowLive, rowMovie, rowSeries};
         for (SectionRow r : rows) {
             r.rail().removeAllViews();
+            r.setVisibility(View.VISIBLE); // a faixa pode ter ficado escondida por erro anterior
             r.showLoading();
         }
         loadAllRails();
@@ -773,7 +777,7 @@ public class HomeActivity extends AscActivity {
                 PosterCard pc = new PosterCard(this, track(row, null));
                 pc.bind(item.name, kind == XtreamApi.Kind.MOVIE ? "Filme" : "Série", item.icon);
                 posterByKey.put(FavoritesStore.identity(item), pc);
-                railView.addView(pc, PosterCard.params(this));
+                railView.addView(pc, PosterCard.params(this, 5)); // filmes e séries: cards maiores
                 card = pc;
             }
             card.setOnClickListener(v -> openItem(item));
