@@ -577,3 +577,8 @@
 - ImageLoader: imagens de 256 px (referência) até 384 px em telas de densidade maior; cache de 8 para 12 MB. Sem dependência nova.
 - Para deixar tudo maior ou menor: ScreenScale.UI_ZOOM.
 
+## 15/11/2026 (2) - Menu lateral sempre cabe na tela
+- Problema: o SideRail tinha alturas fixas (6 botões de ~70 dp + logo) e cortava ícones quando a altura útil era menor.
+- Decisão: SideRail.FitColumn mede a altura disponível e, se não couber, encolhe botões, margens e ícones na mesma proporção; abaixo de 80% esconde os nomes (fica só o ícone); se ainda faltar, esconde o logo. Volta ao normal quando há espaço. Tamanhos naturais guardados em tags (res/values/ids.xml).
+- ScreenScale agora usa o MENOR entre a tela real e a área que o app recebe (descontando barras e recortes).
+

@@ -6,6 +6,7 @@ import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -37,7 +38,7 @@ final class SideRail extends GlassSurface {
         setClipChildren(false);
         setClipToPadding(false);
 
-        LinearLayout col = new LinearLayout(c);
+        FitColumn col = new FitColumn(c);
         col.setOrientation(LinearLayout.VERTICAL);
         col.setGravity(Gravity.CENTER_HORIZONTAL);
         col.setClipChildren(false);
@@ -55,6 +56,7 @@ final class SideRail extends GlassSurface {
                 GlassKit.dp(c, 40), GlassKit.dp(c, 40));
         ll.bottomMargin = GlassKit.dp(c, 10);
         col.addView(logo, ll);
+        col.logo = logo;
 
         home = item(c, col, R.drawable.ic_nav_home, "Início");
         live = item(c, col, R.drawable.ic_nav_live, "Ao vivo");
@@ -70,6 +72,107 @@ final class SideRail extends GlassSurface {
 
         home.setSelected(true);
         relink();
+    }
+
+
+    /**
+     * Coluna do menu que SEMPRE cabe na altura que tem. Se os itens (no tamanho normal) não
+     * cabem, encolhe altura, margens e ícones na mesma proporção; sem espaço para o nome,
+     * esconde o texto e deixa só o ícone; se ainda assim faltar, esconde o logo do topo.
+     */
+    private static final class FitColumn extends LinearLayout {
+
+        View logo;
+
+        FitColumn(Context c) {
+            super(c);
+        }
+
+        @Override
+        protected void onMeasure(int widthSpec, int heightSpec) {
+            if (MeasureSpec.getMode(heightSpec) != MeasureSpec.UNSPECIFIED) {
+                int avail = MeasureSpec.getSize(heightSpec) - getPaddingTop() - getPaddingBottom();
+                if (avail > 0) {
+                    fit(avail);
+                }
+            }
+            super.onMeasure(widthSpec, heightSpec);
+        }
+
+        private int natural(View v, boolean icon) {
+            Object t = v.getTag(icon ? R.id.tag_rail_icon : R.id.tag_rail_h);
+            if (t instanceof Integer) {
+                return (Integer) t;
+            }
+            ViewGroup.LayoutParams lp = v.getLayoutParams();
+            int n = lp.height;
+            v.setTag(icon ? R.id.tag_rail_icon : R.id.tag_rail_h, n);
+            return n;
+        }
+
+        private int margins(View v, float f) {
+            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) v.getLayoutParams();
+            Object t = v.getTag(R.id.tag_rail_m);
+            int[] m;
+            if (t instanceof int[]) {
+                m = (int[]) t;
+            } else {
+                m = new int[]{lp.topMargin, lp.bottomMargin};
+                v.setTag(R.id.tag_rail_m, m);
+            }
+            lp.topMargin = Math.round(m[0] * f);
+            lp.bottomMargin = Math.round(m[1] * f);
+            return m[0] + m[1];
+        }
+
+        private void fit(int avail) {
+            // 1) tamanho natural de tudo que é visível (menos o espaço elástico)
+            int total = 0;
+            for (int i = 0; i < getChildCount(); i++) {
+                View v = getChildAt(i);
+                if (v.getVisibility() == GONE || !(v instanceof GlassSurface || v == logo)) {
+                    continue;
+                }
+                if (v == logo) {
+                    v.setVisibility(VISIBLE);
+                }
+                total += natural(v, false) + margins(v, 1f);
+            }
+            float f = total > avail ? (float) avail / total : 1f;
+            // 2) sem espaço nem para o logo: esconde o logo e refaz a conta
+            if (f < 0.8f && logo != null && logo.getVisibility() != GONE) {
+                logo.setVisibility(GONE);
+                total -= natural(logo, false) + margins(logo, 1f);
+                f = total > avail ? (float) avail / total : 1f;
+            }
+            f = Math.max(0.3f, f);
+            for (int i = 0; i < getChildCount(); i++) {
+                View v = getChildAt(i);
+                if (!(v instanceof GlassSurface || v == logo)) {
+                    continue;
+                }
+                LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) v.getLayoutParams();
+                int nat = natural(v, false);
+                margins(v, f);
+                lp.height = Math.round(nat * f);
+                if (v instanceof GlassSurface && ((GlassSurface) v).getChildCount() > 0
+                        && ((GlassSurface) v).getChildAt(0) instanceof LinearLayout) {
+                    LinearLayout inner = (LinearLayout) ((GlassSurface) v).getChildAt(0);
+                    View icon = inner.getChildAt(0);
+                    View label = inner.getChildAt(1);
+                    int iconNat = natural(icon, true);
+                    boolean showLabel = f >= 0.8f;
+                    if (label != null) {
+                        label.setVisibility(showLabel ? VISIBLE : GONE);
+                    }
+                    int size = showLabel ? Math.round(iconNat * f)
+                            : Math.min(iconNat, Math.round(lp.height * 0.62f));
+                    ViewGroup.LayoutParams ilp = icon.getLayoutParams();
+                    ilp.width = size;
+                    ilp.height = size;
+                }
+            }
+        }
     }
 
     private GlassSurface item(Context c, LinearLayout parent, int iconRes, String label) {

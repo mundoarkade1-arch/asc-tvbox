@@ -50,8 +50,17 @@ final class ScreenScale {
             }
             DisplayMetrics m = new DisplayMetrics();
             display.getRealMetrics(m);
+            // Usa o MENOR entre a tela real e a área que o app realmente recebe (sem barras do
+            // sistema/recortes), para nada ficar escondido.
+            DisplayMetrics a = base.getResources().getDisplayMetrics();
             int longPx = Math.max(m.widthPixels, m.heightPixels);
             int shortPx = Math.min(m.widthPixels, m.heightPixels);
+            int aLong = Math.max(a.widthPixels, a.heightPixels);
+            int aShort = Math.min(a.widthPixels, a.heightPixels);
+            if (aLong > 0 && aShort > 0) {
+                longPx = Math.min(longPx, aLong);
+                shortPx = Math.min(shortPx, aShort);
+            }
             if (longPx <= 0 || shortPx <= 0) {
                 return 0;
             }

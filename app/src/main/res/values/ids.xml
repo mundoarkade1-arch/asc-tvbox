@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Guardam o tamanho normal do menu lateral (SideRail) para ele poder encolher e voltar -->
+    <item name="tag_rail_h" type="id" />
+    <item name="tag_rail_icon" type="id" />
+    <item name="tag_rail_m" type="id" />
+</resources>
