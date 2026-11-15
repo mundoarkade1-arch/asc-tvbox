@@ -53,7 +53,7 @@ import java.util.Map;
  * Esta tela só é aberta a partir de itens que já passaram pelo controle parental
  * (página inicial e "Ver mais"), por isso não repete a conferência da senha.
  */
-public class SeriesActivity extends Activity {
+public class SeriesActivity extends AscActivity {
 
     /** Lista de números (ids) dos episódios da série, na ordem de reprodução. */
     public static final String EXTRA_LIST_IDS = "list_ids";

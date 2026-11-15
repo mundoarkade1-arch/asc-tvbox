@@ -21,8 +21,8 @@ import java.util.concurrent.Executors;
 /**
  * Baixa logos de forma leve (sem biblioteca extra), pensado para 1 GB de RAM.
  *
- * - cache em memória de no máximo ~8 MB (descarta as imagens mais antigas);
- * - cada imagem é reduzida ao abrir (lado maior de no máximo 256 pixels);
+ * - cache em memória de no máximo ~12 MB (descarta as imagens mais antigas);
+ * - cada imagem é reduzida ao abrir (lado maior de 256 pixels; até 384 em telas de alta densidade);
  * - no máximo 2 downloads ao mesmo tempo, com limite de 2 MB por imagem;
  * - só aceita http e https;
  * - não registra endereços em log.
@@ -33,7 +33,7 @@ public final class ImageLoader {
 
     private static final int MAX_SIDE = 256;
     private static final int MAX_BYTES = 2 * 1024 * 1024;
-    private static final int CACHE_BYTES = 8 * 1024 * 1024;
+    private static final int CACHE_BYTES = 12 * 1024 * 1024;
     private static final int TIMEOUT_MS = 8000;
     private static final int MAX_REDIRECTS = 4;
     private static final int MAX_FAILED = 500;
@@ -61,7 +61,11 @@ public final class ImageLoader {
 
     /** Mostra a imagem do endereço; se não houver imagem, deixa vazio (a letra do cartão aparece). */
     public static void load(final ImageView view, final String url) {
-        load(view, url, MAX_SIDE);
+        // Telas de maior resolução (densidade acima de 1) pedem imagem um pouco maior para não
+        // ficar borrada. Na tela de referência (densidade 1) continua 256.
+        float density = view.getResources().getDisplayMetrics().density;
+        int side = Math.round(MAX_SIDE * Math.max(1f, Math.min(1.5f, density)));
+        load(view, url, side);
     }
 
     /**

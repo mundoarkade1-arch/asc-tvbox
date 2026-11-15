@@ -44,7 +44,7 @@ import java.util.Locale;
  * Foco: seta para a direita no menu volta à última opção; seta para a direita numa opção entra
  * nos cards do painel (quando há, como em Listas).
  */
-public class SettingsActivity extends Activity {
+public class SettingsActivity extends AscActivity {
 
     private static final int ROW_LISTS = 0;
     private static final int ROW_PARENTAL = 1;

@@ -35,7 +35,7 @@ import java.util.List;
  * EXTRA_QUEUE = true e nenhuma categoria (nada = todas as categorias).
  * O texto da busca nunca é registrado em log.
  */
-public class SearchActivity extends Activity {
+public class SearchActivity extends AscActivity {
 
     public static final String EXTRA_QUERY = "query";
 
@@ -89,7 +89,10 @@ public class SearchActivity extends Activity {
 
         gvItems.setHorizontalSpacing(dp(10));
         gvItems.setVerticalSpacing(dp(10));
+        // Colunas automáticas (a busca não tem categorias, então a grade é mais larga).
         gvItems.setNumColumns(kind == XtreamApi.Kind.LIVE ? 3 : 4);
+        ScreenScale.autoColumns(gvItems, kind == XtreamApi.Kind.LIVE ? 330 : 270,
+                kind == XtreamApi.Kind.LIVE ? 2 : 3, kind == XtreamApi.Kind.LIVE ? 6 : 8);
         itemAdapter = new ItemAdapter();
         gvItems.setAdapter(itemAdapter);
         gvItems.setOnItemClickListener((parent, view, position, id) -> {

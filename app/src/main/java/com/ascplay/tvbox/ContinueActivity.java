@@ -30,7 +30,7 @@ import java.util.Locale;
  * O endereço do vídeo e a chave da série NUNCA são mostrados nem registrados em log.
  * Sem menu à esquerda (tela de passagem); o Voltar leva à tela inicial.
  */
-public class ContinueActivity extends Activity {
+public class ContinueActivity extends AscActivity {
 
     private CredentialStore.Credentials creds;
 

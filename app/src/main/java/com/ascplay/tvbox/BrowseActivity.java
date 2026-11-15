@@ -54,7 +54,7 @@ import java.util.Set;
  * de 4 números para abrir. A liberação vale só para aquela categoria, enquanto a pessoa está
  * nela. Na lista "Todas as categorias", conteúdo adulto não aparece.
  */
-public class BrowseActivity extends Activity {
+public class BrowseActivity extends AscActivity {
 
     private static final int PAGE = 40;
     private static final int MAX_ITEMS = 5000;
@@ -128,8 +128,11 @@ public class BrowseActivity extends Activity {
         lvCategories.setDividerHeight(dp(6));
         gvItems.setHorizontalSpacing(dp(10));
         gvItems.setVerticalSpacing(dp(10));
-        // Canais: 3 cards por fileira (maiores). Filmes e séries: 4.
+        // Colunas automáticas pela largura da tela. Na tela de referência (1280x720 dp):
+        // canais = 3 cards por fileira (maiores); filmes e séries = 4.
         gvItems.setNumColumns(kind == XtreamApi.Kind.LIVE ? 3 : 4);
+        ScreenScale.autoColumns(gvItems, kind == XtreamApi.Kind.LIVE ? 290 : 215,
+                kind == XtreamApi.Kind.LIVE ? 2 : 3, kind == XtreamApi.Kind.LIVE ? 6 : 8);
 
         // Botão "Pesquisar" fixo: sempre à vista, acima da lista de categorias (R4-1).
         // Foco: do botão, baixo vai à lista; do alto da lista, cima volta ao botão.

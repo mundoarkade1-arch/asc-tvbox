@@ -56,7 +56,7 @@ import java.util.Map;
  * (página inicial e "Ver mais"), por isso não repete a conferência da senha.
  * Os endereços dos vídeos costumam conter usuário e senha: nunca mostrar nem registrar em log.
  */
-public class M3uSeriesActivity extends Activity {
+public class M3uSeriesActivity extends AscActivity {
 
     private static final int COLOR_NEUTRAL = 0xFFB8C0CC;
     private static final int COLOR_ERROR = 0xFFF28B82;

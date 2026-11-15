@@ -91,7 +91,7 @@ import java.util.Locale;
  * direita mostra tamanho do vídeo, tipo, decodificador e tamanho da tela por 6 segundos.
  */
 @OptIn(markerClass = UnstableApi.class)
-public class MainActivity extends Activity {
+public class MainActivity extends AscActivity {
 
     /** Endereço direto do vídeo (só no login por lista M3U). */
     public static final String EXTRA_URL = "url";

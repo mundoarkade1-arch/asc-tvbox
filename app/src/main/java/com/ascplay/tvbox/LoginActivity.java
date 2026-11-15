@@ -15,7 +15,7 @@ import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-public class LoginActivity extends Activity {
+public class LoginActivity extends AscActivity {
 
     private static final int COLOR_NEUTRAL = 0xFFFFFFFF;
     private static final int COLOR_ERROR = 0xFFF28B82;

@@ -7,6 +7,7 @@ Regras de trabalho: AGENTS.md. Mapa e limites: docs/ARQUIVOS.md. Montagem e vers
 Rodada R5 salva e VERDE no Actions. Nada dela foi visto no TX9 ainda, exceto a primeira versão dos cards (o dono mandou fotos e pediu capa cheia, já feita). O ambiente local não tem Android SDK: nada foi compilado fora do Actions.
 
 ## Já feito
+- Responsividade: ScreenScale + AscActivity (escala automática da tela), colunas automáticas nas abas, busca e episódios; ImageLoader com nitidez por densidade. Ver DECISIONS (15/11/2026).
 - Rodadas anteriores (base, M6 a M13c, R4, identidade ASC lite, Home, player 1080p/60, Ajustes com "Apagar dados"): testadas no TX9.
 - R5 cards: canais com 3 por fileira (item_card_live.xml, nome 22sp, "Agora" e "A seguir"); filmes e séries com 4 por fileira, capa cheia 260dp centerCrop, nome 18sp; Home com cards maiores e faixas mais altas; Continue com lista maior.
 - R5 categorias: A a Z em Canais, Filmes e Séries; adultas no fim.
@@ -14,6 +15,7 @@ Rodada R5 salva e VERDE no Actions. Nada dela foi visto no TX9 ainda, exceto a p
 - R5 login remoto: a lista que chega pelo Supabase agora é testada antes de entrar; a tela de login mostra uma frase com o motivo do erro.
 
 ## Falta
+- Responsividade (15/11/2026): conferir o Actions; no TX9 tudo deve ficar IGUAL a antes (referência 1280x720 dp). Testar em outra resolução (1080p, 4:3, ultrawide) e ver colunas das abas, menu, Home, player e janelas.
 - No TX9: conferir cards (3 e 4 por fileira, capa cheia, nomes), "A seguir" nos canais, categorias em ordem, "Jogos do dia" na Home.
 - PROBLEMA ABERTO (o mais importante): depois da mudança de segurança no Supabase / app ASC Admin (feita FORA deste repositório), a lista enviada à distância não entra direto. O dono quer colocar a lista UMA vez à distância e ela ficar salva no aparelho. Esperando a foto da tela de login com a frase nova (ex.: "Erro 401 em fetch_playlist", "Servidor ok, usuário N letras, senha N letras", "o teste falhou (AUTH)").
 - Favoritos: o app não tem (pedido do dono só citou os cards; ofereci criar).

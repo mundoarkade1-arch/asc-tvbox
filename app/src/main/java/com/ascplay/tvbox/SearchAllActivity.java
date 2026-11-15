@@ -22,7 +22,7 @@ import java.util.List;
  * No máximo 20 resultados por tipo. Controle parental ligado: itens adultos não aparecem.
  * O texto da busca nunca é registrado em log.
  */
-public class SearchAllActivity extends Activity {
+public class SearchAllActivity extends AscActivity {
 
     private static final int LIMIT = 20;
     private static final int MAX_QUERY = 40;

@@ -52,7 +52,7 @@ import java.util.List;
  * Filme: abre a página do filme (MovieActivity), que leva o endereço e a capa do item.
  * Série: abre a tela da série da lista M3U (M3uSeriesActivity), com temporadas e episódios.
  */
-public class M3uBrowseActivity extends Activity {
+public class M3uBrowseActivity extends AscActivity {
 
     private static final int PAGE = 40;
     private static final int MAX_ITEMS = 5000;
@@ -120,7 +120,10 @@ public class M3uBrowseActivity extends Activity {
         lvCategories.setDividerHeight(dp(6));
         gvItems.setHorizontalSpacing(dp(10));
         gvItems.setVerticalSpacing(dp(10));
+        // Colunas automáticas pela largura da tela (referência 1280x720 dp: canais 3, resto 4).
         gvItems.setNumColumns(kind == XtreamApi.Kind.LIVE ? 3 : 4);
+        ScreenScale.autoColumns(gvItems, kind == XtreamApi.Kind.LIVE ? 290 : 215,
+                kind == XtreamApi.Kind.LIVE ? 2 : 3, kind == XtreamApi.Kind.LIVE ? 6 : 8);
 
         // Botão "Pesquisar" fixo: sempre à vista, acima da lista de categorias (R4-1).
         // Foco: do botão, baixo vai à lista; do alto da lista, cima volta ao botão.

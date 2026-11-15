@@ -567,3 +567,13 @@
 - Decisão: o foco do menu lateral (SideRail) é fixo, ícone por ícone, parando nos extremos. Motivo: o Android escolhia o "mais perto" e, pelo espaço entre Séries e Atualizar, pulava para os cards da tela (bug visto no TX9).
 - Decisão: "Deseja sair?" virou janela própria em vidro bem transparente (ExitDialog), título grande, "Sim" em cima e "Não" embaixo, foco inicial em Sim. Motivo: pedido do dono.
 
+## 15/11/2026 - Responsividade a qualquer tela (escala automática)
+- Problema: todos os tamanhos são em dp e foram desenhados para 1280x720 dp (o TX9). Em aparelhos com outra resolução/densidade o app ficava pequeno, grande ou cortado; as grades tinham colunas fixas (3 ou 4).
+- Decisão: ScreenScale.wrap (chamado por AscActivity.attachBaseContext) recalcula a densidade pela tela REAL (DisplayManager, lado maior/menor, independe de orientação) para a tela ter sempre ~1280x720 dp. Na tela de referência a densidade é a mesma de antes (nada muda no TX9). Escolha por densidade, e não por mexer em cada layout: um só ponto, vale para XML, telas montadas em código, janelas e player.
+- Todas as Activities passam a estender AscActivity (nova). Tela nova DEVE estender AscActivity.
+- Fonte do sistema fixada em 1.0 no app (fontScale) para o layout não quebrar.
+- Grades de Browse, M3uBrowse e Search usam ScreenScale.autoColumns (colunas pela largura; referência: canais 3, resto 4). Grade de episódios: numColumns auto_fit com columnWidth 80dp (15 colunas na referência).
+- Se a resolução da tela mudar com o app aberto, AscApp confere e refaz a tela (uma tentativa por densidade, sem laço).
+- ImageLoader: imagens de 256 px (referência) até 384 px em telas de densidade maior; cache de 8 para 12 MB. Sem dependência nova.
+- Para deixar tudo maior ou menor: ScreenScale.UI_ZOOM.
+

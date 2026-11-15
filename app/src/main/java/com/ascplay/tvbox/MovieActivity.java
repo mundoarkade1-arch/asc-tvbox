@@ -28,7 +28,7 @@ import java.util.Locale;
  * Só é aberta a partir de itens que já passaram pelo filtro do controle parental.
  * Não tem menu à esquerda (tela de passagem, como a de resultados da busca).
  */
-public class MovieActivity extends Activity {
+public class MovieActivity extends AscActivity {
 
     /** Endereço da capa do item (já conhecido da lista). Pode vir vazio. */
     public static final String EXTRA_ICON = "icon";

@@ -49,7 +49,7 @@ import java.util.Set;
  * Tecla de menu (três listras) sobre um canal ao vivo do servidor, ou OK segurado: programação.
  * O endereço do vídeo e a chave da série NUNCA são mostrados nem registrados em log.
  */
-public class HomeActivity extends Activity {
+public class HomeActivity extends AscActivity {
 
     public static final String EXTRA_KIND = "kind";
     public static final String EXTRA_ID = "id";
