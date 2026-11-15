@@ -1,10 +1,17 @@
 package com.ascplay.tvbox;
 
+import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import java.util.List;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -176,6 +183,7 @@ public final class Updater {
             return; // já tem um download em andamento
         }
         final Context app = context.getApplicationContext();
+        final Context ui = context;
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -187,7 +195,7 @@ public final class Updater {
                     MAIN.post(new Runnable() {
                         @Override
                         public void run() {
-                            startInstaller(app, apk, listener);
+                            startInstaller(app, ui, apk, listener);
                         }
                     });
                 } catch (final Exception e) {
@@ -267,26 +275,134 @@ public final class Updater {
         }
     }
 
-    private static void startInstaller(Context app, File apk, InstallListener listener) {
+    /**
+     * Abre o instalador do Android. Tenta, nesta ordem: (1) INSTALL_PACKAGE, (2) VIEW do APK e
+     * (3) a sessão do PackageInstaller (funciona em TV boxes sem a tela de instalação comum).
+     * A tela (Activity) é usada para abrir o instalador quando ainda está viva.
+     */
+    private static void startInstaller(Context app, Context ui, File apk,
+                                       InstallListener listener) {
         try {
             if (Build.VERSION.SDK_INT >= 26 && !app.getPackageManager().canRequestPackageInstalls()) {
-                Intent settings = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
-                        Uri.parse("package:" + app.getPackageName()));
-                settings.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                app.startActivity(settings);
-                listener.onFailed("Permita instalar aplicativos por este app e tente de novo.");
-                return;
+                try {
+                    Intent settings = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                            Uri.parse("package:" + app.getPackageName()));
+                    settings.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    app.startActivity(settings);
+                    listener.onFailed("Permita instalar aplicativos por este app e tente de novo.");
+                    return;
+                } catch (Exception e) {
+                    // Sem essa tela neste aparelho: segue, o próprio instalador pede a permissão.
+                }
             }
             Uri uri = FileProvider.getUriForFile(app, app.getPackageName() + ".fileprovider", apk);
-            Intent install = new Intent(Intent.ACTION_VIEW);
-            install.setDataAndType(uri, "application/vnd.android.package-archive");
-            install.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
-            app.startActivity(install);
-            listener.onInstallerOpened();
-        } catch (ActivityNotFoundException e) {
-            listener.onFailed("Este aparelho não tem instalador de aplicativos.");
+            boolean live = ui instanceof Activity && !((Activity) ui).isFinishing();
+            Context starter = live ? ui : app;
+
+            Intent[] tries = new Intent[2];
+            tries[0] = new Intent(Intent.ACTION_INSTALL_PACKAGE);
+            tries[0].setData(uri);
+            tries[0].putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true);
+            tries[1] = new Intent(Intent.ACTION_VIEW);
+            tries[1].setDataAndType(uri, "application/vnd.android.package-archive");
+            for (Intent i : tries) {
+                i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                if (!live) {
+                    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                }
+                try {
+                    List<ResolveInfo> targets = app.getPackageManager().queryIntentActivities(
+                            i, PackageManager.MATCH_DEFAULT_ONLY);
+                    for (ResolveInfo ri : targets) {
+                        app.grantUriPermission(ri.activityInfo.packageName, uri,
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    }
+                } catch (Exception ignored) {
+                    // só reforço de permissão; o flag acima já cobre a maioria dos aparelhos
+                }
+                try {
+                    starter.startActivity(i);
+                    listener.onInstallerOpened();
+                    return;
+                } catch (ActivityNotFoundException | SecurityException e) {
+                    // tenta a próxima forma
+                }
+            }
+            installWithSession(app, apk, listener);
         } catch (Exception e) {
             listener.onFailed("Não foi possível abrir o instalador.");
+        }
+    }
+
+    /** Última tentativa: instala pela sessão do PackageInstaller (o Android pede a confirmação). */
+    private static void installWithSession(final Context app, File apk,
+                                           final InstallListener listener) {
+        try {
+            PackageInstaller installer = app.getPackageManager().getPackageInstaller();
+            PackageInstaller.SessionParams params = new PackageInstaller.SessionParams(
+                    PackageInstaller.SessionParams.MODE_FULL_INSTALL);
+            int id = installer.createSession(params);
+            PackageInstaller.Session session = installer.openSession(id);
+            try {
+                OutputStream out = session.openWrite("ASC-TVBox.apk", 0, apk.length());
+                InputStream in = new java.io.FileInputStream(apk);
+                try {
+                    byte[] buf = new byte[64 * 1024];
+                    int n;
+                    while ((n = in.read(buf)) >= 0) {
+                        out.write(buf, 0, n);
+                    }
+                    session.fsync(out);
+                } finally {
+                    in.close();
+                    out.close();
+                }
+
+                final String action = app.getPackageName() + ".INSTALL_RESULT";
+                BroadcastReceiver receiver = new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        int status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS,
+                                PackageInstaller.STATUS_FAILURE);
+                        if (status == PackageInstaller.STATUS_PENDING_USER_ACTION) {
+                            Intent confirm = intent.getParcelableExtra(Intent.EXTRA_INTENT);
+                            if (confirm != null) {
+                                confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                try {
+                                    app.startActivity(confirm);
+                                    listener.onInstallerOpened();
+                                } catch (Exception e) {
+                                    listener.onFailed("Não foi possível abrir o instalador.");
+                                }
+                            }
+                            return;
+                        }
+                        try {
+                            app.unregisterReceiver(this);
+                        } catch (Exception ignored) {
+                            // já removido
+                        }
+                        if (status != PackageInstaller.STATUS_SUCCESS) {
+                            listener.onFailed("O Android não conseguiu instalar a atualização.");
+                        }
+                    }
+                };
+                IntentFilter filter = new IntentFilter(action);
+                if (Build.VERSION.SDK_INT >= 33) {
+                    app.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED);
+                } else {
+                    app.registerReceiver(receiver, filter);
+                }
+                int flags = PendingIntent.FLAG_UPDATE_CURRENT
+                        | (Build.VERSION.SDK_INT >= 31 ? PendingIntent.FLAG_MUTABLE : 0);
+                Intent result = new Intent(action).setPackage(app.getPackageName());
+                PendingIntent pending = PendingIntent.getBroadcast(app, id, result, flags);
+                session.commit(pending.getIntentSender());
+            } finally {
+                session.close();
+            }
+        } catch (Exception e) {
+            listener.onFailed("Este aparelho não conseguiu abrir o instalador de aplicativos.");
         }
     }
 

@@ -587,3 +587,7 @@
 - Início: filmes e séries mostram 5 cards por vez (antes 6): PosterCard.params(c, 5). Continue assistindo e Minha lista seguem com 6.
 - Tela só com o fundo ao atualizar: ScreenScale.recheck não roda mais no onResume (recriar a Activity dentro do onResume podia deixar a tela vazia) e só refaz a tela em mudança de configuração com diferença de densidade maior que 10%. Em HomeActivity.reloadRails, o estado "atualizando" preso expira em 45 s e as faixas voltam a ficar visíveis.
 
+## 15/11/2026 (4) - Instalador da atualização não abria
+- Updater.startInstaller agora tenta, em ordem: INSTALL_PACKAGE, VIEW do APK e, por último, a sessão do PackageInstaller (confirmação pelo próprio Android). Abre pela Activity (tela) quando viva; senão pelo Application com NEW_TASK. Reforça a permissão de leitura do APK para os instaladores que respondem. Se a tela de "fontes desconhecidas" não existir no aparelho, segue para o instalador em vez de parar.
+- Sem permissão nova nem dependência nova (REQUEST_INSTALL_PACKAGES já existia).
+
