@@ -90,6 +90,7 @@ public class HomeActivity extends AscActivity {
     // Aviso de atualização do app
     private GlassSurface updateBar;
     private TextView tvUpdate;
+    private UpdateDialog updateDialog;
     private GlassSurface.Button btnUpdateNow;
     private GlassSurface.Button btnUpdateLater;
     private Updater.Info pendingUpdate;
@@ -245,6 +246,10 @@ public class HomeActivity extends AscActivity {
         if (exitDialog != null) {
             exitDialog.dismiss();
             exitDialog = null;
+        }
+        if (updateDialog != null) {
+            updateDialog.dismiss();
+            updateDialog = null;
         }
         handler.removeCallbacksAndMessages(null);
         heroGen++;
@@ -522,6 +527,7 @@ public class HomeActivity extends AscActivity {
     /** Foco inicial automático: só sobe (para algo mais alto na tela), nunca desce. */
     private void autoFocus(int rank, View target) {
         if (target == null || userNavigated || rank >= autoFocusRank
+                || (updateDialog != null && updateDialog.isShowing())
                 || updateBar.getVisibility() == View.VISIBLE || !target.isFocusable()) {
             return;
         }
@@ -1441,10 +1447,11 @@ public class HomeActivity extends AscActivity {
                     return;
                 }
                 pendingUpdate = info;
-                tvUpdate.setTextColor(GlassKit.color(HomeActivity.this, R.color.asc_focus));
-                tvUpdate.setText(getString(R.string.update_available, info.name));
-                updateBar.setVisibility(View.VISIBLE);
-                btnUpdateNow.requestFocus();
+                // Janela no meio da tela (igual à "Deseja sair?"): atualizar agora ou depois
+                if (updateDialog == null || !updateDialog.isShowing()) {
+                    updateDialog = UpdateDialog.show(HomeActivity.this, info.name,
+                            () -> startUpdate(), () -> dismissUpdate());
+                }
             }
 
             @Override
@@ -1455,50 +1462,42 @@ public class HomeActivity extends AscActivity {
     }
 
     private void startUpdate() {
-        if (downloading || pendingUpdate == null) {
+        if (downloading || pendingUpdate == null || updateDialog == null) {
             return;
         }
         downloading = true;
-        btnUpdateNow.setEnabled(false);
-        btnUpdateLater.setEnabled(false);
-        tvUpdate.setTextColor(GlassKit.color(this, R.color.asc_text_primary));
-        tvUpdate.setText(R.string.msg_downloading_unknown);
+        updateDialog.setStatus(getString(R.string.msg_downloading_unknown), true);
 
         Updater.downloadAndInstallAsync(this, pendingUpdate, new Updater.InstallListener() {
             @Override
             public void onProgress(int percent) {
-                if (isFinishing() || isDestroyed()) {
+                if (isFinishing() || isDestroyed() || updateDialog == null) {
                     return;
                 }
                 if (percent >= 0) {
-                    tvUpdate.setText(getString(R.string.msg_downloading, percent));
+                    updateDialog.setStatus(getString(R.string.msg_downloading, percent), true);
                 } else {
-                    tvUpdate.setText(R.string.msg_downloading_unknown);
+                    updateDialog.setStatus(getString(R.string.msg_downloading_unknown), true);
                 }
             }
 
             @Override
             public void onInstallerOpened() {
                 downloading = false;
-                if (isFinishing() || isDestroyed()) {
+                if (isFinishing() || isDestroyed() || updateDialog == null) {
                     return;
                 }
-                tvUpdate.setText(R.string.msg_installer_opened);
-                btnUpdateNow.setEnabled(true);
-                btnUpdateLater.setEnabled(true);
+                updateDialog.setStatus(getString(R.string.msg_installer_opened), false);
             }
 
             @Override
             public void onFailed(String message) {
                 downloading = false;
-                if (isFinishing() || isDestroyed()) {
+                if (isFinishing() || isDestroyed() || updateDialog == null) {
                     return;
                 }
-                tvUpdate.setTextColor(GlassKit.color(HomeActivity.this, R.color.asc_text_primary));
-                tvUpdate.setText(message);
-                btnUpdateNow.setEnabled(true);
-                btnUpdateLater.setEnabled(true);
-                btnUpdateNow.requestFocus();
+                updateDialog.setStatus(message, false);
+                updateDialog.focusNow();
             }
         });
     }
@@ -1507,7 +1506,9 @@ public class HomeActivity extends AscActivity {
         if (downloading) {
             return;
         }
-        updateBar.setVisibility(View.GONE);
+        if (updateDialog != null) {
+            updateDialog.dismiss();
+        }
         hero.playButton().requestFocus();
     }
 }

@@ -22,7 +22,7 @@ import android.widget.TextView;
  */
 final class HeroBanner extends FrameLayout {
 
-    static final int HEIGHT = 410; // desenho 1920x1080 (era 296: ficava curtinho)
+    static final int HEIGHT = 500; // desenho 1920x1080: passa um pouco da metade da tela
     /** Altura extra (dp): o banner sobe até o topo da tela, atrás da barra de busca/relógio. */
     static final int TOP_EXTRA_DP = 74;
 
@@ -60,8 +60,8 @@ final class HeroBanner extends FrameLayout {
         // escurecimento à esquerda (cor de fundo do app, de opaca para transparente)
         View scrim = new View(c);
         GradientDrawable sg = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-                new int[]{GlassKit.alpha(c, R.color.asc_bg_scrim_dialog, 0.95f),
-                        GlassKit.alpha(c, R.color.asc_bg_scrim_dialog, 0.70f),
+                new int[]{GlassKit.alpha(c, R.color.asc_bg_scrim_dialog, 0.55f),
+                        GlassKit.alpha(c, R.color.asc_bg_scrim_dialog, 0.30f),
                         GlassKit.alpha(c, R.color.asc_bg_scrim_dialog, 0.0f)});
         scrim.setBackground(sg);
         addView(scrim, new FrameLayout.LayoutParams(
@@ -70,14 +70,14 @@ final class HeroBanner extends FrameLayout {
         // escurecimento no topo: a barra de busca, "Lista atualizada" e o relógio ficam legíveis
         View topScrim = new View(c);
         topScrim.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
-                new int[]{GlassKit.alpha(c, R.color.asc_bg_scrim_dialog, 0.75f),
+                new int[]{GlassKit.alpha(c, R.color.asc_bg_scrim_dialog, 0.55f),
                         GlassKit.alpha(c, R.color.asc_bg_scrim_dialog, 0.0f)}));
         addView(topScrim, new FrameLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, GlassKit.dp(c, 110), Gravity.TOP));
 
         // painel de vidro (esquerda)
         GlassSurface panel = new GlassSurface(c, GlassKit.d(c, 32), false,
-                GlassSurface.STYLE_GLASS, true);
+                GlassSurface.STYLE_SEE_THROUGH, false);
         LinearLayout pc = new LinearLayout(c);
         pc.setOrientation(LinearLayout.VERTICAL);
         pc.setClipChildren(false);
@@ -92,7 +92,7 @@ final class HeroBanner extends FrameLayout {
         chips.setOrientation(LinearLayout.HORIZONTAL);
         chips.setGravity(Gravity.CENTER_VERTICAL);
         TextView chipFeatured = makeChip(c, "EM DESTAQUE");
-        GlassKit.chip(chipFeatured, GlassKit.dp(c, 10), R.color.asc_glass_light, 0.95f,
+        GlassKit.chip(chipFeatured, GlassKit.dp(c, 10), R.color.asc_text_primary, 0.14f,
                 R.color.asc_gold);
         chips.addView(chipFeatured, chipParams(c));
         chipKind = makeChip(c, "");
@@ -112,6 +112,7 @@ final class HeroBanner extends FrameLayout {
         title.setSingleLine(true);
         title.setEllipsize(TextUtils.TruncateAt.END);
         title.setTextColor(GlassKit.color(c, R.color.asc_text_primary));
+        title.setShadowLayer(GlassKit.dp(c, 4), 0, GlassKit.dp(c, 1), 0xCC000000);
         LinearLayout.LayoutParams tl = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         tl.topMargin = GlassKit.dp(c, 6);
@@ -123,7 +124,8 @@ final class HeroBanner extends FrameLayout {
         buttons.setClipToPadding(false);
         buttons.setPadding(GlassKit.dp(c, 4), GlassKit.dp(c, 4), GlassKit.dp(c, 4), GlassKit.dp(c, 4));
         playButton = new GlassSurface.Button(c, "\u25B6  Assistir", true);
-        listButton = new GlassSurface.Button(c, "+ Minha lista", false);
+        listButton = new GlassSurface.Button(c, "+ Minha lista",
+                GlassSurface.STYLE_SEE_THROUGH);
         // largura pelo texto (antes era fixa e o "+ Minha lista" ficava cortado)
         buttons.addView(playButton, new LinearLayout.LayoutParams(
                 LayoutParams.WRAP_CONTENT, GlassKit.dp(c, 40)));
@@ -160,7 +162,9 @@ final class HeroBanner extends FrameLayout {
         t.setTypeface(t.getTypeface(), Typeface.BOLD);
         t.setSingleLine(true);
         t.setPadding(GlassKit.dp(c, 8), GlassKit.dp(c, 3), GlassKit.dp(c, 8), GlassKit.dp(c, 3));
-        GlassKit.chip(t, GlassKit.dp(c, 10), R.color.asc_glass_light, 0.90f, R.color.asc_text_primary);
+        GlassKit.chip(t, GlassKit.dp(c, 10), R.color.asc_text_primary, 0.14f,
+                R.color.asc_text_primary);
+        t.setShadowLayer(GlassKit.dp(c, 3), 0, GlassKit.dp(c, 1), 0xCC000000);
         return t;
     }
 

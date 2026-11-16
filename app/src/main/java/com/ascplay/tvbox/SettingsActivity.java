@@ -28,8 +28,10 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Aba Ajustes no visual "Glass": menu flutuante à esquerda (SideRail), cards de vidro com as
- * opções no meio e um painel de vidro à direita com o conteúdo da opção que está em foco.
+ * Aba Ajustes no visual "Glass": menu flutuante à esquerda (SideRail) e, ao lado, cards de
+ * vidro com as opções em grade (4 por linha, quebra a linha). OK num card abre a opção: as que
+ * têm conteúdo (Listas, Atualização, Sobre...) abrem um painel de vidro com botão Voltar;
+ * Controle parental e Apagar dados abrem a janela de ação direto.
  * Tela montada em código (como a Home), com o fundo da imagem 30% mais escuro (lista).
  *
  * Opções:
@@ -54,6 +56,9 @@ public class SettingsActivity extends AscActivity {
     private static final int ROW_CLEAR_DATA = 5;
     private static final int ROW_COUNT = 6;
 
+    /** Cards por linha na grade de opções. */
+    private static final int OPTION_COLS = 4;
+
     private static final int MATCH = ViewGroup.LayoutParams.MATCH_PARENT;
     private static final int WRAP = ViewGroup.LayoutParams.WRAP_CONTENT;
 
@@ -70,6 +75,10 @@ public class SettingsActivity extends AscActivity {
 
     private SideRail rail;
     private final OptionCard[] cards = new OptionCard[ROW_COUNT];
+    private GlassSurface panel;
+    private ScrollView optScroll;
+    private GlassSurface.Button backButton;
+    private boolean panelOpen = false;
     private TextView panelTitle;
     private LinearLayout panelBody;
     private ScrollView panelScroll;
@@ -101,11 +110,11 @@ public class SettingsActivity extends AscActivity {
         // que atualizar, então o botão Atualizar fica escondido.
         NavBar.bindRail(this, rail, NavBar.SETTINGS);
         rail.setOnRight(() -> {
-            View target = lastOptionFocus != null ? lastOptionFocus : cards[0].view;
+            View target = panelOpen ? backButton
+                    : (lastOptionFocus != null ? lastOptionFocus : cards[0].view);
             target.requestFocus();
         });
 
-        showPanel(ROW_LISTS, true);
         cards[ROW_LISTS].view.requestFocus();
     }
 
@@ -115,6 +124,51 @@ public class SettingsActivity extends AscActivity {
         if (cards[0] != null) {
             refreshSubtitles();
         }
+    }
+
+    /** Voltar: se um painel está aberto, fecha o painel e volta à grade de opções. */
+    @Override
+    public void onBackPressed() {
+        if (panelOpen) {
+            closePanel();
+            return;
+        }
+        super.onBackPressed();
+    }
+
+    private void openPanel(int row) {
+        panelOpen = true;
+        optScroll.setVisibility(View.GONE);
+        panel.setVisibility(View.VISIBLE);
+        showPanel(row, true);
+        if (row == ROW_UPDATE) {
+            if (pendingUpdate == null && updateText == null) {
+                checkOrInstallUpdate();
+            }
+            return; // o botão do painel de atualização pega o foco
+        }
+        View first = firstFocusableInPanel();
+        (first != null ? first : backButton).requestFocus();
+    }
+
+    private void closePanel() {
+        panelOpen = false;
+        panel.setVisibility(View.GONE);
+        optScroll.setVisibility(View.VISIBLE);
+        refreshSubtitles();
+        View back = currentRow >= 0 && currentRow < ROW_COUNT ? cards[currentRow].view
+                : cards[0].view;
+        back.requestFocus();
+    }
+
+    private View firstFocusableInPanel() {
+        for (int i = 0; i < panelBody.getChildCount(); i++) {
+            View c = panelBody.getChildAt(i);
+            if (c.isFocusable()) {
+                return c;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -159,43 +213,57 @@ public class SettingsActivity extends AscActivity {
 
         column.addView(titleRow("Ajustes", 24), new LinearLayout.LayoutParams(MATCH, WRAP));
 
-        LinearLayout body = new LinearLayout(this);
-        body.setOrientation(LinearLayout.HORIZONTAL);
+        FrameLayout body = new FrameLayout(this);
         body.setClipChildren(false);
         LinearLayout.LayoutParams bl = new LinearLayout.LayoutParams(MATCH, 0, 1f);
         bl.topMargin = GlassKit.dp(this, 10);
         column.addView(body, bl);
 
-        // Coluna das opções (cards de vidro)
-        ScrollView optScroll = new ScrollView(this);
+        // Grade de opções (cards de vidro, OPTION_COLS por linha)
+        optScroll = new ScrollView(this);
         optScroll.setFocusable(false);
         optScroll.setVerticalScrollBarEnabled(false);
         optScroll.setClipChildren(false);
         optScroll.setClipToPadding(false);
-        optScroll.setPadding(GlassKit.dp(this, 8), GlassKit.dp(this, 8),
-                GlassKit.dp(this, 8), GlassKit.dp(this, 8));
+        optScroll.setPadding(GlassKit.dp(this, 4), GlassKit.dp(this, 8),
+                GlassKit.dp(this, 4), GlassKit.dp(this, 8));
         LinearLayout optList = new LinearLayout(this);
         optList.setOrientation(LinearLayout.VERTICAL);
         optList.setClipChildren(false);
         optScroll.addView(optList, new FrameLayout.LayoutParams(MATCH, WRAP));
-        body.addView(optScroll, new LinearLayout.LayoutParams(GlassKit.dp(this, 230), MATCH));
+        body.addView(optScroll, new FrameLayout.LayoutParams(MATCH, MATCH));
 
-        cards[ROW_LISTS] = makeOption(optList, ROW_LISTS, "Listas");
-        cards[ROW_PARENTAL] = makeOption(optList, ROW_PARENTAL, "Controle parental");
-        cards[ROW_UPDATE] = makeOption(optList, ROW_UPDATE, "Atualização");
-        cards[ROW_DEVICE] = makeOption(optList, ROW_DEVICE, "Sobre o dispositivo");
-        cards[ROW_APP] = makeOption(optList, ROW_APP, "Sobre o aplicativo");
-        cards[ROW_CLEAR_DATA] = makeOption(optList, ROW_CLEAR_DATA, "Apagar dados");
+        String[] titles = {"Listas", "Controle parental", "Atualização", "Sobre o dispositivo",
+                "Sobre o aplicativo", "Apagar dados"};
+        LinearLayout gridRow = null;
+        for (int i = 0; i < ROW_COUNT; i++) {
+            if (i % OPTION_COLS == 0) {
+                gridRow = new LinearLayout(this);
+                gridRow.setOrientation(LinearLayout.HORIZONTAL);
+                gridRow.setClipChildren(false);
+                optList.addView(gridRow, new LinearLayout.LayoutParams(MATCH, WRAP));
+            }
+            cards[i] = makeOption(gridRow, i, titles[i]);
+        }
+        // espaços vazios para os cards da última linha ficarem do mesmo tamanho
+        for (int i = ROW_COUNT; i % OPTION_COLS != 0; i++) {
+            View gap = new View(this);
+            LinearLayout.LayoutParams gl = new LinearLayout.LayoutParams(
+                    0, GlassKit.dp(this, 1), 1f);
+            gl.leftMargin = GlassKit.dp(this, 8);
+            gl.rightMargin = GlassKit.dp(this, 8);
+            gridRow.addView(gap, gl);
+        }
         refreshSubtitles();
         linkOptionCards();
 
-        // Painel de vidro com o conteúdo
-        GlassSurface panel = new GlassSurface(this, GlassKit.dp(this, 20), false,
+        // Painel de vidro com o conteúdo (aparece por cima da grade, com botão Voltar)
+        panel = new GlassSurface(this, GlassKit.dp(this, 20), false,
                 GlassSurface.STYLE_GLASS, true);
-        LinearLayout.LayoutParams pl = new LinearLayout.LayoutParams(0, MATCH, 1f);
-        pl.leftMargin = GlassKit.dp(this, 10);
+        FrameLayout.LayoutParams pl = new FrameLayout.LayoutParams(MATCH, MATCH);
         pl.topMargin = GlassKit.dp(this, 8);
         pl.bottomMargin = GlassKit.dp(this, 8);
+        panel.setVisibility(View.GONE);
         body.addView(panel, pl);
 
         LinearLayout panelCol = new LinearLayout(this);
@@ -207,6 +275,14 @@ public class SettingsActivity extends AscActivity {
 
         LinearLayout panelHead = titleRow("", 20);
         panelTitle = (TextView) panelHead.getChildAt(1);
+        View headGap = new View(this);
+        panelHead.addView(headGap, new LinearLayout.LayoutParams(0, 1, 1f));
+        backButton = new GlassSurface.Button(this, "\u25C0  Voltar", false);
+        backButton.setOnClickListener(v -> closePanel());
+        backButton.setNextFocusUpId(GlassKit.ensureId(backButton));
+        backButton.setNextFocusRightId(GlassKit.ensureId(backButton));
+        backButton.setNextFocusLeftId(GlassKit.ensureId(rail.settings));
+        panelHead.addView(backButton, new LinearLayout.LayoutParams(WRAP, GlassKit.dp(this, 38)));
         panelCol.addView(panelHead, new LinearLayout.LayoutParams(MATCH, WRAP));
 
         panelScroll = new ScrollView(this);
@@ -257,43 +333,49 @@ public class SettingsActivity extends AscActivity {
 
     private OptionCard makeOption(LinearLayout parent, final int row, String title) {
         OptionCard oc = new OptionCard();
-        GlassSurface s = new GlassSurface(this, GlassKit.dp(this, 16), true,
+        GlassSurface s = new GlassSurface(this, GlassKit.dp(this, 18), true,
                 GlassSurface.STYLE_GLASS, true);
 
         LinearLayout inner = new LinearLayout(this);
         inner.setOrientation(LinearLayout.VERTICAL);
-        inner.setPadding(GlassKit.dp(this, 14), GlassKit.dp(this, 10),
-                GlassKit.dp(this, 14), GlassKit.dp(this, 12));
-        s.addView(inner, new FrameLayout.LayoutParams(MATCH, WRAP));
+        inner.setGravity(Gravity.CENTER);
+        inner.setPadding(GlassKit.dp(this, 12), GlassKit.dp(this, 10),
+                GlassKit.dp(this, 12), GlassKit.dp(this, 12));
+        s.addView(inner, new FrameLayout.LayoutParams(MATCH, MATCH));
 
         TextView t = new TextView(this);
         t.setText(title);
-        t.setTextSize(GlassKit.sp(15));
+        t.setTextSize(GlassKit.sp(18));
         t.setTypeface(t.getTypeface(), Typeface.BOLD);
+        t.setGravity(Gravity.CENTER);
         t.setTextColor(GlassKit.color(this, R.color.asc_text_primary));
-        t.setSingleLine(true);
+        t.setMaxLines(2);
         t.setEllipsize(TextUtils.TruncateAt.END);
         inner.addView(t, new LinearLayout.LayoutParams(MATCH, WRAP));
 
         TextView sub = new TextView(this);
-        sub.setTextSize(GlassKit.sp(12));
+        sub.setTextSize(GlassKit.sp(13));
+        sub.setGravity(Gravity.CENTER);
         sub.setTextColor(GlassKit.color(this, R.color.asc_text_secondary));
         sub.setSingleLine(true);
         sub.setEllipsize(TextUtils.TruncateAt.END);
         LinearLayout.LayoutParams subLp = new LinearLayout.LayoutParams(MATCH, WRAP);
-        subLp.topMargin = GlassKit.dp(this, 2);
+        subLp.topMargin = GlassKit.dp(this, 6);
         inner.addView(sub, subLp);
 
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(MATCH, WRAP);
-        lp.topMargin = GlassKit.dp(this, 4);
-        lp.bottomMargin = GlassKit.dp(this, 4);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                0, GlassKit.dp(this, 110), 1f);
+        lp.leftMargin = GlassKit.dp(this, 8);
+        lp.rightMargin = GlassKit.dp(this, 8);
+        lp.topMargin = GlassKit.dp(this, 8);
+        lp.bottomMargin = GlassKit.dp(this, 8);
         parent.addView(s, lp);
 
         s.setOnClickListener(v -> onRowClick(row));
         GlassKit.focusScale(s, 1.04f, (v, hasFocus) -> {
             if (hasFocus) {
                 lastOptionFocus = v;
-                showPanel(row, false);
+                currentRow = row;
             }
         });
 
@@ -303,19 +385,21 @@ public class SettingsActivity extends AscActivity {
     }
 
     /**
-     * Ordem fixa do foco nas opções: cima/baixo só entre elas (os extremos param) e esquerda
-     * volta ao menu. A direita das opções sem cards no painel não vai a lugar nenhum.
+     * Foco na grade: setas andam entre os cards (OPTION_COLS por linha); os extremos param.
+     * Esquerda na primeira coluna volta ao menu.
      */
     private void linkOptionCards() {
         int railId = GlassKit.ensureId(rail.settings);
         for (int i = 0; i < ROW_COUNT; i++) {
             GlassSurface v = cards[i].view;
-            GlassSurface up = i > 0 ? cards[i - 1].view : v;
-            GlassSurface down = i < ROW_COUNT - 1 ? cards[i + 1].view : v;
+            int col = i % OPTION_COLS;
+            GlassSurface up = i - OPTION_COLS >= 0 ? cards[i - OPTION_COLS].view : v;
+            GlassSurface down = i + OPTION_COLS < ROW_COUNT ? cards[i + OPTION_COLS].view : v;
+            GlassSurface right = col < OPTION_COLS - 1 && i + 1 < ROW_COUNT ? cards[i + 1].view : v;
             v.setNextFocusUpId(GlassKit.ensureId(up));
             v.setNextFocusDownId(GlassKit.ensureId(down));
-            v.setNextFocusLeftId(railId);
-            v.setNextFocusRightId(GlassKit.ensureId(v));
+            v.setNextFocusRightId(GlassKit.ensureId(right));
+            v.setNextFocusLeftId(col > 0 ? GlassKit.ensureId(cards[i - 1].view) : railId);
         }
     }
 
@@ -339,11 +423,6 @@ public class SettingsActivity extends AscActivity {
             return;
         }
         currentRow = row;
-        for (int i = 0; i < ROW_COUNT; i++) {
-            if (cards[i] != null) {
-                cards[i].view.setSelected(i == row);
-            }
-        }
         panelBody.removeAllViews();
         panelScroll.scrollTo(0, 0);
         switch (row) {
@@ -358,6 +437,7 @@ public class SettingsActivity extends AscActivity {
             case ROW_UPDATE:
                 panelTitle.setText("Atualização");
                 setPanelText(updateText != null ? updateText : updateDefaultText(), updateColor);
+                addUpdateButton();
                 break;
             case ROW_DEVICE:
                 panelTitle.setText("Sobre o dispositivo");
@@ -386,6 +466,25 @@ public class SettingsActivity extends AscActivity {
         panelBody.addView(tv, new LinearLayout.LayoutParams(MATCH, WRAP));
     }
 
+    /** Botão do painel de Atualização: procurar de novo ou instalar. */
+    private void addUpdateButton() {
+        String label = checking || downloading ? "Aguarde..."
+                : (pendingUpdate != null ? "Instalar agora" : "Procurar atualização");
+        GlassSurface.Button b = new GlassSurface.Button(this, label, true);
+        b.setOnClickListener(v -> checkOrInstallUpdate());
+        b.setNextFocusUpId(GlassKit.ensureId(backButton));
+        b.setNextFocusDownId(GlassKit.ensureId(b));
+        b.setNextFocusLeftId(GlassKit.ensureId(b));
+        b.setNextFocusRightId(GlassKit.ensureId(b));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(WRAP, GlassKit.dp(this, 42));
+        lp.topMargin = GlassKit.dp(this, 14);
+        panelBody.addView(b, lp);
+        backButton.setNextFocusDownId(GlassKit.ensureId(b));
+        if (panelOpen) {
+            b.requestFocus();
+        }
+    }
+
     private String parentalText() {
         return (ParentalStore.isEnabled(this)
                 ? "O controle parental está ATIVO."
@@ -403,19 +502,14 @@ public class SettingsActivity extends AscActivity {
 
     private void onRowClick(int row) {
         switch (row) {
-            case ROW_LISTS:
-                focusFirstInPanel();
-                break;
             case ROW_PARENTAL:
                 openParentalMenu();
-                break;
-            case ROW_UPDATE:
-                checkOrInstallUpdate();
                 break;
             case ROW_CLEAR_DATA:
                 confirmClearData();
                 break;
             default:
+                openPanel(row); // Listas, Atualização, Sobre o dispositivo, Sobre o aplicativo
                 break;
         }
     }
@@ -470,10 +564,10 @@ public class SettingsActivity extends AscActivity {
                 items.add(c);
             }
         }
-        int listsId = GlassKit.ensureId(cards[ROW_LISTS].view);
+        int listsId = GlassKit.ensureId(backButton);
         for (int i = 0; i < items.size(); i++) {
             View v = items.get(i);
-            View up = i > 0 ? items.get(i - 1) : v;
+            View up = i > 0 ? items.get(i - 1) : backButton;
             View down = i < items.size() - 1 ? items.get(i + 1) : v;
             v.setNextFocusUpId(GlassKit.ensureId(up));
             v.setNextFocusDownId(GlassKit.ensureId(down));
@@ -481,7 +575,7 @@ public class SettingsActivity extends AscActivity {
             v.setNextFocusRightId(GlassKit.ensureId(v));
         }
         if (!items.isEmpty()) {
-            cards[ROW_LISTS].view.setNextFocusRightId(GlassKit.ensureId(items.get(0)));
+            backButton.setNextFocusDownId(GlassKit.ensureId(items.get(0)));
         }
     }
 
@@ -703,8 +797,8 @@ public class SettingsActivity extends AscActivity {
     private void showUpdate(String text, int color) {
         updateText = text;
         updateColor = color;
-        if (currentRow == ROW_UPDATE) {
-            setPanelText(text, color);
+        if (panelOpen && currentRow == ROW_UPDATE) {
+            showPanel(ROW_UPDATE, true);
         }
     }
 
@@ -817,9 +911,7 @@ public class SettingsActivity extends AscActivity {
 
     private void parentalChanged() {
         refreshSubtitles();
-        if (currentRow == ROW_PARENTAL) {
-            showPanel(ROW_PARENTAL, true);
-        }
+        // (o controle parental abre só a janela de ação: nada mais a refazer)
     }
 
     /** Pede a senha nova (4 números). Depois pede para repetir. */

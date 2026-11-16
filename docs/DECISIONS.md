@@ -602,3 +602,9 @@
 - Colunas fixas, iguais em toda TV: ScreenScale.COLS_LIVE (3), COLS_POSTER (4), COLS_EPISODES (15). autoColumns não é mais usado. Para mudar o número de colunas, só mudar essas constantes.
 - Carrossel da Home não girava porque o foco inicial fica no botão Assistir e a troca era pausada com foco no banner. Agora gira a cada 8 s mesmo assim, esperando 3 s se houve tecla apertada.
 
+## 16/11/2026 (3) - Banner mais alto e em vidro, Ajustes em grade, janela de atualização
+- HeroBanner.HEIGHT 410 -> 500 (passa um pouco da metade da tela). Escurecimento da esquerda e do topo mais leve para a arte aparecer.
+- Novo GlassSurface.STYLE_SEE_THROUGH (vidro quase transparente: véu branco 16% -> 6%, borda 30%). Usado na busca, "Lista atualizada", relógio, painel e chips do banner e no botão "+ Minha lista". Textos com sombra para continuarem legíveis. O botão "Assistir" continua azul.
+- Ajustes: opções em grade de cards (SettingsActivity.OPTION_COLS = 4 por linha). OK abre a opção: Listas, Atualização e Sobre... abrem um painel com botão Voltar (tecla Voltar também fecha o painel); Controle parental e Apagar dados abrem a janela de ação direto. Atualização no painel tem botão "Instalar agora" / "Procurar atualização".
+- Atualização ao abrir o app: nova UpdateDialog (mesmo estilo da ExitDialog): "Atualizar agora" / "Depois", mostra o andamento do download na própria janela. A faixa pequena do topo (updateBar) deixou de aparecer.
+

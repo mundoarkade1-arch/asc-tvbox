@@ -32,7 +32,7 @@ final class TopBar extends LinearLayout {
         final int corner = GlassKit.dp(c, 18);
 
         // busca
-        search = new GlassSurface(c, corner, true);
+        search = new GlassSurface(c, corner, true, GlassSurface.STYLE_SEE_THROUGH, false);
         search.setContentDescription("Buscar canais, filmes e séries");
         LinearLayout inner = new LinearLayout(c);
         inner.setOrientation(HORIZONTAL);
@@ -47,7 +47,8 @@ final class TopBar extends LinearLayout {
         hint.setTextSize(GlassKit.sp(13));
         hint.setSingleLine(true);
         hint.setEllipsize(TextUtils.TruncateAt.END);
-        hint.setTextColor(GlassKit.color(c, R.color.asc_text_secondary));
+        hint.setTextColor(GlassKit.color(c, R.color.asc_text_primary));
+        hint.setShadowLayer(GlassKit.dp(c, 3), 0, GlassKit.dp(c, 1), 0xCC000000);
         LinearLayout.LayoutParams hl = new LinearLayout.LayoutParams(
                 LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         hl.leftMargin = GlassKit.dp(c, 8);
@@ -62,7 +63,8 @@ final class TopBar extends LinearLayout {
         addView(spacer, new LinearLayout.LayoutParams(0, 1, 1f));
 
         // chip "Lista atualizada"
-        GlassSurface chip = new GlassSurface(c, corner, false);
+        GlassSurface chip = new GlassSurface(c, corner, false,
+                GlassSurface.STYLE_SEE_THROUGH, false);
         LinearLayout chipRow = new LinearLayout(c);
         chipRow.setOrientation(HORIZONTAL);
         chipRow.setGravity(Gravity.CENTER_VERTICAL);
@@ -79,6 +81,7 @@ final class TopBar extends LinearLayout {
         chipText.setSingleLine(true);
         chipText.setTypeface(chipText.getTypeface(), Typeface.BOLD);
         chipText.setTextColor(GlassKit.color(c, R.color.asc_text_primary));
+        chipText.setShadowLayer(GlassKit.dp(c, 3), 0, GlassKit.dp(c, 1), 0xCC000000);
         chipRow.addView(chipText, new LinearLayout.LayoutParams(
                 LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
         chip.addView(chipRow, new FrameLayout.LayoutParams(
@@ -89,13 +92,15 @@ final class TopBar extends LinearLayout {
         addView(chip, cl);
 
         // relógio 24h
-        GlassSurface clockPill = new GlassSurface(c, corner, false);
+        GlassSurface clockPill = new GlassSurface(c, corner, false,
+                GlassSurface.STYLE_SEE_THROUGH, false);
         TextClock clock = new TextClock(c);
         clock.setFormat24Hour("HH:mm");
         clock.setFormat12Hour("HH:mm");
         clock.setTextSize(GlassKit.sp(14));
         clock.setTypeface(clock.getTypeface(), Typeface.BOLD);
         clock.setTextColor(GlassKit.color(c, R.color.asc_text_primary));
+        clock.setShadowLayer(GlassKit.dp(c, 3), 0, GlassKit.dp(c, 1), 0xCC000000);
         clock.setGravity(Gravity.CENTER);
         clock.setPadding(GlassKit.dp(c, 14), 0, GlassKit.dp(c, 14), 0);
         clockPill.addView(clock, new FrameLayout.LayoutParams(

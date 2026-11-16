@@ -33,6 +33,8 @@ class GlassSurface extends FrameLayout {
     static final int STYLE_FILLED = 1;
     /** Vidro bem transparente (janelas sobre a imagem de fundo, como "Deseja sair?"). */
     static final int STYLE_CLEAR = 2;
+    /** Vidro de verdade: quase transparente, só um leve véu e borda (por cima de imagens). */
+    static final int STYLE_SEE_THROUGH = 3;
 
     private final Fill fill;
 
@@ -58,8 +60,11 @@ class GlassSurface extends FrameLayout {
         private final TextView label;
 
         Button(Context context, String text, boolean filled) {
-            super(context, GlassKit.dp(context, 16), true,
-                    filled ? STYLE_FILLED : STYLE_GLASS, false);
+            this(context, text, filled ? STYLE_FILLED : STYLE_GLASS);
+        }
+
+        Button(Context context, String text, int style) {
+            super(context, GlassKit.dp(context, 16), true, style, false);
             label = new TextView(context);
             label.setText(text);
             label.setTextSize(GlassKit.sp(14));
@@ -110,6 +115,11 @@ class GlassSurface extends FrameLayout {
         private final int clearLo;
         private final int clearFocusHi;
         private final int clearFocusLo;
+        private final int seeHi;
+        private final int seeLo;
+        private final int seeFocusHi;
+        private final int seeFocusLo;
+        private final int borderSee;
 
         private boolean selected = false;
         private boolean focused = false;
@@ -129,6 +139,11 @@ class GlassSurface extends FrameLayout {
             clearLo = GlassKit.alpha(c, R.color.asc_glass_light, 0.34f);
             clearFocusHi = GlassKit.alpha(c, R.color.asc_glass_light, 0.72f);
             clearFocusLo = GlassKit.alpha(c, R.color.asc_glass_light, 0.54f);
+            seeHi = GlassKit.alpha(c, R.color.asc_text_primary, 0.16f);
+            seeLo = GlassKit.alpha(c, R.color.asc_text_primary, 0.06f);
+            seeFocusHi = GlassKit.alpha(c, R.color.asc_text_primary, 0.30f);
+            seeFocusLo = GlassKit.alpha(c, R.color.asc_text_primary, 0.16f);
+            borderSee = GlassKit.alpha(c, R.color.asc_text_primary, 0.30f);
             focusHi = selHi;
             focusLo = selLo;
             // borda de 1dp: branco com ~10% (bem sutil)
@@ -189,6 +204,9 @@ class GlassSurface extends FrameLayout {
             if (style == STYLE_FILLED) {
                 hi = accent;
                 lo = accent;
+            } else if (style == STYLE_SEE_THROUGH) {
+                hi = focused ? seeFocusHi : seeHi;
+                lo = focused ? seeFocusLo : seeLo;
             } else if (style == STYLE_CLEAR) {
                 hi = focused ? clearFocusHi : clearHi;
                 lo = focused ? clearFocusLo : clearLo;
@@ -228,7 +246,8 @@ class GlassSurface extends FrameLayout {
             }
 
             // borda de 1dp
-            borderPaint.setColor(selected ? borderSelected : borderNormal);
+            borderPaint.setColor(selected ? borderSelected
+                    : (style == STYLE_SEE_THROUGH ? borderSee : borderNormal));
             float half = line / 2f;
             rect.set(b.left + half, b.top + half, b.right - half, b.bottom - bottomGap - half);
             canvas.drawRoundRect(rect, Math.max(0f, corner - half), Math.max(0f, corner - half),
