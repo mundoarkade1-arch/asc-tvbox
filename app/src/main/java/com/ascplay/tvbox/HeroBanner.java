@@ -23,6 +23,8 @@ import android.widget.TextView;
 final class HeroBanner extends FrameLayout {
 
     static final int HEIGHT = 410; // desenho 1920x1080 (era 296: ficava curtinho)
+    /** Altura extra (dp): o banner sobe até o topo da tela, atrás da barra de busca/relógio. */
+    static final int TOP_EXTRA_DP = 74;
 
     private final ImageView art;
     private final TextView chipKind;
@@ -36,7 +38,16 @@ final class HeroBanner extends FrameLayout {
         super(c);
         final int corner = GlassKit.d(c, 40);
         setClipChildren(false);
-        GlassKit.roundClipStart(this, corner);
+        // só o canto de baixo à esquerda é arredondado: em cima o banner encosta no topo da
+        // tela e à direita vai até a borda (os outros cantos ficam fora da view)
+        setOutlineProvider(new android.view.ViewOutlineProvider() {
+            @Override
+            public void getOutline(View view, android.graphics.Outline outline) {
+                outline.setRoundRect(-corner, -corner, view.getWidth() + corner,
+                        view.getHeight(), corner);
+            }
+        });
+        setClipToOutline(true);
         setBackground(GlassKit.placeholder(c, corner, true));
 
         // arte ao fundo
@@ -55,6 +66,14 @@ final class HeroBanner extends FrameLayout {
         scrim.setBackground(sg);
         addView(scrim, new FrameLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+
+        // escurecimento no topo: a barra de busca, "Lista atualizada" e o relógio ficam legíveis
+        View topScrim = new View(c);
+        topScrim.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[]{GlassKit.alpha(c, R.color.asc_bg_scrim_dialog, 0.75f),
+                        GlassKit.alpha(c, R.color.asc_bg_scrim_dialog, 0.0f)}));
+        addView(topScrim, new FrameLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, GlassKit.dp(c, 110), Gravity.TOP));
 
         // painel de vidro (esquerda)
         GlassSurface panel = new GlassSurface(c, GlassKit.d(c, 32), false,
@@ -127,9 +146,9 @@ final class HeroBanner extends FrameLayout {
     }
 
     /** rightBleedPx: quanto o banner passa da margem direita da coluna, até a borda da tela. */
-    static LinearLayout.LayoutParams params(Context c, int rightBleedPx) {
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, GlassKit.d(c, HEIGHT));
+    static FrameLayout.LayoutParams params(Context c, int rightBleedPx) {
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, GlassKit.d(c, HEIGHT) + GlassKit.dp(c, TOP_EXTRA_DP));
         lp.rightMargin = -rightBleedPx;
         return lp;
     }

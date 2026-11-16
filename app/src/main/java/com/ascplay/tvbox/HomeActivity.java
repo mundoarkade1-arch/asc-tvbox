@@ -305,7 +305,7 @@ public class HomeActivity extends AscActivity {
         column.setClipChildren(false);
         // sem isto a coluna corta o que passa do padding (banner até a borda e anel de foco)
         column.setClipToPadding(false);
-        column.setPadding(0, GlassKit.dp(this, 20), 0, 0); // margens laterais ficam na barra e no corpo
+        column.setPadding(0, 0, 0, 0); // o banner sobe até o topo; a margem de cima fica na barra
         main.addView(column, new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.MATCH_PARENT, 1f));
 
@@ -325,23 +325,33 @@ public class HomeActivity extends AscActivity {
         body.setClipChildren(false);
         body.setClipToPadding(false);
         // sem folga à direita: as linhas de cards vão até a borda da tela (sem faixa/linha)
-        body.setPadding(GlassKit.dp(this, 16), GlassKit.dp(this, 10), 0, GlassKit.dp(this, 28));
+        body.setPadding(GlassKit.dp(this, 16), 0, 0, GlassKit.dp(this, 28));
         scroll.addView(body, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
 
-        // Barra do topo (busca, "Lista atualizada", relógio): fica PARADA no topo da página e
-        // rola junto com o conteúdo (some ao descer; para pesquisar, sobe até o topo)
-        LinearLayout.LayoutParams tbl = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        tbl.bottomMargin = GlassKit.dp(this, 8);
-        tbl.rightMargin = GlassKit.dp(this, 24);
-        body.addView(topBar, tbl);
-
-        buildUpdateBar(body);
+        // Topo da página, em camadas: fundo azul (atrás de tudo), banner de destaque (sobe até
+        // o topo da tela) e, POR CIMA do banner, a barra de busca, "Lista atualizada" e relógio.
+        // Tudo rola junto com o conteúdo (para pesquisar, sobe até o topo).
+        FrameLayout top = new FrameLayout(this);
+        top.setClipChildren(false);
+        top.setClipToPadding(false);
 
         hero = new HeroBanner(this);
         // O banner vai até a borda direita da tela (sem a faixa de margem da coluna)
-        body.addView(hero, HeroBanner.params(this, 0));
+        top.addView(hero, HeroBanner.params(this, 0));
+
+        FrameLayout.LayoutParams tbl = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.TOP);
+        tbl.topMargin = GlassKit.dp(this, 20); // margem de segurança (overscan)
+        tbl.leftMargin = GlassKit.dp(this, 16);
+        tbl.rightMargin = GlassKit.dp(this, 24);
+        top.addView(topBar, tbl);
+
+        body.addView(top, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+
+        buildUpdateBar(body);
 
         rowContinue = addRow(body, "Continue assistindo");
         rowContinue.setVisibility(View.GONE);

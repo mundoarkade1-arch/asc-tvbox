@@ -162,18 +162,18 @@ public final class CredentialStore {
     }
 
     /**
-     * Texto curto para mostrar na tela: tipo e endereço (só o nome do servidor). NUNCA inclui
-     * senha nem o link inteiro (o link da lista M3U pode ter senha).
+     * Texto curto para mostrar na tela: só "Logado" e o nome de usuário (geralmente um número).
+     * NUNCA inclui servidor, senha nem o link da lista M3U (o link pode ter senha).
      */
     public static String describe(Credentials c) {
         if (c == null) {
             return "";
         }
         if (MODE_M3U.equals(c.mode)) {
-            return "Lista M3U · " + hostOf(c.m3uUrl);
+            return "Logado na lista M3U";
         }
         String u = c.user == null ? "" : c.user.trim();
-        return "Servidor · " + hostOf(c.server) + (u.isEmpty() ? "" : " · " + u);
+        return u.isEmpty() ? "Logado" : "Logado · usuário " + u;
     }
 
     // ---------- Várias listas: peças internas ----------

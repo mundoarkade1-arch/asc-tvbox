@@ -591,3 +591,8 @@
 - Updater.startInstaller agora tenta, em ordem: INSTALL_PACKAGE, VIEW do APK e, por último, a sessão do PackageInstaller (confirmação pelo próprio Android). Abre pela Activity (tela) quando viva; senão pelo Application com NEW_TASK. Reforça a permissão de leitura do APK para os instaladores que respondem. Se a tela de "fontes desconhecidas" não existir no aparelho, segue para o instalador em vez de parar.
 - Sem permissão nova nem dependência nova (REQUEST_INSTALL_PACKAGES já existia).
 
+## 16/11/2026 - Banner até o topo e Ajustes sem dados de login
+- Banner de destaque (HeroBanner) sobe até o topo da tela: ordem das camadas é fundo azul, banner, e por cima a barra de busca / "Lista atualizada" / relógio (TopBar). Motivo: o banner ficava curtinho e mostrava pouco da arte.
+- Só o canto de baixo à esquerda do banner é arredondado; escurecimento no topo mantém a barra legível.
+- Ajustes: cada lista mostra só "Logado · usuário N" (M3U: "Logado na lista M3U"). Nunca servidor, senha nem link. Motivo: expor isso na tela é risco de segurança.
+
