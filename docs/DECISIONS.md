@@ -608,3 +608,6 @@
 - Ajustes: opções em grade de cards (SettingsActivity.OPTION_COLS = 4 por linha). OK abre a opção: Listas, Atualização e Sobre... abrem um painel com botão Voltar (tecla Voltar também fecha o painel); Controle parental e Apagar dados abrem a janela de ação direto. Atualização no painel tem botão "Instalar agora" / "Procurar atualização".
 - Atualização ao abrir o app: nova UpdateDialog (mesmo estilo da ExitDialog): "Atualizar agora" / "Depois", mostra o andamento do download na própria janela. A faixa pequena do topo (updateBar) deixou de aparecer.
 
+## 16/11/2026 (4) - Ajustes: grade pequena + painel ao lado
+- A grade de 4 cards grandes não agradou. Ajustes volta ao desenho com painel de vidro à direita (conteúdo da opção em foco) e as opções viram cards pequenos em 2 colunas x 3 linhas (SettingsActivity.OPTION_COLS = 2, altura 78). OK age como antes (Listas entra no painel, Atualização procura/instala, Parental e Apagar abrem a janela). Sem botão Voltar nem painel por cima.
+
