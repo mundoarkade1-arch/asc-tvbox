@@ -7,6 +7,7 @@ Regras de trabalho: AGENTS.md. Mapa e limites: docs/ARQUIVOS.md. Montagem e vers
 Rodada R5 salva e VERDE no Actions. Nada dela foi visto no TX9 ainda, exceto a primeira versão dos cards (o dono mandou fotos e pediu capa cheia, já feita). O ambiente local não tem Android SDK: nada foi compilado fora do Actions.
 
 ## Já feito
+- 16/11/2026 (2): calibração da escala pela janela real (TV de 50"), colunas fixas (ScreenScale.COLS_*), carrossel da Home girando. Falta testar na TV de 50" e no TX9 e ver o Actions.
 - 16/11/2026: banner da Home até o topo (atrás da barra de busca) e Ajustes mostram só "Logado · usuário". Falta ver no TX9 e conferir o Actions.
 - Responsividade: ScreenScale + AscActivity (escala automática da tela), colunas automáticas nas abas, busca e episódios; ImageLoader com nitidez por densidade. Ver DECISIONS (15/11/2026).
 - Rodadas anteriores (base, M6 a M13c, R4, identidade ASC lite, Home, player 1080p/60, Ajustes com "Apagar dados"): testadas no TX9.

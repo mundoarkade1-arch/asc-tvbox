@@ -596,3 +596,9 @@
 - Só o canto de baixo à esquerda do banner é arredondado; escurecimento no topo mantém a barra legível.
 - Ajustes: cada lista mostra só "Logado · usuário N" (M3U: "Logado na lista M3U"). Nunca servidor, senha nem link. Motivo: expor isso na tela é risco de segurança.
 
+## 16/11/2026 (2) - Mesma tela em TODA TV, colunas fixas, carrossel gira
+- Problema: na TV de 50" o app ficava com tudo maior (3 cards em Filmes/Séries, menu apertado). O sistema não aplicava a escala pedida (ou informava tamanho errado).
+- ScreenScale.calibrate: mede a janela de verdade (decor view), guarda o tamanho (prefs asc_scale) e refaz a tela uma vez se a janela não tiver ~1280x720 dp. targetDpi usa esse tamanho guardado primeiro. ScreenScale.enforce (no onCreate da AscActivity) aplica a densidade direto no Resources se o wrap foi ignorado. Sem laço: uma tentativa por medida.
+- Colunas fixas, iguais em toda TV: ScreenScale.COLS_LIVE (3), COLS_POSTER (4), COLS_EPISODES (15). autoColumns não é mais usado. Para mudar o número de colunas, só mudar essas constantes.
+- Carrossel da Home não girava porque o foco inicial fica no botão Assistir e a troca era pausada com foco no banner. Agora gira a cada 8 s mesmo assim, esperando 3 s se houve tecla apertada.
+

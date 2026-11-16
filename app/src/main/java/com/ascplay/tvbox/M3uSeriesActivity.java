@@ -125,6 +125,7 @@ public class M3uSeriesActivity extends AscActivity {
         btnWatch = findViewById(R.id.btn_watch);
         btnSeason = findViewById(R.id.btn_season);
         gvEpisodes = findViewById(R.id.gv_episodes);
+        gvEpisodes.setNumColumns(ScreenScale.COLS_EPISODES); // igual em toda TV
         statusBox = (View) tvStatus.getParent().getParent();
 
         // As listas antigas ficam escondidas (o layout ainda as tem)

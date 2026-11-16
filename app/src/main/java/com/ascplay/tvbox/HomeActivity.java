@@ -7,6 +7,7 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
@@ -61,6 +62,7 @@ public class HomeActivity extends AscActivity {
     private static final int HERO_CANDIDATES = 8;
     private static final int HERO_MAX = 5;
     private static final long HERO_PERIOD_MS = 8000L;
+    private static final long HERO_IDLE_MS = 3000L; // sem tecla há 3 s para poder trocar
 
     // Ordem de prioridade do foco inicial (menor número = mais alto na tela)
     private static final int RANK_HERO = 0;
@@ -148,13 +150,16 @@ public class HomeActivity extends AscActivity {
     private XtreamApi.Item currentHero;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private boolean resumed = false;
+    private long lastKeyMs = 0L;
 
     private final Runnable heroTick = new Runnable() {
         @Override
         public void run() {
             if (resumed && !isFinishing() && !isDestroyed()) {
-                // Só troca se a pessoa não está com o foco no banner (não rouba nem muda o alvo)
-                if (heroEntries.size() > 1 && !hero.hasFocusInside()) {
+                // Gira sozinho, mesmo com o foco no botão "Assistir" (o foco nunca muda). Só
+                // espera um pouco se a pessoa acabou de apertar uma tecla.
+                if (heroEntries.size() > 1
+                        && SystemClock.uptimeMillis() - lastKeyMs > HERO_IDLE_MS) {
                     showHero((heroIndex + 1) % heroEntries.size());
                 }
                 handler.postDelayed(this, HERO_PERIOD_MS);
@@ -260,6 +265,7 @@ public class HomeActivity extends AscActivity {
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         if (event.getAction() == KeyEvent.ACTION_DOWN) {
+            lastKeyMs = SystemClock.uptimeMillis();
             int code = event.getKeyCode();
             if (code == KeyEvent.KEYCODE_DPAD_UP || code == KeyEvent.KEYCODE_DPAD_DOWN
                     || code == KeyEvent.KEYCODE_DPAD_LEFT || code == KeyEvent.KEYCODE_DPAD_RIGHT) {

@@ -90,9 +90,8 @@ public class SearchActivity extends AscActivity {
         gvItems.setHorizontalSpacing(dp(10));
         gvItems.setVerticalSpacing(dp(10));
         // Colunas automáticas (a busca não tem categorias, então a grade é mais larga).
-        gvItems.setNumColumns(kind == XtreamApi.Kind.LIVE ? 3 : 4);
-        ScreenScale.autoColumns(gvItems, kind == XtreamApi.Kind.LIVE ? 330 : 270,
-                kind == XtreamApi.Kind.LIVE ? 2 : 3, kind == XtreamApi.Kind.LIVE ? 6 : 8);
+        gvItems.setNumColumns(kind == XtreamApi.Kind.LIVE
+                ? ScreenScale.COLS_LIVE : ScreenScale.COLS_POSTER);
         itemAdapter = new ItemAdapter();
         gvItems.setAdapter(itemAdapter);
         gvItems.setOnItemClickListener((parent, view, position, id) -> {
