@@ -75,6 +75,8 @@ public class M3uBrowseActivity extends AscActivity {
     private final List<XtreamApi.Item> items = new ArrayList<>();
     private CategoryAdapter catAdapter;
     private List<String> rawCats = null;
+    /** Ícone de cada linha da lista de categorias (mesma posição de catNames; 0 = sem ícone). */
+    private final List<Integer> catIcons = new ArrayList<>();
     private ItemAdapter itemAdapter;
 
     private String currentGroup = null;
@@ -136,6 +138,7 @@ public class M3uBrowseActivity extends AscActivity {
         NavBar.bind(this, navCurrent(), () -> refreshCurrent());
 
         catNames.add("Todas as categorias");
+        catIcons.add(kind == XtreamApi.Kind.LIVE ? R.drawable.ic_cat_todas : 0);
         catAdapter = new CategoryAdapter();
         itemAdapter = new ItemAdapter();
         lvCategories.setAdapter(catAdapter);
@@ -366,8 +369,25 @@ public class M3uBrowseActivity extends AscActivity {
         while (catNames.size() > 1) {
             catNames.remove(catNames.size() - 1);
         }
+        while (catIcons.size() > 1) {
+            catIcons.remove(catIcons.size() - 1);
+        }
         catNames.addAll(sorted);
+        for (String c : sorted) {
+            catIcons.add(iconFor(c));
+        }
         catAdapter.notifyDataSetChanged();
+    }
+
+    /** Ícone da categoria: vermelho se for adulta (em qualquer aba); nos canais, o do grupo. */
+    private int iconFor(String name) {
+        if (ParentalStore.isAdultCategory(name)) {
+            return CategoryIcons.adult();
+        }
+        if (kind == XtreamApi.Kind.LIVE) {
+            return CategoryIcons.forGroup(CategoryOverrides.of(this, name));
+        }
+        return 0;
     }
 
     /** Segurar o OK numa categoria de canais: escolher a que grupo ela pertence. */
@@ -619,6 +639,11 @@ public class M3uBrowseActivity extends AscActivity {
             String name = catNames.get(position);
             boolean locked = parentalOn && position > 0 && ParentalStore.isAdultCategory(name);
             tv.setText(locked ? LOCK + name : name);
+            int icon = position < catIcons.size() ? catIcons.get(position) : 0;
+            boolean firstAdult = icon == CategoryIcons.adult() && position > 0
+                    && (position - 1 >= catIcons.size()
+                    || catIcons.get(position - 1) != CategoryIcons.adult());
+            CategoryIcons.apply(tv, icon, firstAdult);
             return tv;
         }
     }

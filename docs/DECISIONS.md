@@ -655,3 +655,11 @@
 - Correção manual: segurar o OK numa categoria de canais abre "Mover para". Fica guardada pelo nome (vale em outros servidores). Não altera dado do servidor. Não dá para mover para dentro ou para fora de Adultos (a proteção é do controle parental).
 - Testado fora do aparelho (Java puro): 51 nomes de categoria diferentes, todos no grupo esperado.
 - NÃO feito (de propósito, falta decidir): (a) Adultos oculto por padrão com o controle parental desligado: hoje, desligado, o adulto aparece sem senha; mudar isso altera o que já funciona; (b) títulos de grupo e ícones na lista; (c) juntar categorias de um mesmo grupo numa só; (d) classificar canal por canal; (e) subcategorias.
+
+## 19/11/2026 (7) - Ícones nas categorias
+- Pedido do dono (complemento): ícones intuitivos nas categorias, adulto bem identificado, logos dos canais intactas.
+- Decisão: ícones vetoriais de linha fina (mesma família dos ic_nav_*), não emoji. Motivo: o documento sugere emojis, mas o TX9 é Android 7.1: emoji novo (ex.: ursinho) aparece como quadrado e o desenho muda por aparelho; os vetores ficam iguais em celular, tablet e TV e seguem as cores do menu (dourado/branco no foco). O documento também aceita "Lucide ou equivalentes já utilizados no projeto".
+- Mapa: Início = casa; Esportes = bola; Canais Abertos = TV; Filmes = tira de filme; Séries = tela com play; Documentários = livro aberto; Notícias = jornal; Infantil = rosto sorrindo; Variedades = brilho; Canais 24 Horas = setas circulares; Outros = antena; Internacionais = globo; Adultos = círculo "18" vermelho; Todas as categorias = grade.
+- Adulto: mesmo ícone vermelho em canais, filmes e séries; a primeira categoria adulta fica mais afastada das outras. Cor de destaque só nele.
+- Logos dos canais não foram tocadas; ícone é da categoria, logo é da emissora.
+- Não feito: ícones por gênero em Filmes e Séries (Ação, Comédia...), "Canais 4K", Favoritos e "Reality" como linhas próprias (não existem como categoria no app hoje), e Adultos oculto por padrão (continua pendente da decisão do dono, ver item 6).

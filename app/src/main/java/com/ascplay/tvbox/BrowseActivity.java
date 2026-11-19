@@ -77,6 +77,8 @@ public class BrowseActivity extends AscActivity {
     private final List<XtreamApi.Item> items = new ArrayList<>();
     private CategoryAdapter catAdapter;
     private List<XtreamApi.Category> rawCats = null;
+    /** Ícone de cada linha da lista de categorias (mesma posição de catNames; 0 = sem ícone). */
+    private final List<Integer> catIcons = new ArrayList<>();
     private ItemAdapter itemAdapter;
 
     // Programa de agora de cada canal já consultado nesta categoria (id do canal -> texto).
@@ -146,6 +148,7 @@ public class BrowseActivity extends AscActivity {
 
         catIds.add(null);
         catNames.add("Todas as categorias");
+        catIcons.add(kind == XtreamApi.Kind.LIVE ? R.drawable.ic_cat_todas : 0);
         catAdapter = new CategoryAdapter();
         itemAdapter = new ItemAdapter();
         lvCategories.setAdapter(catAdapter);
@@ -416,15 +419,30 @@ public class BrowseActivity extends AscActivity {
             catIds.remove(catIds.size() - 1);
             catNames.remove(catNames.size() - 1);
         }
+        while (catIcons.size() > 1) {
+            catIcons.remove(catIcons.size() - 1);
+        }
         adultCatIds.clear();
         for (XtreamApi.Category c : sorted) {
             catIds.add(c.id);
             catNames.add(c.name);
+            catIcons.add(iconFor(c.name));
             if (parentalOn && ParentalStore.isAdultCategory(c.name)) {
                 adultCatIds.add(c.id);
             }
         }
         catAdapter.notifyDataSetChanged();
+    }
+
+    /** Ícone da categoria: vermelho se for adulta (em qualquer aba); nos canais, o do grupo. */
+    private int iconFor(String name) {
+        if (ParentalStore.isAdultCategory(name)) {
+            return CategoryIcons.adult();
+        }
+        if (kind == XtreamApi.Kind.LIVE) {
+            return CategoryIcons.forGroup(CategoryOverrides.of(this, name));
+        }
+        return 0;
     }
 
     /** Segurar o OK numa categoria de canais: escolher a que grupo ela pertence. */
@@ -749,6 +767,11 @@ public class BrowseActivity extends AscActivity {
             String id = catIds.get(position);
             boolean locked = parentalOn && id != null && adultCatIds.contains(id);
             tv.setText(locked ? LOCK + catNames.get(position) : catNames.get(position));
+            int icon = position < catIcons.size() ? catIcons.get(position) : 0;
+            boolean firstAdult = icon == CategoryIcons.adult() && position > 0
+                    && (position - 1 >= catIcons.size()
+                    || catIcons.get(position - 1) != CategoryIcons.adult());
+            CategoryIcons.apply(tv, icon, firstAdult);
             return tv;
         }
     }
