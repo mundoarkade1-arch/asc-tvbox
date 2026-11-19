@@ -74,6 +74,7 @@ public class M3uBrowseActivity extends AscActivity {
     private final List<String> catNames = new ArrayList<>();
     private final List<XtreamApi.Item> items = new ArrayList<>();
     private CategoryAdapter catAdapter;
+    private List<String> rawCats = null;
     private ItemAdapter itemAdapter;
 
     private String currentGroup = null;
@@ -142,6 +143,13 @@ public class M3uBrowseActivity extends AscActivity {
 
         // Posição da lista = índice da categoria em catNames
         lvCategories.setOnItemClickListener((parent, view, position, id) -> onCategoryClick(position));
+        lvCategories.setOnItemLongClickListener((parent, view, position, id) -> {
+            if (kind == XtreamApi.Kind.LIVE && position > 0) {
+                askGroup(position);
+                return true;
+            }
+            return false;
+        });
         gvItems.setOnItemClickListener((parent, view, position, id) -> {
             if (position >= 0 && position < items.size()) {
                 openItem(items.get(position));
@@ -310,22 +318,64 @@ public class M3uBrowseActivity extends AscActivity {
                     Toast.LENGTH_SHORT).show();
             return;
         }
-        // Ordem alfabética (ignora maiúsculas e acentos)
+        rawCats = new ArrayList<>(res);
+        rebuildCategories();
+    }
+
+    /**
+     * Monta a lista de categorias (depois da "Todas as categorias"). Canais ao vivo seguem a
+     * ordem padrão dos grupos (CategoryGroups, com as correções feitas à mão); filmes e séries
+     * continuam em ordem alfabética. Adulto sempre por último.
+     */
+    private void rebuildCategories() {
+        if (rawCats == null) {
+            return;
+        }
         final java.text.Collator collator =
                 java.text.Collator.getInstance(new java.util.Locale("pt", "BR"));
         collator.setStrength(java.text.Collator.PRIMARY);
-        List<String> sorted = new ArrayList<>(res);
-        // Categorias adultas vão para o fim da lista, também em ordem alfabética
+        final boolean byGroup = kind == XtreamApi.Kind.LIVE;
+        final java.util.Map<String, Integer> groupOf = new java.util.HashMap<>();
+        if (byGroup) {
+            for (String c : rawCats) {
+                groupOf.put(c, CategoryOverrides.of(this, c).order());
+            }
+        }
+        List<String> sorted = new ArrayList<>(rawCats);
         java.util.Collections.sort(sorted, (a, b) -> {
             boolean adultA = ParentalStore.isAdultCategory(a);
             boolean adultB = ParentalStore.isAdultCategory(b);
             if (adultA != adultB) {
                 return adultA ? 1 : -1;
             }
+            if (byGroup) {
+                int ga = groupOf.get(a);
+                int gb = groupOf.get(b);
+                if (ga != gb) {
+                    return ga < gb ? -1 : 1;
+                }
+                int ra = CategoryOrder.rank(a);
+                int rb = CategoryOrder.rank(b);
+                if (ra != rb) {
+                    return ra < rb ? -1 : 1;
+                }
+            }
             return collator.compare(a, b);
         });
+        // Fica só a "Todas as categorias" (posição 0) e põe as outras na nova ordem
+        while (catNames.size() > 1) {
+            catNames.remove(catNames.size() - 1);
+        }
         catNames.addAll(sorted);
         catAdapter.notifyDataSetChanged();
+    }
+
+    /** Segurar o OK numa categoria de canais: escolher a que grupo ela pertence. */
+    private void askGroup(int position) {
+        if (kind != XtreamApi.Kind.LIVE || position <= 0 || position >= catNames.size()) {
+            return;
+        }
+        CategoryOverrides.showPicker(this, catNames.get(position), this::rebuildCategories);
     }
 
     /** A pessoa escolheu uma categoria (índice em catNames). Se for adulta e trancada, pede a senha. */

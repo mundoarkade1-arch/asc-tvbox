@@ -76,6 +76,7 @@ public class BrowseActivity extends AscActivity {
     private final List<String> catNames = new ArrayList<>();
     private final List<XtreamApi.Item> items = new ArrayList<>();
     private CategoryAdapter catAdapter;
+    private List<XtreamApi.Category> rawCats = null;
     private ItemAdapter itemAdapter;
 
     // Programa de agora de cada canal já consultado nesta categoria (id do canal -> texto).
@@ -152,6 +153,13 @@ public class BrowseActivity extends AscActivity {
 
         // Posição da lista = índice da categoria em catIds/catNames
         lvCategories.setOnItemClickListener((parent, view, position, id) -> onCategoryClick(position));
+        lvCategories.setOnItemLongClickListener((parent, view, position, id) -> {
+            if (kind == XtreamApi.Kind.LIVE && position > 0) {
+                askGroup(position);
+                return true;
+            }
+            return false;
+        });
         gvItems.setOnItemClickListener((parent, view, position, id) -> {
             if (position >= 0 && position < items.size()) {
                 openItem(items.get(position));
@@ -353,34 +361,78 @@ public class BrowseActivity extends AscActivity {
             Toast.makeText(this, ServerMessage.connection(this),
                     Toast.LENGTH_SHORT).show();
         } else {
-            // Ordem alfabética (ignora maiúsculas e acentos)
-            final java.text.Collator collator =
-                    java.text.Collator.getInstance(new java.util.Locale("pt", "BR"));
-            collator.setStrength(java.text.Collator.PRIMARY);
-            List<XtreamApi.Category> sorted = new ArrayList<>(res);
-            // Categorias adultas vão para o fim da lista, também em ordem alfabética
-            java.util.Collections.sort(sorted, (a, b) -> {
-                boolean adultA = ParentalStore.isAdultCategory(a.name);
-                boolean adultB = ParentalStore.isAdultCategory(b.name);
-                if (adultA != adultB) {
-                    return adultA ? 1 : -1;
-                }
-                return collator.compare(a.name, b.name);
-            });
-            for (XtreamApi.Category c : sorted) {
-                catIds.add(c.id);
-                catNames.add(c.name);
-                if (parentalOn && ParentalStore.isAdultCategory(c.name)) {
-                    adultCatIds.add(c.id);
-                }
-            }
-            catAdapter.notifyDataSetChanged();
+            rawCats = new ArrayList<>(res);
+            rebuildCategories();
         }
         catsDone = true;
         // Com o controle parental ligado, a primeira página esperou as categorias chegarem.
         if (items.isEmpty() && !loading && !ended && !loadFailed) {
             loadPage();
         }
+    }
+
+    /**
+     * Monta a lista de categorias (depois da "Todas as categorias"). Canais ao vivo seguem a
+     * ordem padrão dos grupos (CategoryGroups, com as correções feitas à mão); filmes e séries
+     * continuam em ordem alfabética. Adulto sempre por último.
+     */
+    private void rebuildCategories() {
+        if (rawCats == null) {
+            return;
+        }
+        final java.text.Collator collator =
+                java.text.Collator.getInstance(new java.util.Locale("pt", "BR"));
+        collator.setStrength(java.text.Collator.PRIMARY);
+        final boolean byGroup = kind == XtreamApi.Kind.LIVE;
+        final Map<String, Integer> groupOf = new HashMap<>();
+        if (byGroup) {
+            for (XtreamApi.Category c : rawCats) {
+                groupOf.put(c.id, CategoryOverrides.of(this, c.name).order());
+            }
+        }
+        List<XtreamApi.Category> sorted = new ArrayList<>(rawCats);
+        java.util.Collections.sort(sorted, (a, b) -> {
+            boolean adultA = ParentalStore.isAdultCategory(a.name);
+            boolean adultB = ParentalStore.isAdultCategory(b.name);
+            if (adultA != adultB) {
+                return adultA ? 1 : -1;
+            }
+            if (byGroup) {
+                int ga = groupOf.get(a.id);
+                int gb = groupOf.get(b.id);
+                if (ga != gb) {
+                    return ga < gb ? -1 : 1;
+                }
+                int ra = CategoryOrder.rank(a.name);
+                int rb = CategoryOrder.rank(b.name);
+                if (ra != rb) {
+                    return ra < rb ? -1 : 1;
+                }
+            }
+            return collator.compare(a.name, b.name);
+        });
+        // Fica só a "Todas as categorias" (posição 0) e põe as outras na nova ordem
+        while (catIds.size() > 1) {
+            catIds.remove(catIds.size() - 1);
+            catNames.remove(catNames.size() - 1);
+        }
+        adultCatIds.clear();
+        for (XtreamApi.Category c : sorted) {
+            catIds.add(c.id);
+            catNames.add(c.name);
+            if (parentalOn && ParentalStore.isAdultCategory(c.name)) {
+                adultCatIds.add(c.id);
+            }
+        }
+        catAdapter.notifyDataSetChanged();
+    }
+
+    /** Segurar o OK numa categoria de canais: escolher a que grupo ela pertence. */
+    private void askGroup(int position) {
+        if (kind != XtreamApi.Kind.LIVE || position <= 0 || position >= catNames.size()) {
+            return;
+        }
+        CategoryOverrides.showPicker(this, catNames.get(position), this::rebuildCategories);
     }
 
     /** A pessoa escolheu uma categoria (índice em catIds). Se for adulta e trancada, pede a senha. */

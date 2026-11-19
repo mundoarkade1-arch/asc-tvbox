@@ -645,3 +645,13 @@
 - DeviceLink: novo lastServerDown (rede ou 5xx). Erros 4xx (ex.: 401 em fetch_playlist, permissão do Supabase) continuam mostrando o código, porque são do app/configuração.
 - Permissão nova: ACCESS_NETWORK_STATE (comum, sem pergunta ao usuário). Motivo: saber se o aparelho está sem internet. Sem dependência nova.
 - Risco aceito: um endereço de servidor digitado errado também vai mostrar "manutenção". Antes dizia "confira o endereço".
+
+## 19/11/2026 (6) - Organização padrão das categorias de canais (fase 1)
+- Pedido do dono (documento "Sistema universal de organização de categorias"): todos os servidores devem aparecer na mesma ordem e com a mesma lógica, sem depender dos nomes de cada provedor.
+- Análise do que já existia: as categorias vêm do servidor (XtreamApi.categories) ou do group-title da lista M3U (M3uApi.categories); BrowseActivity e M3uBrowseActivity ordenavam em ordem alfabética com adulto por último e cadeado do controle parental; CategoryOrder existia mas nenhuma tela chamava. Aproveitado: CategoryOrder (agora usada dentro do grupo Início), ParentalStore.isAdultCategory (define Adultos) e o cadeado/PIN.
+- Decisão: classificar pelo NOME da categoria (CategoryGroups) e só em CANAIS AO VIVO. Filmes e séries ficam como estavam. Motivo: olhar canal por canal exige carregar a lista inteira; o app é para 1 GB de RAM e pede só o que está na tela.
+- Decisão: não renomear as categorias do servidor nem juntar várias em uma. A lista continua com os nomes originais, só na ordem padrão. Motivo: juntar exigiria mudar a paginação por categoria (risco alto sem teste no aparelho) e o documento pede para não mexer no que funciona.
+- Estrangeiro vence o gênero (ex.: "SPORTS USA" vai para Internacionais), a não ser que o nome tenha marca de Brasil. "24h" só vira Canais 24 Horas se não for esporte nem notícia. "Internacional" sozinho só vale se nenhum gênero for achado ("FUTEBOL INTERNACIONAL" fica em Esportes).
+- Correção manual: segurar o OK numa categoria de canais abre "Mover para". Fica guardada pelo nome (vale em outros servidores). Não altera dado do servidor. Não dá para mover para dentro ou para fora de Adultos (a proteção é do controle parental).
+- Testado fora do aparelho (Java puro): 51 nomes de categoria diferentes, todos no grupo esperado.
+- NÃO feito (de propósito, falta decidir): (a) Adultos oculto por padrão com o controle parental desligado: hoje, desligado, o adulto aparece sem senha; mudar isso altera o que já funciona; (b) títulos de grupo e ícones na lista; (c) juntar categorias de um mesmo grupo numa só; (d) classificar canal por canal; (e) subcategorias.
