@@ -3,10 +3,12 @@ package com.ascplay.tvbox;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
@@ -278,7 +280,13 @@ public final class Updater {
     /**
      * Abre o instalador do Android. Tenta, nesta ordem: (1) INSTALL_PACKAGE, (2) VIEW do APK e
      * (3) a sessão do PackageInstaller (funciona em TV boxes sem a tela de instalação comum).
-     * A tela (Activity) é usada para abrir o instalador quando ainda está viva.
+     *
+     * Duas regras (19/11/2026):
+     *  - O instalador abre SEMPRE em tarefa própria (FLAG_ACTIVITY_NEW_TASK). Antes ele abria
+     *    dentro da tarefa do app; ao terminar de instalar, o Android encerra o app e levava junto
+     *    a tela "Concluído / Abrir", que sumia antes de dar para escolher.
+     *  - Se mais de um app responde ao pedido de instalar, escolhe sozinho o instalador do
+     *    sistema (chooseInstaller) e abre direto, sem a janela "Completar ação usando".
      */
     private static void startInstaller(Context app, Context ui, File apk,
                                        InstallListener listener) {
@@ -306,10 +314,9 @@ public final class Updater {
             tries[1] = new Intent(Intent.ACTION_VIEW);
             tries[1].setDataAndType(uri, "application/vnd.android.package-archive");
             for (Intent i : tries) {
-                i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                if (!live) {
-                    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                }
+                // Sempre em tarefa própria: a tela final do instalador não pode morrer junto
+                // com o app quando o Android o encerrar para trocar a versão.
+                i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
                 try {
                     List<ResolveInfo> targets = app.getPackageManager().queryIntentActivities(
                             i, PackageManager.MATCH_DEFAULT_ONLY);
@@ -317,8 +324,12 @@ public final class Updater {
                         app.grantUriPermission(ri.activityInfo.packageName, uri,
                                 Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     }
+                    ComponentName only = chooseInstaller(app, targets);
+                    if (only != null) {
+                        i.setComponent(only); // sem janela de escolha do instalador
+                    }
                 } catch (Exception ignored) {
-                    // só reforço de permissão; o flag acima já cobre a maioria dos aparelhos
+                    // só reforço; se falhar, abre do jeito comum (o Android pode perguntar)
                 }
                 try {
                     starter.startActivity(i);
@@ -332,6 +343,39 @@ public final class Updater {
         } catch (Exception e) {
             listener.onFailed("Não foi possível abrir o instalador.");
         }
+    }
+
+    /**
+     * Entre os apps que sabem instalar APK, escolhe UM: o instalador do sistema (nome com
+     * "packageinstaller" e app do sistema) vale mais; depois qualquer app do sistema; depois os
+     * outros. Devolve null se não houver nenhum (aí o Android decide).
+     */
+    private static ComponentName chooseInstaller(Context app, List<ResolveInfo> targets) {
+        if (targets == null) {
+            return null;
+        }
+        ResolveInfo best = null;
+        int bestScore = -1;
+        for (ResolveInfo ri : targets) {
+            if (ri == null || ri.activityInfo == null || !ri.activityInfo.exported) {
+                continue;
+            }
+            String pkg = ri.activityInfo.packageName;
+            if (pkg == null || pkg.equals(app.getPackageName())) {
+                continue;
+            }
+            boolean system = ri.activityInfo.applicationInfo != null
+                    && (ri.activityInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
+            int score = (pkg.contains("packageinstaller") ? 2 : 0) + (system ? 1 : 0);
+            if (score > bestScore) {
+                bestScore = score;
+                best = ri;
+            }
+        }
+        if (best == null) {
+            return null;
+        }
+        return new ComponentName(best.activityInfo.packageName, best.activityInfo.name);
     }
 
     /** Última tentativa: instala pela sessão do PackageInstaller (o Android pede a confirmação). */
@@ -444,14 +488,14 @@ public final class Updater {
         throw new IOException("redirecionamentos demais");
     }
 
-    /** Endereço do APK: tem que começar pelo repositório e não pode ter "..", "%2e" nem "\\". */
+    /** Endereço do APK: tem que começar pelo repositório e não pode ter "..", "%2e" nem "". */
     private static boolean isSafeDownloadUrl(String url) {
         if (url == null || !url.startsWith(DOWNLOAD_PREFIX)) {
             return false;
         }
         String lower = url.toLowerCase();
         return !lower.contains("..") && !lower.contains("%2e")
-                && !lower.contains("\\") && !lower.contains("%5c");
+                && !lower.contains("") && !lower.contains("%5c");
     }
 
     private static byte[] readUpTo(InputStream in, int max) throws IOException {

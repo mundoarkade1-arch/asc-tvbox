@@ -1,6 +1,6 @@
 # Status do projeto
 
-Última atualização: 19/11/2026 (limpeza dos textos e das cópias soltas; nenhum código mudou)
+Última atualização: 19/11/2026 (limpeza dos textos e das cópias soltas; depois, correção do instalador da atualização: Updater.java, aguarda Actions e teste no TX9)
 Regras de trabalho: AGENTS.md. Mapa e limites: docs/ARQUIVOS.md. Montagem e versão: docs/ARCHITECTURE.md. Decisões: docs/DECISIONS.md.
 
 ## Fase atual
@@ -15,10 +15,12 @@ Visual Glass da Home, Ajustes, escala automática e janelas novas estão no GitH
 - 16/11: banner até o topo e mais alto, vidro quase transparente, janela "Atualizar agora / Depois", Ajustes em cards pequenos 2x3 com painel ao lado, colunas fixas (3 canais, 4 pôsteres).
 - Minha lista (FavoritesStore) e busca geral (SearchAllActivity) existem na Home.
 - 19/11: textos conferidos com o código; cópias soltas da raiz e 5 arquivos sem uso apagados (ver DECISIONS).
+- 19/11: Updater.java: instalador abre em tarefa própria e sem janela de escolha (ver DECISIONS). Falta Actions e teste no TX9.
 
 ## Falta
 - No TX9 e na TV de 50": ver banner, Ajustes 2x3, janelas, colunas, menu lateral, Minha lista e busca geral.
 - Conferir o Actions depois de cada arquivo salvo ou apagado.
+- No TX9: atualizar o app e ver se (a) não aparece a janela "Completar ação usando" e (b) a tela "Concluído / Abrir" fica na tela até escolher. Se o problema continuar, o dono conta o que viu (pode ser preciso abrir o app sozinho depois de atualizar).
 - Diagnóstico temporário do player (MainActivity: showDiag, diagLabel): remover quando acabar a investigação da imagem pixelada de filmes e séries (hipótese: o arquivo é 720p).
 - Opcional: trocar "PLAY" nas imagens do ícone e do banner.
 

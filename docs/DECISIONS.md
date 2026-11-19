@@ -618,3 +618,9 @@
 - Pendente: a faixa "Jogos do dia" saiu da Home no redesign e a CategoryOrder não é chamada por nenhuma tela. Aguardando o dono dizer se quer de volta.
 - Regra de entrega nova (pedido do dono): trocar ou criar arquivos por ZIP com as pastas certas, arrastado na página principal do GitHub; apagar por links de delete. Está no AGENTS.md.
 
+## 19/11/2026 (2) - Instalador da atualização: tela final some e janela de escolha
+- Problema (visto no TX9): ao atualizar, aparecia a janela para escolher o instalador de pacote; ao terminar, a tela "Concluído / Abrir" fechava sozinha antes de dar para escolher, e o app sumia.
+- Causa provável (não testada no aparelho): o Updater abria o instalador DENTRO da tarefa do app (sem NEW_TASK, quando a tela estava viva). Ao trocar a versão, o Android encerra o app e leva junto a tela final do instalador. E, com mais de um app que instala APK, o Android perguntava qual usar.
+- Decisão: Updater.startInstaller agora abre SEMPRE com FLAG_ACTIVITY_NEW_TASK e escolhe sozinho um instalador (chooseInstaller: o do sistema com nome packageinstaller vale mais; depois qualquer app do sistema; depois os outros) e abre direto por ComponentName. Sem dependência nova, sem permissão nova. A ordem das tentativas (INSTALL_PACKAGE, VIEW, sessão do PackageInstaller) não mudou.
+- Não feito de propósito: abrir o app sozinho depois de atualizar (receptor de MY_PACKAGE_REPLACED). Só se o problema continuar ou o dono pedir.
+
