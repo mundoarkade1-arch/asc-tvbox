@@ -702,22 +702,13 @@
 - O card da capa não recebe foco (só os botões, como antes). Escolha do destaque, giro de 8 s e foco inalterados.
 - Para reverter: voltar o HeroBanner.java anterior (HEIGHT 500, arte ao fundo).
 
-## 19/11/2026 (13) - Banner menor com a capa dentro do card do nome
-- Pedido do dono: banner mais baixo, capa NO MESMO card do nome (não separada, longe), para as linhas de baixo subirem.
-- HeroBanner: HEIGHT 350 -> 280. Um só card de vidro à esquerda: capa 2:3 inteira (FIT_CENTER) + selo EM DESTAQUE, título e botões ao lado. O card solto da direita foi removido.
-
-## 19/11/2026 (14) - Instalador: desfeito o "escolher sozinho"
+## 19/11/2026 (13) - Instalador: desfeito o "escolher sozinho"
 - Problema (visto no TX9 depois de (2)): aviso constante para escolher instalador, depois "um assistente" que parece instalar e não instala.
 - Causa provável: chooseInstaller + setComponent forçava um app que não era o instalador de verdade neste TV box. O "Sempre" marcado pelo dono pode ter gravado esse app como padrão.
 - Decisão: removidos chooseInstaller e setComponent. Updater volta ao jeito de antes de (2): o Android decide; abre pela tela do app quando viva, senão Application com NEW_TASK. Ordem das tentativas igual (INSTALL_PACKAGE, VIEW, sessão).
 - O dono precisa limpar o padrão salvo no TV box (Configurações > Aplicativos > o "assistente" > Limpar padrões).
 
-## 19/11/2026 (15) - Banner sem fundo azul, vidro de verdade, sem "Lista atualizada"
-- Pedido do dono: sem o azul diferente atrás do banner (fica o fundo do app); o card do nome e da capa em vidro; tirar "Lista atualizada" e deixar só o relógio, menor; card um pouco mais alto.
-- HeroBanner: sem fundo, sem recorte e sem escurecimento do topo; painel em STYLE_GLASS; capa 74x111dp; HEIGHT 290 e TOP_EXTRA_DP 62.
-- TopBar: chip removido; relógio 12sp em pílula de 28dp. setUpdatedText e setUpdating continuam, sem efeito, para a Home compilar.
-
-## 19/11/2026 (16) - Banner: card grande atrás da busca, capa alta na frente do nome
-- Pedido do dono (os layouts anteriores ficaram "minúsculos"): um card grande de vidro que começa no topo, ATRÁS da barra de busca e do relógio (que continuam por cima, visíveis); nome, selo e botões à esquerda; logo na frente do nome, a capa 2:3 inteira, mais alta que larga, com a altura do card. Sem fundo azul próprio.
-- HeroBanner: HEIGHT_DP 200 (altura total até as linhas); coluna do texto 320dp; capa 112x168dp; título até 2 linhas (22sp). Substitui (13) e (15) no desenho (continuam valendo: sem "Lista atualizada" e relógio pequeno no TopBar).
+## 19/11/2026 (14) - Banner: tentativas desfeitas
+- O dono testou três desenhos novos do banner (capa dentro do card do nome; sem fundo azul e sem "Lista atualizada"; card grande atrás da busca com capa alta) e não gostou de nenhum. HeroBanner e TopBar voltaram ao desenho do experimento (12): banner 350, card da capa à direita, "Lista atualizada" e relógio na barra.
+- Ideia de outro caminho só se o dono pedir de novo.
 
