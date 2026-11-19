@@ -694,3 +694,10 @@
 - Problema (foto do dono no TX9): faixas AZUIS em cima e embaixo do vídeo. Causa: activity_main.xml e o tema tinham fundo #0A1A33 (azul escuro), embora o texto dissesse que o player era preto.
 - Decisão: fundo #000000 no layout do player, no PlayerView, no shutter e no tema do MainActivity (PlayerTheme em styles.xml, ligado no AndroidManifest.xml). Modo de encaixe explícito: resize_mode="fit" (a imagem inteira, sem cortar; sobra faixa preta quando a proporção é diferente). Não usar zoom/recorte: pedido do dono.
 - Só o player muda. Barra de status do player (#990A1A33) e o resto do app seguem como estavam.
+
+## 19/11/2026 — Banner de destaque mais baixo, com card da capa inteira (EXPERIMENTO: se não ficar bom, reverter)
+- Pedido do dono: ganhar espaço na Home; a capa em tela cheia ficava cortada (CENTER_CROP de capa vertical num banner largo). Pediu um card pequeno com a imagem INTEIRA.
+- Decisão: HeroBanner.HEIGHT 500 → 350 (design 1920x1080), ou seja uns 75dp a menos. Fundo = só o degradê do app. Esquerda: painel de vidro com selo EM DESTAQUE, título e botões (Assistir, + Minha lista). Direita: card 2:3 com a capa em FIT_CENTER (inteira), margem direita 28dp e topo abaixo da barra de busca (não passa por trás dela).
+- Chips Filme/Série, gênero·ano e nota ficaram escondidos (pedido: só "em destaque", nome e botões). showEntry mantém a assinatura (HomeActivity não mudou).
+- O card da capa não recebe foco (só os botões, como antes). Escolha do destaque, giro de 8 s e foco inalterados.
+- Para reverter: voltar o HeroBanner.java anterior (HEIGHT 500, arte ao fundo).

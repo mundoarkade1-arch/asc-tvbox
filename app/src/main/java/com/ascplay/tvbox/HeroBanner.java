@@ -12,21 +12,22 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 /**
- * Banner de destaque (hero): arte grande ao fundo com escurecimento à esquerda, painel de vidro
- * com chips (EM DESTAQUE, tipo, gênero · ano, nota), título grande e botões "Assistir" e
- * "+ Minha lista". Sem card de canal ao vivo (removido a pedido do dono). O banner vai até a
- * borda direita da tela: os cantos da direita são retos e os da esquerda arredondados.
+ * Banner de destaque (hero), mais baixo (350): painel de vidro à esquerda com o selo EM DESTAQUE,
+ * o título e os botões "Assistir" e "+ Minha lista"; à direita, um card 2:3 com a capa INTEIRA
+ * (sem cortar), abaixo da barra de busca. Sem card de canal ao vivo (removido a pedido do dono).
+ * O banner vai até a borda direita da tela: cantos da direita retos e os da esquerda arredondados.
  *
  * Esta classe só desenha. Quem escolhe o destaque, gira a cada 8 s e abre as telas é a
  * HomeActivity. Trocar de destaque NUNCA mexe no foco.
  */
 final class HeroBanner extends FrameLayout {
 
-    static final int HEIGHT = 500; // desenho 1920x1080: passa um pouco da metade da tela
+    static final int HEIGHT = 350; // desenho 1920x1080 (antes 500): banner mais baixo, sobra espaço para as linhas
     /** Altura extra (dp): o banner sobe até o topo da tela, atrás da barra de busca/relógio. */
     static final int TOP_EXTRA_DP = 74;
 
     private final ImageView art;
+    private final FrameLayout posterCard;
     private final TextView chipKind;
     private final TextView chipMeta;
     private final TextView chipRating;
@@ -50,21 +51,16 @@ final class HeroBanner extends FrameLayout {
         setClipToOutline(true);
         setBackground(GlassKit.placeholder(c, corner, true));
 
-        // arte ao fundo
+        // O fundo é só o degradê do app (a capa em tela cheia ficava cortada). A capa aparece
+        // INTEIRA no card da direita (posterCard), mais abaixo.
         art = new ImageView(c);
-        art.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        art.setScaleType(ImageView.ScaleType.FIT_CENTER); // inteira, nunca cortada
         art.setContentDescription(null);
-        addView(art, new FrameLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-
-        // escurecimento à esquerda (cor de fundo do app, de opaca para transparente)
-        View scrim = new View(c);
-        GradientDrawable sg = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-                new int[]{GlassKit.alpha(c, R.color.asc_bg_scrim_dialog, 0.55f),
-                        GlassKit.alpha(c, R.color.asc_bg_scrim_dialog, 0.30f),
-                        GlassKit.alpha(c, R.color.asc_bg_scrim_dialog, 0.0f)});
-        scrim.setBackground(sg);
-        addView(scrim, new FrameLayout.LayoutParams(
+        posterCard = new FrameLayout(c);
+        final int cardCorner = GlassKit.d(c, 24);
+        posterCard.setBackground(GlassKit.placeholder(c, cardCorner));
+        GlassKit.roundClip(posterCard, cardCorner);
+        posterCard.addView(art, new FrameLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
         // escurecimento no topo: a barra de busca, "Lista atualizada" e o relógio ficam legíveis
@@ -144,6 +140,17 @@ final class HeroBanner extends FrameLayout {
         pp.bottomMargin = GlassKit.dp(c, 16);
         addView(panel, pp);
 
+        // Card da capa (2:3), à direita, ABAIXO da barra de busca/relógio (não passa por trás).
+        // Altura = banner visível menos as margens; a largura segue a proporção da capa.
+        int visibleH = GlassKit.d(c, HEIGHT);
+        int cardH = visibleH - GlassKit.dp(c, 8) - GlassKit.dp(c, 16);
+        int cardW = Math.round(cardH * 2f / 3f);
+        FrameLayout.LayoutParams cp = new FrameLayout.LayoutParams(cardW, cardH,
+                Gravity.END | Gravity.BOTTOM);
+        cp.rightMargin = GlassKit.dp(c, 28); // margem de segurança da TV (overscan)
+        cp.bottomMargin = GlassKit.dp(c, 16);
+        addView(posterCard, cp);
+
         showLoading();
     }
 
@@ -202,15 +209,18 @@ final class HeroBanner extends FrameLayout {
         playButton.setFocusable(false);
         listButton.setFocusable(false);
         art.setImageDrawable(null);
+        posterCard.setVisibility(INVISIBLE);
     }
 
     /** Mostra um destaque. Não pede foco. */
     void showEntry(String name, String kindLabel, String meta, String rating, String artUrl,
                    boolean inList) {
         title.setText(name == null ? "" : name);
-        setChip(chipKind, kindLabel);
-        setChip(chipMeta, meta);
-        setChip(chipRating, rating == null || rating.isEmpty() ? "" : "\u2605 " + rating);
+        // Só o selo "EM DESTAQUE" (pedido do dono): sem Filme/Série, gênero·ano e nota.
+        setChip(chipKind, "");
+        setChip(chipMeta, "");
+        setChip(chipRating, "");
+        posterCard.setVisibility(VISIBLE);
         playButton.setVisibility(VISIBLE);
         listButton.setVisibility(VISIBLE);
         playButton.setFocusable(true);
