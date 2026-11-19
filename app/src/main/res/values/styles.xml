@@ -6,6 +6,11 @@
         <item name="android:alertDialogTheme">@style/AscDialog</item>
     </style>
 
+    <!-- Tela do player: fundo PRETO (as faixas em volta do vídeo não podem ser azuis) -->
+    <style name="PlayerTheme" parent="AppTheme">
+        <item name="android:windowBackground">#000000</item>
+    </style>
+
     <!-- Janelas de confirmação (card #12294D com borda sutil) -->
     <style name="AscDialog" parent="android:Theme.Material.Dialog.Alert">
         <item name="android:windowBackground">@drawable/glass_strong</item>

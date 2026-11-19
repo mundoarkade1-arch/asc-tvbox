@@ -689,3 +689,8 @@
 - Itens antigos já guardados que estão nos últimos 3 min deixam de ser mostrados (filtro na hora de exibir).
 - Cards da faixa: PosterCard.params(this, 5), o mesmo tamanho de Filmes e Séries na Home.
 - Clique continua abrindo a página do filme ou da série (onde marca o ponto e tem "Continuar"); não toca direto.
+
+## 19/11/2026 — Player com fundo preto
+- Problema (foto do dono no TX9): faixas AZUIS em cima e embaixo do vídeo. Causa: activity_main.xml e o tema tinham fundo #0A1A33 (azul escuro), embora o texto dissesse que o player era preto.
+- Decisão: fundo #000000 no layout do player, no PlayerView, no shutter e no tema do MainActivity (PlayerTheme em styles.xml, ligado no AndroidManifest.xml). Modo de encaixe explícito: resize_mode="fit" (a imagem inteira, sem cortar; sobra faixa preta quando a proporção é diferente). Não usar zoom/recorte: pedido do dono.
+- Só o player muda. Barra de status do player (#990A1A33) e o resto do app seguem como estavam.

@@ -8,7 +8,7 @@ Outros: res/values/strings.xml, res/xml/file_paths.xml, AndroidManifest.xml, app
 - Nome do app: ASC Play (strings.xml, app_name, e os textos das telas). O nome "ASC lite" foi usado entre 1 e 8/11 e não está mais no código.
 - Cores: res/values/asc_glass.xml (central do visual: fundo #0A1A33, vidro #12294D, destaque #1F6FEB, foco #5AA2FF, texto #FFFFFF e #B8C0CC) e res/values/asc_gold.xml (dourado discreto #C9A55C: anel de foco, títulos, barras de progresso, nota). Mude as cores AQUI.
 - Fundo global: Glass.java desenha drawable-nodpi/asc_bg.jpg atrás de toda tela, com camada escura (Home 0%, telas de lista 30%, vem de asc_glass.xml). Por isso bg_gradient.xml é TRANSPARENTE de propósito e as telas de layout continuam usando @drawable/bg_gradient. GlassBackground faz o mesmo nas telas montadas em código.
-- O PLAYER (activity_main.xml) continua PRETO, de propósito.
+- O PLAYER (activity_main.xml) é PRETO (layout, PlayerView e PlayerTheme no manifest; antes estava azul por engano) e usa resize_mode=fit (não corta).
 - bg_button.xml, bg_card.xml e bg_field.xml mantêm seus estados. bg_poster.xml é o fundo das capas em item_card.xml, item_continue.xml, activity_movie.xml e activity_series.xml.
 - Menu lateral: SideRail (vidro flutuante). bg_nav.xml, bg_nav_tab.xml e o layout_nav.xml de res/layout só servem de ponto de encaixe nas telas de abas (ver "Visual Glass, menu lateral e Home").
 

@@ -3,12 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0A1A33">
+    android:background="#000000">
 
     <androidx.media3.ui.PlayerView
         android:id="@+id/player_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="#000000"
+        app:resize_mode="fit"
+        app:shutter_background_color="#000000"
         app:show_buffering="never"
         app:show_timeout="3000"
         app:show_rewind_button="false"

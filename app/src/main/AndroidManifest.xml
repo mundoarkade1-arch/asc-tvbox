@@ -97,6 +97,7 @@
 
         <activity
             android:name=".MainActivity"
+            android:theme="@style/PlayerTheme"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="false"
             android:screenOrientation="landscape" />

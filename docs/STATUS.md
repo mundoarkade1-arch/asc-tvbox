@@ -20,6 +20,7 @@ Visual Glass da Home, Ajustes, escala automática e janelas novas estão no GitH
 - 19/11 (8): ajuste visual: nome antes do ícone, ícones 26dp vivos, tarja 18+ em Adultos (CategoryLabel). Falta Actions e teste no TX9 (tarja legível, nomes longos, foco).
 - 19/11 (9): grupo Reality Shows (depois de Esportes) e Esportes ampliado (Sportnet, Prime Video, Gold, Kazé, Apple TV, Paramount). Falta Actions e teste no TX9. Dúvida aberta: os nomes citados são de CATEGORIA ou de CANAL?
 - 19/11 (10): Continue assistindo: some se faltam menos de 3 min (PlaybackProgress.isNearEnd) e os cards têm o tamanho de Filmes/Séries. Falta Actions e teste no TX9.
+- 19/11 (11): player com fundo preto e encaixe sem cortar (faixas azuis eram o fundo do layout). Falta Actions e teste no TX9.
 - 19/11 (6): categorias de CANAIS na ordem padrão dos 13 grupos (CategoryGroups, CategoryOverrides) + "Mover para" segurando o OK. Falta Actions e teste no TX9. Pendente de decisão do dono: Adultos oculto por padrão, títulos de grupo, juntar categorias.
 - 19/11 (5): mensagem "Servidor em manutenção" (ServerMessage) no lugar de erro com código para falha de conexão. Falta Actions e teste no TX9 (desligar a internet e ver "Sem internet"; lista com servidor fora do ar e ver "manutenção").
 - 19/11 (4): o APK instalado na TV ainda é o antigo (com o bug) e por isso não acha atualização: instalar o APK novo UMA vez à mão. Updater agora compara o endereço sem diferenciar maiúscula/minúscula.
