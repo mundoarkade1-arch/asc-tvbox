@@ -490,7 +490,9 @@ public final class Updater {
 
     /** Endereço do APK: tem que começar pelo repositório e não pode ter "..", "%2e", "%5c" nem barra invertida. */
     private static boolean isSafeDownloadUrl(String url) {
-        if (url == null || !url.startsWith(DOWNLOAD_PREFIX)) {
+        // Sem diferenciar maiúscula/minúscula: o GitHub guarda o nome do repositório como foi
+        // criado (ex.: "Dono/Repo") e o endereço do version.json pode vir com outra caixa.
+        if (url == null || !url.regionMatches(true, 0, DOWNLOAD_PREFIX, 0, DOWNLOAD_PREFIX.length())) {
             return false;
         }
         String lower = url.toLowerCase();

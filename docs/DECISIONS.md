@@ -631,3 +631,8 @@
 - Apagar dados: passou a apagar também a Minha lista (FavoritesStore.clearAll), como o texto da confirmação já dizia.
 - Sem dependência nova.
 
+## 19/11/2026 (4) - Por que o app instalado não achava a versão nova
+- Causa: o APK que está instalado na TV é de ANTES do conserto de isSafeDownloadUrl (o contains("") sempre verdadeiro). Esse APK antigo recusa todo endereço e nunca vai achar atualização, mesmo com Release nova no GitHub. O código do repositório já está certo; o que está errado é a cópia instalada.
+- Decisão: instalar UMA vez, à mão, o APK novo (baixado em Releases) por cima do antigo. Dali em diante a atualização automática funciona.
+- Updater.isSafeDownloadUrl: o começo do endereço agora é comparado sem diferenciar maiúscula/minúscula (regionMatches). Motivo: evitar recusa silenciosa se o nome do repositório no GitHub tiver outra caixa. As outras conferências (https, "..", %2e, barra invertida, %5c) continuam iguais.
+- Sem dependência nova.
