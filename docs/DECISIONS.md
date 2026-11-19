@@ -712,3 +712,8 @@
 - Decisão: removidos chooseInstaller e setComponent. Updater volta ao jeito de antes de (2): o Android decide; abre pela tela do app quando viva, senão Application com NEW_TASK. Ordem das tentativas igual (INSTALL_PACKAGE, VIEW, sessão).
 - O dono precisa limpar o padrão salvo no TV box (Configurações > Aplicativos > o "assistente" > Limpar padrões).
 
+## 19/11/2026 (15) - Banner sem fundo azul, vidro de verdade, sem "Lista atualizada"
+- Pedido do dono: sem o azul diferente atrás do banner (fica o fundo do app); o card do nome e da capa em vidro; tirar "Lista atualizada" e deixar só o relógio, menor; card um pouco mais alto.
+- HeroBanner: sem fundo, sem recorte e sem escurecimento do topo; painel em STYLE_GLASS; capa 74x111dp; HEIGHT 290 e TOP_EXTRA_DP 62.
+- TopBar: chip removido; relógio 12sp em pílula de 28dp. setUpdatedText e setUpdating continuam, sem efeito, para a Home compilar.
+

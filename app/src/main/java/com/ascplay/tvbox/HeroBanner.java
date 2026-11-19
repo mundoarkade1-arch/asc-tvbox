@@ -12,19 +12,18 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 /**
- * Banner de destaque (hero), bem mais baixo (280): UM card de vidro à esquerda com a capa INTEIRA
+ * Banner de destaque (hero), baixo (290), SEM fundo próprio (aparece o fundo do app): UM card de vidro à esquerda com a capa INTEIRA
  * (2:3, sem cortar) na frente e, ao lado dela, o selo EM DESTAQUE, o título e os botões
  * "Assistir" e "+ Minha lista". Sem card de canal ao vivo (removido a pedido do dono).
- * O banner vai até a borda direita da tela: cantos da direita retos e os da esquerda arredondados.
  *
  * Esta classe só desenha. Quem escolhe o destaque, gira a cada 8 s e abre as telas é a
  * HomeActivity. Trocar de destaque NUNCA mexe no foco.
  */
 final class HeroBanner extends FrameLayout {
 
-    static final int HEIGHT = 280; // desenho 1920x1080 (antes 350 e, antes, 500): banner baixo, as linhas sobem
+    static final int HEIGHT = 290; // desenho 1920x1080 (antes 350 e, antes, 500): banner baixo, as linhas sobem
     /** Altura extra (dp): o banner sobe até o topo da tela, atrás da barra de busca/relógio. */
-    static final int TOP_EXTRA_DP = 74;
+    static final int TOP_EXTRA_DP = 62;
 
     private final ImageView art;
     private final FrameLayout posterCard;
@@ -37,22 +36,11 @@ final class HeroBanner extends FrameLayout {
 
     HeroBanner(Context c) {
         super(c);
-        final int corner = GlassKit.d(c, 40);
         setClipChildren(false);
-        // só o canto de baixo à esquerda é arredondado: em cima o banner encosta no topo da
-        // tela e à direita vai até a borda (os outros cantos ficam fora da view)
-        setOutlineProvider(new android.view.ViewOutlineProvider() {
-            @Override
-            public void getOutline(View view, android.graphics.Outline outline) {
-                outline.setRoundRect(-corner, -corner, view.getWidth() + corner,
-                        view.getHeight(), corner);
-            }
-        });
-        setClipToOutline(true);
-        setBackground(GlassKit.placeholder(c, corner, true));
+        setClipToPadding(false);
+        // Sem fundo próprio: atrás do card fica o fundo do app (pedido do dono).
 
-        // O fundo é só o degradê do app (a capa em tela cheia ficava cortada). A capa aparece
-        // INTEIRA no posterCard, dentro do mesmo card de vidro do nome.
+        // A capa aparece INTEIRA no posterCard, dentro do mesmo card de vidro do nome.
         art = new ImageView(c);
         art.setScaleType(ImageView.ScaleType.FIT_CENTER); // inteira, nunca cortada
         art.setContentDescription(null);
@@ -63,17 +51,9 @@ final class HeroBanner extends FrameLayout {
         posterCard.addView(art, new FrameLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
-        // escurecimento no topo: a barra de busca, "Lista atualizada" e o relógio ficam legíveis
-        View topScrim = new View(c);
-        topScrim.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
-                new int[]{GlassKit.alpha(c, R.color.asc_bg_scrim_dialog, 0.55f),
-                        GlassKit.alpha(c, R.color.asc_bg_scrim_dialog, 0.0f)}));
-        addView(topScrim, new FrameLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, GlassKit.dp(c, 110), Gravity.TOP));
-
         // painel de vidro (esquerda)
         GlassSurface panel = new GlassSurface(c, GlassKit.d(c, 32), false,
-                GlassSurface.STYLE_SEE_THROUGH, false);
+                GlassSurface.STYLE_GLASS, false);
         LinearLayout pc = new LinearLayout(c);
         pc.setOrientation(LinearLayout.VERTICAL);
         pc.setClipChildren(false);
@@ -90,7 +70,7 @@ final class HeroBanner extends FrameLayout {
         panel.addView(inner, new FrameLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         inner.addView(posterCard, new LinearLayout.LayoutParams(
-                GlassKit.dp(c, 66), GlassKit.dp(c, 99)));
+                GlassKit.dp(c, 74), GlassKit.dp(c, 111)));
         pc.setPadding(GlassKit.dp(c, 12), 0, 0, 0);
         inner.addView(pc, new LinearLayout.LayoutParams(
                 0, LayoutParams.WRAP_CONTENT, 1f));
