@@ -681,3 +681,11 @@
 - Ícone de Reality: TV com play (ic_cat_reality.xml).
 - Limite que continua: a regra olha o NOME DA CATEGORIA, não o canal. Se "X Sport" for nome de CANAL dentro de outra categoria, esta mudança não resolve.
 - Efeito colateral aceito: qualquer categoria com a palavra "gold" (ex.: "Gold Movies") vai para Esportes.
+
+## 19/11/2026 — Continue assistindo: regra dos 3 minutos e cards maiores
+- Já existia a faixa "Continue assistindo" na Home, entre o banner e Canais ao vivo (só filme e série; canal ao vivo nunca entra). Não foi recriada.
+- Pedido do dono: se faltam menos de 3 minutos (créditos), o item não aparece; faltando 3 minutos ou mais, aparece. Antes a regra era 95% (num filme de 2 h, saía com 6 min faltando).
+- Decisão: regra única em PlaybackProgress.isNearEnd(pos, dur): vídeo de 6 min ou mais = faltam menos de 3 min; vídeo mais curto = 95%. Usada na MainActivity (salvar/remover), na faixa da Home, na ContinueActivity e no Mark.isFinished (páginas de filme e série: verde/vermelho e "Continuar" ficam coerentes com a faixa).
+- Itens antigos já guardados que estão nos últimos 3 min deixam de ser mostrados (filtro na hora de exibir).
+- Cards da faixa: PosterCard.params(this, 5), o mesmo tamanho de Filmes e Séries na Home.
+- Clique continua abrindo a página do filme ou da série (onde marca o ponto e tem "Continuar"); não toca direto.

@@ -89,6 +89,7 @@ Outros: res/values/strings.xml, res/xml/file_paths.xml, AndroidManifest.xml, app
 - Tudo que entra em activity_browse.xml precisa ser tratado (escondido) na SearchActivity, que reaproveita o layout.
 - Ao abrir canal ao vivo, a tela manda EXTRA_QUEUE = true. A categoria só é mandada quando existe (não mandar nada = todas; evita putExtra com null solto).
 - A seriesKey e o endereço do vídeo (ContinueStore.Saved) podem ter servidor, usuário e senha: nunca mostrar nem registrar em log.
+- ATUALIZAÇÃO 19/11: "terminou" = faltam menos de 3 min (vídeo de 6 min ou mais) ou 95% (vídeo curto), em PlaybackProgress.isNearEnd; antes era só 95%.
 - O clique do "Continue assistindo" existe em DOIS lugares (HomeActivity.openContinue e ContinueActivity.openContinue): mudou um, mude o outro.
 - SeriesActivity e M3uSeriesActivity são gêmeas (mesmo layout, mesma lógica de botões, grade, cores e rótulos): mudou uma, mude a outra.
 - Fundo das telas: o fundo global vem do Glass.java; nos layouts use @drawable/bg_gradient (transparente) e nunca uma cor sólida por cima. O player é preto.

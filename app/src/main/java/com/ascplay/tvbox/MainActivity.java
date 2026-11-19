@@ -76,7 +76,7 @@ import java.util.Locale;
  * primeiro vídeo começar naquele minuto ("Continuar de onde parei").
  *
  * "Continue assistindo" (ContinueStore): junto com o minuto, filme e episódio parados entre
- * 5 segundos e 95% entram na lista (com nome, capa, endereço e minuto). Ao chegar a 95% ou
+ * 5 segundos e faltando 3 minutos ou mais entram na lista (com nome, capa, endereço e minuto). Ao chegar a 95% ou
  * terminar, saem da lista. A capa vem em EXTRA_ICON (opcional).
  *
  * Controles de filme e episódio (o foco não fica preso nos botões):
@@ -1102,15 +1102,15 @@ public class MainActivity extends AscActivity {
     }
 
     /**
-     * Atualiza a lista "Continue assistindo": entra se parou entre 5 segundos e 95%,
-     * sai se passou de 95%. Só filme e episódio. O endereço é guardado criptografado.
+     * Atualiza a lista "Continue assistindo": entra se parou depois de 5 segundos e
+     * ainda faltam 3 minutos ou mais; sai se faltam menos de 3 minutos. Só filme e episódio. O endereço é guardado criptografado.
      */
     private void updateContinue(long position, long duration) {
         if (item == null || streamUrl == null || duration <= 0
                 || (item.kind != XtreamApi.Kind.MOVIE && item.kind != XtreamApi.Kind.EPISODE)) {
             return;
         }
-        if (position * 100L >= duration * 95L) {
+        if (PlaybackProgress.isNearEnd(position, duration)) {
             ContinueStore.remove(this, streamUrl);
             return;
         }

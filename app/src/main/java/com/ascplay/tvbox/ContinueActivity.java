@@ -118,7 +118,7 @@ public class ContinueActivity extends AscActivity {
         shown.clear();
         if (list != null) {
             for (ContinueStore.Saved s : list) {
-                if (s.url.isEmpty()) {
+                if (s.url.isEmpty() || PlaybackProgress.isNearEnd(s.posMs, s.durMs)) {
                     continue;
                 }
                 if (hideAdult && ParentalStore.isAdultName(s.name)) {

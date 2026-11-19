@@ -1101,7 +1101,7 @@ public class HomeActivity extends AscActivity {
         int total = 0;
         if (list != null) {
             for (ContinueStore.Saved s : list) {
-                if (s.url.isEmpty()) {
+                if (s.url.isEmpty() || PlaybackProgress.isNearEnd(s.posMs, s.durMs)) {
                     continue;
                 }
                 if (hideAdult && ParentalStore.isAdultName(s.name)) {
@@ -1131,7 +1131,7 @@ public class HomeActivity extends AscActivity {
                 card.setProgressFraction(Math.max(0f, Math.min(1f, (float) s.posMs / (float) s.durMs)));
             }
             card.setOnClickListener(v -> openContinue(s));
-            rowContinue.rail().addView(card, PosterCard.params(this));
+            rowContinue.rail().addView(card, PosterCard.params(this, 5)); // mesmo tamanho de Filmes e Séries
             if (first == null) {
                 first = card;
             }

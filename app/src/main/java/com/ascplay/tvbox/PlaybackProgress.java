@@ -24,6 +24,24 @@ public final class PlaybackProgress {
     private static final long MIN_SAVE_MS = 5000L;
     // Passou disso do vídeo: conta como "visto"
     private static final double FINISHED_FRACTION = 0.95;
+    /** Faltando menos que isto, conta como terminado (o resto são créditos). */
+    static final long END_REMAINING_MS = 3L * 60L * 1000L;
+    /** Abaixo desta duração total, a regra dos 3 minutos não vale (usa os 95%). */
+    private static final long MIN_DURATION_FOR_END_RULE_MS = 2L * END_REMAINING_MS;
+
+    /**
+     * Já viu o suficiente para tirar do "Continue assistindo"? Vídeo de 6 minutos ou mais:
+     * faltam menos de 3 minutos. Vídeo mais curto: passou de 95%.
+     */
+    static boolean isNearEnd(long positionMs, long durationMs) {
+        if (durationMs <= 0) {
+            return false;
+        }
+        if (durationMs >= MIN_DURATION_FOR_END_RULE_MS) {
+            return durationMs - positionMs < END_REMAINING_MS;
+        }
+        return (double) positionMs / (double) durationMs >= FINISHED_FRACTION;
+    }
 
     private PlaybackProgress() {
     }
@@ -52,7 +70,7 @@ public final class PlaybackProgress {
 
         /** Já viu quase tudo (ou tudo). */
         public boolean isFinished() {
-            return durationMs > 0 && fraction() >= FINISHED_FRACTION;
+            return isNearEnd(positionMs, durationMs);
         }
 
         /** Viu uma parte, mas não terminou: vale o "Continuar de onde parei". */
