@@ -611,3 +611,10 @@
 ## 16/11/2026 (4) - Ajustes: grade pequena + painel ao lado
 - A grade de 4 cards grandes não agradou. Ajustes volta ao desenho com painel de vidro à direita (conteúdo da opção em foco) e as opções viram cards pequenos em 2 colunas x 3 linhas (SettingsActivity.OPTION_COLS = 2, altura 78). OK age como antes (Listas entra no painel, Atualização procura/instala, Parental e Apagar abrem a janela). Sem botão Voltar nem painel por cima.
 
+## 19/11/2026 - Limpeza dos textos e das cópias soltas
+- Conferido no código: o nome do app é ASC Play (strings.xml); o nome ASC lite não está mais lá. Minha lista existe (FavoritesStore, usada pela HomeActivity); o texto antigo dizendo que não havia favoritos estava errado. A Home e a busca geral são montadas em código.
+- Decisão: apagar as cópias antigas da raiz (BrowseActivity.java, HomeActivity.java, activity_browse.xml, activity_home.xml, activity_settings.xml, bg_nav.xml, bg_nav_tab.xml, ic_nav_*.xml, layout_nav.xml, nav_text.xml, STATUS.md, ARQUIVOS.md, DECISIONS.md). Motivo: não entravam no app e confundiam quem lia; a verdade está em app/ e docs/.
+- Decisão: apagar o que não tem uso em res/: layout/activity_home.xml, layout/activity_settings.xml, layout/item_home_channel.xml, layout/item_home_poster.xml e drawable/bg_banner_fade.xml. Motivo: a Home e os Ajustes agora são montados em código; conferido que nenhum id nem referência depende deles.
+- Pendente: a faixa "Jogos do dia" saiu da Home no redesign e a CategoryOrder não é chamada por nenhuma tela. Aguardando o dono dizer se quer de volta.
+- Regra de entrega nova (pedido do dono): trocar ou criar arquivos por ZIP com as pastas certas, arrastado na página principal do GitHub; apagar por links de delete. Está no AGENTS.md.
+

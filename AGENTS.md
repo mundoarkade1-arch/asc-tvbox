@@ -3,7 +3,7 @@
 ## O que ler, nesta ordem
 1. docs/STATUS.md: onde paramos e o que fazer agora.
 2. docs/ARQUIVOS.md: mapa dos arquivos, regras técnicas e limites conhecidos.
-3. docs/DECISIONS.md: decisões e motivos (só se acrescenta no fim).
+3. docs/DECISIONS.md: decisões e motivos (só se acrescenta no fim). Não há mais cópias soltas na raiz: a verdade está em docs/.
 4. docs/TARGET_DEVICES.md: o aparelho de teste.
 5. docs/ARCHITECTURE.md: como o app é montado e como a versão sobe.
 6. docs/ORIGINAL_APP.md: só se precisar do comportamento do app original.
@@ -22,20 +22,21 @@ App de IPTV nativo (Java + ExoPlayer, sem WebView) para TV boxes antigos. Aparel
 - Se algo der errado, não culpe e não complique: diga o que mandar (print ou texto do erro do Actions) e conserte.
 - Não despeje muita coisa de uma vez. Passos curtos. Se ele parecer perdido, repita de outro jeito, mais simples.
 - Ele fala por voz (ditado): se uma frase não fizer sentido, pergunte.
-- Tudo é feito pelo site do GitHub. Nada de terminal, zip ou programas. O APK sai do GitHub Actions e chega ao TX9 pela atualização automática do app.
+- Tudo é feito pelo site do GitHub. Nada de terminal nem programas. O APK sai do GitHub Actions e chega ao TX9 pela atualização automática do app.
 - Nunca peça senha, chave de assinatura ou o link da lista M3U dele (pode ter senha).
 
 ## Links diretos
 - ver ou editar: https://github.com/mundoarkade1-arch/asc-tvbox/edit/main/CAMINHO
 - criar: https://github.com/mundoarkade1-arch/asc-tvbox/new/main/PASTA?filename=NOME
 - Java: app/src/main/java/com/ascplay/tvbox/ ; layouts: app/src/main/res/layout/
+- ENTREGA EM ZIP (desde 19/11/2026, pedido do dono): para trocar ou criar arquivos, mande UM zip com as pastas certas do repositório (os arquivos já dentro de app/..., docs/... etc., sem pasta extra por fora). O dono extrai e arrasta tudo para "Add file > Upload files" na página principal do repositório. Para APAGAR, mande o link de cada arquivo no formato https://github.com/mundoarkade1-arch/asc-tvbox/delete/main/CAMINHO. Arquivo de código no zip continua COMPLETO e partindo do atual (veja a regra abaixo).
 - Mostrar um arquivo: abre o link, Ctrl+A, Ctrl+C, cola na conversa, sem Commit.
 - Salvar: Ctrl+A, Delete, colar o código completo, Commit changes e, na janelinha, Commit changes de novo.
 - Espere "feito" ou "verde" antes do próximo passo. Se ele não disser se o Actions ficou verde, pergunte.
 
 ## Regras de código
 - ANTES de mexer em um arquivo de código, peça o atual e devolva o arquivo COMPLETO. Nunca reescreva de memória. O GitHub é a verdade; o STATUS pode estar errado.
-- Mande UM arquivo por vez, com nome e link claros antes do bloco, e espere o "verde".
+- Mande UM passo por vez (um arquivo, ou um zip pequeno e coeso, dizendo o que tem dentro) e espere o "verde".
 - Se uma colagem for cortada (erro "reached end of file while parsing"), peça só as últimas linhas e mande SÓ o pedaço que falta.
 - Código que deixa de usar algo primeiro, layout depois. Classe nova primeiro, registro no AndroidManifest.xml depois, botões por último.
 - Tela nova do servidor: crie tela irmã para a lista M3U.
