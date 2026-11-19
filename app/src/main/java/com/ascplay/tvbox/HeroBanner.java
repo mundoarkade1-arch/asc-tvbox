@@ -12,18 +12,21 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 /**
- * Banner de destaque (hero), baixo (290), SEM fundo próprio (aparece o fundo do app): UM card de vidro à esquerda com a capa INTEIRA
- * (2:3, sem cortar) na frente e, ao lado dela, o selo EM DESTAQUE, o título e os botões
- * "Assistir" e "+ Minha lista". Sem card de canal ao vivo (removido a pedido do dono).
+ * Banner de destaque (hero): UM card grande de vidro que começa no topo da tela, ATRÁS da barra
+ * de busca e do relógio (eles ficam por cima e continuam visíveis). Dentro do card: à esquerda o
+ * selo EM DESTAQUE, o nome e os botões "Assistir" e "+ Minha lista"; logo na frente do nome, a
+ * capa INTEIRA (2:3, mais alta que larga, sem cortar) com a altura do card. Sem fundo azul
+ * próprio: atrás do card aparece o fundo do app. Sem card de canal ao vivo.
  *
  * Esta classe só desenha. Quem escolhe o destaque, gira a cada 8 s e abre as telas é a
  * HomeActivity. Trocar de destaque NUNCA mexe no foco.
  */
 final class HeroBanner extends FrameLayout {
 
-    static final int HEIGHT = 290; // desenho 1920x1080 (antes 350 e, antes, 500): banner baixo, as linhas sobem
-    /** Altura extra (dp): o banner sobe até o topo da tela, atrás da barra de busca/relógio. */
-    static final int TOP_EXTRA_DP = 62;
+    /** Altura total do banner (dp), do topo da tela até o começo das linhas de baixo. */
+    static final int HEIGHT_DP = 200;
+    private static final int MARGIN_DP = 8;       // folga do card em cima, embaixo
+    private static final int TEXT_WIDTH_DP = 320; // coluna do nome e dos botões
 
     private final ImageView art;
     private final FrameLayout posterCard;
@@ -38,42 +41,39 @@ final class HeroBanner extends FrameLayout {
         super(c);
         setClipChildren(false);
         setClipToPadding(false);
-        // Sem fundo próprio: atrás do card fica o fundo do app (pedido do dono).
 
-        // A capa aparece INTEIRA no posterCard, dentro do mesmo card de vidro do nome.
+        // capa inteira, nunca cortada
         art = new ImageView(c);
-        art.setScaleType(ImageView.ScaleType.FIT_CENTER); // inteira, nunca cortada
+        art.setScaleType(ImageView.ScaleType.FIT_CENTER);
         art.setContentDescription(null);
         posterCard = new FrameLayout(c);
-        final int cardCorner = GlassKit.d(c, 24);
+        final int cardCorner = GlassKit.dp(c, 16);
         posterCard.setBackground(GlassKit.placeholder(c, cardCorner));
         GlassKit.roundClip(posterCard, cardCorner);
         posterCard.addView(art, new FrameLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
-        // painel de vidro (esquerda)
-        GlassSurface panel = new GlassSurface(c, GlassKit.d(c, 32), false,
+        // card grande de vidro (começa no topo, atrás da barra de busca)
+        GlassSurface panel = new GlassSurface(c, GlassKit.dp(c, 22), false,
                 GlassSurface.STYLE_GLASS, false);
-        LinearLayout pc = new LinearLayout(c);
-        pc.setOrientation(LinearLayout.VERTICAL);
-        pc.setClipChildren(false);
-        pc.setClipToPadding(false);
         panel.setClipChildren(false);
         panel.setClipToPadding(false);
-        // linha do card: capa à esquerda, texto e botões ao lado (tudo no MESMO card de vidro)
         LinearLayout inner = new LinearLayout(c);
         inner.setOrientation(LinearLayout.HORIZONTAL);
-        inner.setGravity(Gravity.CENTER_VERTICAL);
         inner.setClipChildren(false);
         inner.setClipToPadding(false);
-        inner.setPadding(GlassKit.dp(c, 9), GlassKit.dp(c, 9), GlassKit.dp(c, 12), GlassKit.dp(c, 9));
         panel.addView(inner, new FrameLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-        inner.addView(posterCard, new LinearLayout.LayoutParams(
-                GlassKit.dp(c, 74), GlassKit.dp(c, 111)));
-        pc.setPadding(GlassKit.dp(c, 12), 0, 0, 0);
+                LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+
+        // coluna do texto: embaixo à esquerda
+        LinearLayout pc = new LinearLayout(c);
+        pc.setOrientation(LinearLayout.VERTICAL);
+        pc.setGravity(Gravity.BOTTOM);
+        pc.setClipChildren(false);
+        pc.setClipToPadding(false);
+        pc.setPadding(GlassKit.dp(c, 16), 0, GlassKit.dp(c, 8), GlassKit.dp(c, 12));
         inner.addView(pc, new LinearLayout.LayoutParams(
-                0, LayoutParams.WRAP_CONTENT, 1f));
+                GlassKit.dp(c, TEXT_WIDTH_DP), LayoutParams.MATCH_PARENT));
 
         LinearLayout chips = new LinearLayout(c);
         chips.setOrientation(LinearLayout.HORIZONTAL);
@@ -94,15 +94,15 @@ final class HeroBanner extends FrameLayout {
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
         title = new TextView(c);
-        title.setTextSize(GlassKit.sp(24));
+        title.setTextSize(GlassKit.sp(22));
         title.setTypeface(title.getTypeface(), Typeface.BOLD);
-        title.setSingleLine(true);
+        title.setMaxLines(2);
         title.setEllipsize(TextUtils.TruncateAt.END);
         title.setTextColor(GlassKit.color(c, R.color.asc_text_primary));
         title.setShadowLayer(GlassKit.dp(c, 4), 0, GlassKit.dp(c, 1), 0xCC000000);
         LinearLayout.LayoutParams tl = new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        tl.topMargin = GlassKit.dp(c, 4);
+        tl.topMargin = GlassKit.dp(c, 6);
         pc.addView(title, tl);
 
         LinearLayout buttons = new LinearLayout(c);
@@ -113,7 +113,6 @@ final class HeroBanner extends FrameLayout {
         playButton = new GlassSurface.Button(c, "\u25B6  Assistir", true);
         listButton = new GlassSurface.Button(c, "+ Minha lista",
                 GlassSurface.STYLE_SEE_THROUGH);
-        // largura pelo texto (antes era fixa e o "+ Minha lista" ficava cortado)
         buttons.addView(playButton, new LinearLayout.LayoutParams(
                 LayoutParams.WRAP_CONTENT, GlassKit.dp(c, 36)));
         LinearLayout.LayoutParams lb = new LinearLayout.LayoutParams(
@@ -122,22 +121,31 @@ final class HeroBanner extends FrameLayout {
         buttons.addView(listButton, lb);
         LinearLayout.LayoutParams bl = new LinearLayout.LayoutParams(
                 LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        bl.topMargin = GlassKit.dp(c, 2);
+        bl.topMargin = GlassKit.dp(c, 4);
         pc.addView(buttons, bl);
 
+        // capa (2:3) na frente do nome, com a altura do card (menos a folga)
+        int cardH = GlassKit.dp(c, HEIGHT_DP - 2 * MARGIN_DP - 2 * MARGIN_DP);
+        int cardW = Math.round(cardH * 2f / 3f);
+        LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(cardW, cardH);
+        cp.topMargin = GlassKit.dp(c, MARGIN_DP);
+        cp.bottomMargin = GlassKit.dp(c, MARGIN_DP);
+        inner.addView(posterCard, cp);
+
         FrameLayout.LayoutParams pp = new FrameLayout.LayoutParams(
-                GlassKit.dp(c, 470), LayoutParams.WRAP_CONTENT, Gravity.START | Gravity.BOTTOM);
-        pp.leftMargin = GlassKit.dp(c, 16);
-        pp.bottomMargin = GlassKit.dp(c, 8);
+                LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+        pp.topMargin = GlassKit.dp(c, MARGIN_DP);
+        pp.bottomMargin = GlassKit.dp(c, MARGIN_DP);
+        pp.rightMargin = GlassKit.dp(c, 24); // margem de segurança da TV (overscan)
         addView(panel, pp);
 
         showLoading();
     }
 
-    /** rightBleedPx: quanto o banner passa da margem direita da coluna, até a borda da tela. */
+    /** Altura fixa; o banner usa a largura toda da coluna. */
     static FrameLayout.LayoutParams params(Context c, int rightBleedPx) {
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, GlassKit.d(c, HEIGHT) + GlassKit.dp(c, TOP_EXTRA_DP));
+                LayoutParams.MATCH_PARENT, GlassKit.dp(c, HEIGHT_DP));
         lp.rightMargin = -rightBleedPx;
         return lp;
     }

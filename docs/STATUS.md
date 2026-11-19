@@ -22,6 +22,7 @@ Visual Glass da Home, Ajustes, escala automática e janelas novas estão no GitH
 - 19/11 (10): Continue assistindo: some se faltam menos de 3 min (PlaybackProgress.isNearEnd) e os cards têm o tamanho de Filmes/Séries. Falta Actions e teste no TX9.
 - 19/11 (11): player com fundo preto e encaixe sem cortar (faixas azuis eram o fundo do layout). Falta Actions e teste no TX9.
 - 19/11 (13): banner mais baixo (280) com a capa inteira dentro do mesmo card do nome. Falta Actions e teste no TX9 (ver se o card cabe e se as linhas subiram).
+- 19/11 (16): banner = card grande de vidro atrás da busca, nome e botões à esquerda, capa alta na frente do nome. Falta Actions e teste no TX9 (ver se a capa e o nome cabem, e se busca e relógio aparecem por cima).
 - 19/11 (15): banner sem fundo azul, card de vidro, "Lista atualizada" removida, relógio menor. Falta Actions e teste no TX9.
 - 19/11 (14): Updater: desfeito o instalador escolhido sozinho (causava aviso e "assistente" que não instala). Falta Actions e teste no TX9; limpar o padrão salvo no TV box (ver DECISIONS).
 - 19/11 (6): categorias de CANAIS na ordem padrão dos 13 grupos (CategoryGroups, CategoryOverrides) + "Mover para" segurando o OK. Falta Actions e teste no TX9. Pendente de decisão do dono: Adultos oculto por padrão, títulos de grupo, juntar categorias.

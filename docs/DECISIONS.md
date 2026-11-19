@@ -717,3 +717,7 @@
 - HeroBanner: sem fundo, sem recorte e sem escurecimento do topo; painel em STYLE_GLASS; capa 74x111dp; HEIGHT 290 e TOP_EXTRA_DP 62.
 - TopBar: chip removido; relógio 12sp em pílula de 28dp. setUpdatedText e setUpdating continuam, sem efeito, para a Home compilar.
 
+## 19/11/2026 (16) - Banner: card grande atrás da busca, capa alta na frente do nome
+- Pedido do dono (os layouts anteriores ficaram "minúsculos"): um card grande de vidro que começa no topo, ATRÁS da barra de busca e do relógio (que continuam por cima, visíveis); nome, selo e botões à esquerda; logo na frente do nome, a capa 2:3 inteira, mais alta que larga, com a altura do card. Sem fundo azul próprio.
+- HeroBanner: HEIGHT_DP 200 (altura total até as linhas); coluna do texto 320dp; capa 112x168dp; título até 2 linhas (22sp). Substitui (13) e (15) no desenho (continuam valendo: sem "Lista atualizada" e relógio pequeno no TopBar).
+
