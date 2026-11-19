@@ -701,3 +701,14 @@
 - Chips Filme/Série, gênero·ano e nota ficaram escondidos (pedido: só "em destaque", nome e botões). showEntry mantém a assinatura (HomeActivity não mudou).
 - O card da capa não recebe foco (só os botões, como antes). Escolha do destaque, giro de 8 s e foco inalterados.
 - Para reverter: voltar o HeroBanner.java anterior (HEIGHT 500, arte ao fundo).
+
+## 19/11/2026 (13) - Banner menor com a capa dentro do card do nome
+- Pedido do dono: banner mais baixo, capa NO MESMO card do nome (não separada, longe), para as linhas de baixo subirem.
+- HeroBanner: HEIGHT 350 -> 280. Um só card de vidro à esquerda: capa 2:3 inteira (FIT_CENTER) + selo EM DESTAQUE, título e botões ao lado. O card solto da direita foi removido.
+
+## 19/11/2026 (14) - Instalador: desfeito o "escolher sozinho"
+- Problema (visto no TX9 depois de (2)): aviso constante para escolher instalador, depois "um assistente" que parece instalar e não instala.
+- Causa provável: chooseInstaller + setComponent forçava um app que não era o instalador de verdade neste TV box. O "Sempre" marcado pelo dono pode ter gravado esse app como padrão.
+- Decisão: removidos chooseInstaller e setComponent. Updater volta ao jeito de antes de (2): o Android decide; abre pela tela do app quando viva, senão Application com NEW_TASK. Ordem das tentativas igual (INSTALL_PACKAGE, VIEW, sessão).
+- O dono precisa limpar o padrão salvo no TV box (Configurações > Aplicativos > o "assistente" > Limpar padrões).
+
