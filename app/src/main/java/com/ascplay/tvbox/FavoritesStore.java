@@ -70,6 +70,11 @@ final class FavoritesStore {
         return out;
     }
 
+    /** Apaga a Minha lista de todos os logins (usado em Ajustes > Apagar dados). */
+    static synchronized void clearAll(Context c) {
+        prefs(c).edit().clear().apply();
+    }
+
     static synchronized boolean contains(Context c, String owner, XtreamApi.Item item) {
         String id = identity(item);
         for (XtreamApi.Item it : list(c, owner)) {

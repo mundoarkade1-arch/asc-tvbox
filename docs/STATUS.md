@@ -16,6 +16,7 @@ Visual Glass da Home, Ajustes, escala automática e janelas novas estão no GitH
 - Minha lista (FavoritesStore) e busca geral (SearchAllActivity) existem na Home.
 - 19/11: textos conferidos com o código; cópias soltas da raiz e 5 arquivos sem uso apagados (ver DECISIONS).
 - 19/11: Updater.java: instalador abre em tarefa própria e sem janela de escolha (ver DECISIONS). Falta Actions e teste no TX9.
+- 19/11 (3): bug do Updater consertado (a atualização nunca era achada); atualização em janela (Home, login e Ajustes); login mostra o motivo do erro do código; Apagar dados limpa a Minha lista. Falta Actions e teste no TX9.
 
 ## Falta
 - No TX9 e na TV de 50": ver banner, Ajustes 2x3, janelas, colunas, menu lateral, Minha lista e busca geral.
@@ -25,7 +26,7 @@ Visual Glass da Home, Ajustes, escala automática e janelas novas estão no GitH
 - Opcional: trocar "PLAY" nas imagens do ícone e do banner.
 
 ## PROBLEMA ABERTO (o mais importante)
-Depois da mudança de segurança no Supabase / ASC Admin (feita FORA deste repositório), a lista enviada à distância (DeviceLink, função fetch_playlist) não entra direto. O dono quer mandar a lista UMA vez à distância e ela ficar salva no aparelho. A tela de login mostra uma frase com o motivo (ex.: "Erro 401 em fetch_playlist"). Esperando a foto dessa tela.
+Depois da mudança de segurança no Supabase / ASC Admin (feita FORA deste repositório), a lista enviada à distância (DeviceLink, função fetch_playlist) não entra direto. O dono quer mandar a lista UMA vez à distância e ela ficar salva no aparelho. A tela de login mostra uma frase com o motivo (ex.: "Erro 401 em fetch_playlist"). Agora a tela mostra o motivo de verdade: esperando a foto dessa tela (depois da atualização).
 
 ## Perguntas abertas
 - Qual é a frase na tela de login? O que mudou na segurança do Supabase (função, permissões, formato de senha)?

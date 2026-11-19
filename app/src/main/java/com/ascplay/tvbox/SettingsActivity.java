@@ -81,6 +81,7 @@ public class SettingsActivity extends AscActivity {
     private View lastOptionFocus;
 
     private PinDialog pinDialog;
+    private UpdateDialog updateDialog;
 
     // Atualização
     private Updater.Info pendingUpdate;
@@ -127,6 +128,10 @@ public class SettingsActivity extends AscActivity {
         if (pinDialog != null) {
             pinDialog.dismiss();
             pinDialog = null;
+        }
+        if (updateDialog != null) {
+            updateDialog.dismiss();
+            updateDialog = null;
         }
     }
 
@@ -387,7 +392,7 @@ public class SettingsActivity extends AscActivity {
                 break;
             default:
                 panelTitle.setText("Apagar dados");
-                setPanelText("Apaga o \"Continue assistindo\" e o que você já assistiu. "
+                setPanelText("Apaga o \"Continue assistindo\", o que você já assistiu e a Minha lista. "
                         + "As listas salvas e o controle parental não são apagados."
                         + "\n\nAperte OK para apagar.", COLOR_NEUTRAL);
                 break;
@@ -651,6 +656,7 @@ public class SettingsActivity extends AscActivity {
         ContinueStore.clear(this);
         PlaybackProgress.clear(this);
         SeriesProgress.clear(this);
+        FavoritesStore.clearAll(this);
         SearchIndex.clear(this);
         ImageLoader.clear();
         EpgCache.clear();
@@ -729,7 +735,7 @@ public class SettingsActivity extends AscActivity {
             return;
         }
         if (pendingUpdate != null) {
-            startUpdate();
+            showUpdateDialog();
             return;
         }
         checking = true;
@@ -743,8 +749,8 @@ public class SettingsActivity extends AscActivity {
                 }
                 pendingUpdate = info;
                 refreshSubtitles();
-                showUpdate(getString(R.string.update_available, info.name)
-                        + "\n\nAperte OK para instalar.", COLOR_OK);
+                showUpdate(getString(R.string.update_available, info.name), COLOR_OK);
+                showUpdateDialog();
             }
 
             @Override
@@ -758,41 +764,50 @@ public class SettingsActivity extends AscActivity {
         });
     }
 
+    /** Janela no meio da tela (igual à "Deseja sair?"): Atualizar agora ou Depois. */
+    private void showUpdateDialog() {
+        if (pendingUpdate == null || (updateDialog != null && updateDialog.isShowing())) {
+            return;
+        }
+        updateDialog = UpdateDialog.show(this, pendingUpdate.name, () -> startUpdate(), () -> {
+        });
+    }
+
     private void startUpdate() {
-        if (downloading || pendingUpdate == null) {
+        if (downloading || pendingUpdate == null || updateDialog == null) {
             return;
         }
         downloading = true;
-        showUpdate(getString(R.string.msg_downloading_unknown), COLOR_WHITE);
+        updateDialog.setStatus(getString(R.string.msg_downloading_unknown), true);
 
         Updater.downloadAndInstallAsync(this, pendingUpdate, new Updater.InstallListener() {
             @Override
             public void onProgress(int percent) {
-                if (isFinishing() || isDestroyed()) {
+                if (isFinishing() || isDestroyed() || updateDialog == null) {
                     return;
                 }
-                if (percent >= 0) {
-                    showUpdate(getString(R.string.msg_downloading, percent), COLOR_WHITE);
-                } else {
-                    showUpdate(getString(R.string.msg_downloading_unknown), COLOR_WHITE);
-                }
+                updateDialog.setStatus(percent >= 0
+                        ? getString(R.string.msg_downloading, percent)
+                        : getString(R.string.msg_downloading_unknown), true);
             }
 
             @Override
             public void onInstallerOpened() {
                 downloading = false;
-                if (isFinishing() || isDestroyed()) {
+                if (isFinishing() || isDestroyed() || updateDialog == null) {
                     return;
                 }
-                showUpdate(getString(R.string.msg_installer_opened), COLOR_WHITE);
+                updateDialog.setStatus(getString(R.string.msg_installer_opened), false);
             }
 
             @Override
             public void onFailed(String message) {
                 downloading = false;
-                if (isFinishing() || isDestroyed()) {
+                if (isFinishing() || isDestroyed() || updateDialog == null) {
                     return;
                 }
+                updateDialog.setStatus(message, false);
+                updateDialog.focusNow();
                 showUpdate(message, COLOR_ERROR);
             }
         });

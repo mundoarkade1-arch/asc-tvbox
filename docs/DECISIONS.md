@@ -624,3 +624,10 @@
 - Decisão: Updater.startInstaller agora abre SEMPRE com FLAG_ACTIVITY_NEW_TASK e escolhe sozinho um instalador (chooseInstaller: o do sistema com nome packageinstaller vale mais; depois qualquer app do sistema; depois os outros) e abre direto por ComponentName. Sem dependência nova, sem permissão nova. A ordem das tentativas (INSTALL_PACKAGE, VIEW, sessão do PackageInstaller) não mudou.
 - Não feito de propósito: abrir o app sozinho depois de atualizar (receptor de MY_PACKAGE_REPLACED). Só se o problema continuar ou o dono pedir.
 
+## 19/11/2026 (3) - Atualização em janela, Updater consertado, motivo do erro no login
+- Bug achado: Updater.isSafeDownloadUrl tinha contains("") (sempre verdadeiro), então a conferência sempre recusava o endereço e o app nunca achava versão nova. Trocado por contains("\\") (barra invertida). Motivo provável: a barra se perdeu na troca de 19/11.
+- Decisão (pedido do dono): Ajustes > Atualização e a tela de login passam a usar a mesma janela UpdateDialog da Home ("Atualizar agora" / "Depois", com andamento do download). A faixa pequena do login não aparece mais (os views continuam no layout, sem uso).
+- Login: a tela agora mostra, abaixo da frase, o motivo guardado em DeviceLink.lastDetail (ex.: "Erro 401 em fetch_playlist"). Nunca tem senha nem link.
+- Apagar dados: passou a apagar também a Minha lista (FavoritesStore.clearAll), como o texto da confirmação já dizia.
+- Sem dependência nova.
+

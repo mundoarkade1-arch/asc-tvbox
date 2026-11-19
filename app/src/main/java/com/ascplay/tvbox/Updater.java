@@ -488,14 +488,14 @@ public final class Updater {
         throw new IOException("redirecionamentos demais");
     }
 
-    /** Endereço do APK: tem que começar pelo repositório e não pode ter "..", "%2e" nem "". */
+    /** Endereço do APK: tem que começar pelo repositório e não pode ter "..", "%2e", "%5c" nem barra invertida. */
     private static boolean isSafeDownloadUrl(String url) {
         if (url == null || !url.startsWith(DOWNLOAD_PREFIX)) {
             return false;
         }
         String lower = url.toLowerCase();
         return !lower.contains("..") && !lower.contains("%2e")
-                && !lower.contains("") && !lower.contains("%5c");
+                && !lower.contains("\\") && !lower.contains("%5c");
     }
 
     private static byte[] readUpTo(InputStream in, int max) throws IOException {

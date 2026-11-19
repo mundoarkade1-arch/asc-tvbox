@@ -213,6 +213,10 @@ public class LoginActivity extends AscActivity {
 
     @Override
     protected void onDestroy() {
+        if (updateDialog != null) {
+            updateDialog.dismiss();
+            updateDialog = null;
+        }
         handler.removeCallbacks(pollTask);
         super.onDestroy();
     }
@@ -270,10 +274,14 @@ public class LoginActivity extends AscActivity {
             return;
         }
         tvLinkStatus.setTextColor(0xFFB8C0CC);
+        String detail = DeviceLink.lastDetail == null ? "" : DeviceLink.lastDetail;
         if (r.state == DeviceLink.State.WAITING) {
-            tvLinkStatus.setText(R.string.link_waiting);
+            tvLinkStatus.setText(detail.isEmpty() ? getString(R.string.link_waiting)
+                    : getString(R.string.link_waiting) + "\n" + detail);
         } else if (r.state == DeviceLink.State.OFFLINE) {
-            tvLinkStatus.setText(R.string.link_offline);
+            // detail diz o motivo real (ex.: "Erro 401 em fetch_playlist"); nunca tem senha
+            tvLinkStatus.setText(detail.isEmpty() ? getString(R.string.link_offline)
+                    : getString(R.string.link_offline) + "\n" + detail);
         } else {
             tvLinkStatus.setText("");
         }
@@ -285,6 +293,8 @@ public class LoginActivity extends AscActivity {
 
     // ---------- Atualização automática ----------
 
+    private UpdateDialog updateDialog;
+
     private void checkForUpdate() {
         Updater.checkAsync(this, new Updater.CheckListener() {
             @Override
@@ -293,10 +303,11 @@ public class LoginActivity extends AscActivity {
                     return;
                 }
                 pendingUpdate = info;
-                tvUpdate.setTextColor(COLOR_OK);
-                tvUpdate.setText(getString(R.string.update_available, info.name));
-                groupUpdate.setVisibility(View.VISIBLE);
-                btnUpdateNow.requestFocus();
+                // Janela no meio da tela (igual à "Deseja sair?"): atualizar agora ou depois
+                if (updateDialog == null || !updateDialog.isShowing()) {
+                    updateDialog = UpdateDialog.show(LoginActivity.this, info.name,
+                            () -> startUpdate(), () -> btnXtream.requestFocus());
+                }
             }
 
             @Override
@@ -307,50 +318,40 @@ public class LoginActivity extends AscActivity {
     }
 
     private void startUpdate() {
-        if (downloading || pendingUpdate == null) {
+        if (downloading || pendingUpdate == null || updateDialog == null) {
             return;
         }
         downloading = true;
-        btnUpdateNow.setEnabled(false);
-        btnUpdateLater.setEnabled(false);
-        tvUpdate.setTextColor(COLOR_NEUTRAL);
-        tvUpdate.setText(R.string.msg_downloading_unknown);
+        updateDialog.setStatus(getString(R.string.msg_downloading_unknown), true);
 
         Updater.downloadAndInstallAsync(this, pendingUpdate, new Updater.InstallListener() {
             @Override
             public void onProgress(int percent) {
-                if (isFinishing() || isDestroyed()) {
+                if (isFinishing() || isDestroyed() || updateDialog == null) {
                     return;
                 }
-                if (percent >= 0) {
-                    tvUpdate.setText(getString(R.string.msg_downloading, percent));
-                } else {
-                    tvUpdate.setText(R.string.msg_downloading_unknown);
-                }
+                updateDialog.setStatus(percent >= 0
+                        ? getString(R.string.msg_downloading, percent)
+                        : getString(R.string.msg_downloading_unknown), true);
             }
 
             @Override
             public void onInstallerOpened() {
                 downloading = false;
-                if (isFinishing() || isDestroyed()) {
+                if (isFinishing() || isDestroyed() || updateDialog == null) {
                     return;
                 }
-                tvUpdate.setText(R.string.msg_installer_opened);
-                btnUpdateNow.setEnabled(true);
-                btnUpdateLater.setEnabled(true);
+                updateDialog.setStatus(getString(R.string.msg_installer_opened), false);
             }
 
             @Override
             public void onFailed(String message) {
                 downloading = false;
-                if (isFinishing() || isDestroyed()) {
+                if (isFinishing() || isDestroyed() || updateDialog == null) {
                     return;
                 }
-                tvUpdate.setTextColor(COLOR_ERROR);
-                tvUpdate.setText(message);
-                btnUpdateNow.setEnabled(true);
-                btnUpdateLater.setEnabled(true);
-                btnUpdateNow.requestFocus();
+                updateDialog.setStatus(message, false);
+                updateDialog.focusNow();
             }
         });
     }
