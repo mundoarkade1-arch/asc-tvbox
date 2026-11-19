@@ -10,18 +10,23 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextClock;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Menu lateral flutuante: cápsula de vidro à esquerda. Logo no topo; Início, Ao vivo, Filmes e
+ * Menu lateral flutuante: cápsula de vidro à esquerda, pequena e minimalista. Relógio 24h e
+ * logo no topo; Início, Ao vivo, Filmes e
  * Séries; e, ancorados embaixo, Atualizar e Ajustes. O item ativo tem vidro mais claro, borda
  * mais forte e brilho na cor primária do app (estado "selecionado" do GlassSurface).
  * Ícones: os que o app já tem (ic_nav_*). Cor do ícone e do texto: res/color/nav_text.xml.
  */
 final class SideRail extends GlassSurface {
+
+    /** Largura do menu (dp). Menor e mais discreto desde 19/11 (era 76). */
+    static final int WIDTH_DP = 60;
 
     final GlassSurface home;
     final GlassSurface live;
@@ -43,9 +48,25 @@ final class SideRail extends GlassSurface {
         col.setGravity(Gravity.CENTER_HORIZONTAL);
         col.setClipChildren(false);
         col.setClipToPadding(false);
-        col.setPadding(GlassKit.dp(c, 5), GlassKit.dp(c, 10), GlassKit.dp(c, 5), GlassKit.dp(c, 12));
+        col.setPadding(GlassKit.dp(c, 4), GlassKit.dp(c, 8), GlassKit.dp(c, 4), GlassKit.dp(c, 10));
         addView(col, new FrameLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+
+        // relógio 24h pequeno, EM CIMA do ícone do app (TextClock: o Android atualiza sozinho)
+        TextClock clock = new TextClock(c);
+        clock.setFormat24Hour("HH:mm");
+        clock.setFormat12Hour("HH:mm");
+        clock.setTextSize(GlassKit.sp(11));
+        clock.setTypeface(clock.getTypeface(), Typeface.BOLD);
+        clock.setSingleLine(true);
+        clock.setGravity(Gravity.CENTER);
+        clock.setTextColor(GlassKit.color(c, R.color.asc_text_primary));
+        clock.setShadowLayer(GlassKit.dp(c, 3), 0, GlassKit.dp(c, 1), 0xCC000000);
+        LinearLayout.LayoutParams cl = new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, GlassKit.dp(c, 16));
+        cl.bottomMargin = GlassKit.dp(c, 4);
+        col.addView(clock, cl);
+        col.clock = clock;
 
         ImageView logo = new ImageView(c);
         logo.setImageResource(R.drawable.brand_icon);
@@ -53,8 +74,8 @@ final class SideRail extends GlassSurface {
         logo.setContentDescription(null);
         GlassKit.roundClip(logo, GlassKit.dp(c, 10));
         LinearLayout.LayoutParams ll = new LinearLayout.LayoutParams(
-                GlassKit.dp(c, 40), GlassKit.dp(c, 40));
-        ll.bottomMargin = GlassKit.dp(c, 10);
+                GlassKit.dp(c, 30), GlassKit.dp(c, 30));
+        ll.bottomMargin = GlassKit.dp(c, 8);
         col.addView(logo, ll);
         col.logo = logo;
 
@@ -83,6 +104,7 @@ final class SideRail extends GlassSurface {
     private static final class FitColumn extends LinearLayout {
 
         View logo;
+        View clock;
 
         FitColumn(Context c) {
             super(c);
@@ -92,6 +114,11 @@ final class SideRail extends GlassSurface {
         protected void onMeasure(int widthSpec, int heightSpec) {
             if (MeasureSpec.getMode(heightSpec) != MeasureSpec.UNSPECIFIED) {
                 int avail = MeasureSpec.getSize(heightSpec) - getPaddingTop() - getPaddingBottom();
+                if (clock != null && clock.getVisibility() != GONE) {
+                    // o relógio tem altura fixa: desconta antes de encolher os itens
+                    LinearLayout.LayoutParams clp = (LinearLayout.LayoutParams) clock.getLayoutParams();
+                    avail -= clp.height + clp.topMargin + clp.bottomMargin;
+                }
                 if (avail > 0) {
                     fit(avail);
                 }
@@ -176,7 +203,7 @@ final class SideRail extends GlassSurface {
     }
 
     private GlassSurface item(Context c, LinearLayout parent, int iconRes, String label) {
-        GlassSurface s = new GlassSurface(c, GlassKit.dp(c, 16), true);
+        GlassSurface s = new GlassSurface(c, GlassKit.dp(c, 12), true);
         s.setContentDescription(label);
 
         LinearLayout inner = new LinearLayout(c);
@@ -190,11 +217,11 @@ final class SideRail extends GlassSurface {
         icon.setImageResource(iconRes);
         icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
         icon.setDuplicateParentStateEnabled(true);
-        inner.addView(icon, new LinearLayout.LayoutParams(GlassKit.dp(c, 26), GlassKit.dp(c, 26)));
+        inner.addView(icon, new LinearLayout.LayoutParams(GlassKit.dp(c, 18), GlassKit.dp(c, 18)));
 
         TextView t = new TextView(c);
         t.setText(label);
-        t.setTextSize(GlassKit.sp(12));
+        t.setTextSize(GlassKit.sp(9));
         t.setSingleLine(true);
         t.setEllipsize(TextUtils.TruncateAt.END);
         t.setGravity(Gravity.CENTER);
@@ -207,9 +234,9 @@ final class SideRail extends GlassSurface {
         inner.addView(t, tl);
 
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, GlassKit.dp(c, 54));
-        lp.topMargin = GlassKit.dp(c, 3);
-        lp.bottomMargin = GlassKit.dp(c, 3);
+                LayoutParams.MATCH_PARENT, GlassKit.dp(c, 42));
+        lp.topMargin = GlassKit.dp(c, 2);
+        lp.bottomMargin = GlassKit.dp(c, 2);
         parent.addView(s, lp);
 
         GlassKit.focusScale(s, 1.06f, null);

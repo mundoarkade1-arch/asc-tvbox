@@ -152,7 +152,7 @@ public class SettingsActivity extends AscActivity {
         rail.home.setSelected(false);
         rail.settings.setSelected(true);
         rail.hideRefresh();
-        LinearLayout.LayoutParams rl = new LinearLayout.LayoutParams(GlassKit.dp(this, 76), MATCH);
+        LinearLayout.LayoutParams rl = new LinearLayout.LayoutParams(GlassKit.dp(this, SideRail.WIDTH_DP), MATCH);
         rl.leftMargin = GlassKit.dp(this, 16);
         rl.topMargin = GlassKit.dp(this, 16);
         rl.bottomMargin = GlassKit.dp(this, 16);

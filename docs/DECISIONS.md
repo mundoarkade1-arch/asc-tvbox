@@ -725,3 +725,8 @@
 - Decisão: Updater.checkAsync tenta até 4 vezes (esperas 0, 5, 15 e 30 s) antes de desistir; Updater.lastCheckFailed() diz se foi falha. Conexão sem cache (setUseCaches(false) e Cache-Control: no-cache). HomeActivity confere de novo ao voltar (onResume) se passaram 15 min e não há janela nem download. Ajustes mostra "Não consegui verificar agora. Confira a internet e tente de novo." em falha e "Você já está na versão mais nova." quando não há versão nova.
 - Não mexido: version.json e o fluxo de publicação (apk.yml). Se mesmo assim falhar, ver no Actions se o Release foi publicado (precisa dos Secrets da chave).
 
+## 19/11/2026 (17) - Relógio no menu lateral e menu menor
+- Pedido do dono: o relógio na barra de cima ficou feio e sem destaque; colocá-lo em cima do ícone do app, no menu lateral, e deixar o menu menor e minimalista (ícones e textos menores).
+- SideRail: TextClock 24h (11sp) acima do logo; largura 60dp (SideRail.WIDTH_DP, usada por HomeActivity, NavBar e SettingsActivity; era 76); itens 42dp (era 54); ícones 18dp (era 26); nomes 9sp (era 12); logo 30dp. A FitColumn desconta a altura do relógio antes de encolher os itens.
+- TopBar: só a busca; o relógio saiu de lá.
+

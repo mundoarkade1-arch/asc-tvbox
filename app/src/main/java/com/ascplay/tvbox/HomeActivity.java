@@ -313,7 +313,7 @@ public class HomeActivity extends AscActivity {
         // Menu lateral flutuante: 32px das bordas no desenho = 16dp
         rail = new SideRail(this);
         LinearLayout.LayoutParams rl = new LinearLayout.LayoutParams(
-                GlassKit.dp(this, 76), LinearLayout.LayoutParams.MATCH_PARENT);
+                GlassKit.dp(this, SideRail.WIDTH_DP), LinearLayout.LayoutParams.MATCH_PARENT);
         rl.leftMargin = GlassKit.dp(this, 16);
         rl.topMargin = GlassKit.dp(this, 16);
         rl.bottomMargin = GlassKit.dp(this, 16);

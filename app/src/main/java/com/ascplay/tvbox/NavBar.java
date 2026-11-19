@@ -45,7 +45,7 @@ final class NavBar {
 
         SideRail rail = new SideRail(activity);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                GlassKit.dp(activity, 76), LinearLayout.LayoutParams.MATCH_PARENT);
+                GlassKit.dp(activity, SideRail.WIDTH_DP), LinearLayout.LayoutParams.MATCH_PARENT);
         lp.leftMargin = GlassKit.dp(activity, 16);
         lp.topMargin = GlassKit.dp(activity, 16);
         lp.bottomMargin = GlassKit.dp(activity, 16);

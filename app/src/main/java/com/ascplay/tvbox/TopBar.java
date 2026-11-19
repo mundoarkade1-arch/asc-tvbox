@@ -12,8 +12,8 @@ import android.widget.TextClock;
 import android.widget.TextView;
 
 /**
- * Barra superior (compacta): campo de busca em pílula de vidro e relógio 24h pequeno em pílula
- * de vidro (TextClock: o próprio Android atualiza a cada minuto). Sem o aviso "Lista atualizada".
+ * Barra superior (compacta): só o campo de busca em pílula de vidro. O relógio foi para o menu
+ * lateral (SideRail), em cima do ícone do app. Sem o aviso "Lista atualizada".
  */
 final class TopBar extends LinearLayout {
 
@@ -58,22 +58,6 @@ final class TopBar extends LinearLayout {
         // espaço
         android.view.View spacer = new android.view.View(c);
         addView(spacer, new LinearLayout.LayoutParams(0, 1, 1f));
-
-        // relógio 24h
-        GlassSurface clockPill = new GlassSurface(c, corner, false,
-                GlassSurface.STYLE_SEE_THROUGH, false);
-        TextClock clock = new TextClock(c);
-        clock.setFormat24Hour("HH:mm");
-        clock.setFormat12Hour("HH:mm");
-        clock.setTextSize(GlassKit.sp(12));
-        clock.setTypeface(clock.getTypeface(), Typeface.BOLD);
-        clock.setTextColor(GlassKit.color(c, R.color.asc_text_primary));
-        clock.setShadowLayer(GlassKit.dp(c, 3), 0, GlassKit.dp(c, 1), 0xCC000000);
-        clock.setGravity(Gravity.CENTER);
-        clock.setPadding(GlassKit.dp(c, 10), 0, GlassKit.dp(c, 10), 0);
-        clockPill.addView(clock, new FrameLayout.LayoutParams(
-                LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT));
-        addView(clockPill, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, h));
 
     }
 
