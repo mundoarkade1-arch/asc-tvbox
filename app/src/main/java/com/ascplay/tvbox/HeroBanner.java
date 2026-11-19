@@ -12,20 +12,28 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 /**
- * Banner de destaque (hero), mais baixo (350): painel de vidro à esquerda com o selo EM DESTAQUE,
- * o título e os botões "Assistir" e "+ Minha lista"; à direita, um card 2:3 com a capa INTEIRA
- * (sem cortar), abaixo da barra de busca. Sem card de canal ao vivo (removido a pedido do dono).
- * O banner vai até a borda direita da tela: cantos da direita retos e os da esquerda arredondados.
+ * Banner de destaque (hero) no estilo "imagem grande de fundo": a imagem larga (backdrop) do
+ * filme ou da série ocupa o banner todo, com um escurecimento à esquerda para o texto ler bem;
+ * à esquerda ficam o selo EM DESTAQUE, o nome e os botões "Assistir" e "+ Minha lista"; à direita,
+ * a capa 2:3 INTEIRA em destaque; embaixo à esquerda, as bolinhas do carrossel (qual destaque
+ * está passando). Se o servidor não mandar a imagem larga, o fundo é o degradê do app.
+ *
+ * O banner sobe até o topo da tela, atrás da barra de busca e do relógio (que ficam por cima),
+ * e vai até a borda direita: cantos da direita retos e os da esquerda arredondados.
  *
  * Esta classe só desenha. Quem escolhe o destaque, gira a cada 8 s e abre as telas é a
  * HomeActivity. Trocar de destaque NUNCA mexe no foco.
  */
 final class HeroBanner extends FrameLayout {
 
-    static final int HEIGHT = 350; // desenho 1920x1080 (antes 500): banner mais baixo, sobra espaço para as linhas
-    /** Altura extra (dp): o banner sobe até o topo da tela, atrás da barra de busca/relógio. */
-    static final int TOP_EXTRA_DP = 74;
+    /** Altura total (dp), do topo da tela até o começo das linhas de baixo. */
+    static final int HEIGHT_DP = 232;
+    /** Espaço de cima ocupado pela barra de busca e pelo relógio (a capa começa abaixo dele). */
+    private static final int TOP_BAR_DP = 58;
+    private static final int POSTER_BOTTOM_DP = 14;
+    private static final int MAX_DOTS = 8;
 
+    private final ImageView backdrop;
     private final ImageView art;
     private final FrameLayout posterCard;
     private final TextView chipKind;
@@ -34,6 +42,7 @@ final class HeroBanner extends FrameLayout {
     private final TextView title;
     private final GlassSurface.Button playButton;
     private final GlassSurface.Button listButton;
+    private final LinearLayout dots;
 
     HeroBanner(Context c) {
         super(c);
@@ -51,38 +60,38 @@ final class HeroBanner extends FrameLayout {
         setClipToOutline(true);
         setBackground(GlassKit.placeholder(c, corner, true));
 
-        // O fundo é só o degradê do app (a capa em tela cheia ficava cortada). A capa aparece
-        // INTEIRA no card da direita (posterCard), mais abaixo.
-        art = new ImageView(c);
-        art.setScaleType(ImageView.ScaleType.FIT_CENTER); // inteira, nunca cortada
-        art.setContentDescription(null);
-        posterCard = new FrameLayout(c);
-        final int cardCorner = GlassKit.d(c, 24);
-        posterCard.setBackground(GlassKit.placeholder(c, cardCorner));
-        GlassKit.roundClip(posterCard, cardCorner);
-        posterCard.addView(art, new FrameLayout.LayoutParams(
+        // imagem larga de fundo (cortada para preencher; é só ambiente, a capa aparece inteira)
+        backdrop = new ImageView(c);
+        backdrop.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        backdrop.setContentDescription(null);
+        addView(backdrop, new FrameLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
-        // escurecimento no topo: a barra de busca, "Lista atualizada" e o relógio ficam legíveis
+        // escurecimento: esquerda (texto) e embaixo
+        int dark = R.color.asc_bg_scrim_dialog;
+        View sideScrim = new View(c);
+        sideScrim.setBackground(new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{GlassKit.alpha(c, dark, 0.92f), GlassKit.alpha(c, dark, 0.62f),
+                        GlassKit.alpha(c, dark, 0.08f)}));
+        addView(sideScrim, new FrameLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+        View bottomScrim = new View(c);
+        bottomScrim.setBackground(new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP,
+                new int[]{GlassKit.alpha(c, dark, 0.7f), GlassKit.alpha(c, dark, 0.0f)}));
+        addView(bottomScrim, new FrameLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, GlassKit.dp(c, 90), Gravity.BOTTOM));
+        // escurecimento no topo: a barra de busca e o relógio ficam legíveis
         View topScrim = new View(c);
         topScrim.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
-                new int[]{GlassKit.alpha(c, R.color.asc_bg_scrim_dialog, 0.55f),
-                        GlassKit.alpha(c, R.color.asc_bg_scrim_dialog, 0.0f)}));
+                new int[]{GlassKit.alpha(c, dark, 0.6f), GlassKit.alpha(c, dark, 0.0f)}));
         addView(topScrim, new FrameLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, GlassKit.dp(c, 110), Gravity.TOP));
+                LayoutParams.MATCH_PARENT, GlassKit.dp(c, 90), Gravity.TOP));
 
-        // painel de vidro (esquerda)
-        GlassSurface panel = new GlassSurface(c, GlassKit.d(c, 32), false,
-                GlassSurface.STYLE_SEE_THROUGH, false);
+        // coluna do texto (esquerda, embaixo)
         LinearLayout pc = new LinearLayout(c);
         pc.setOrientation(LinearLayout.VERTICAL);
         pc.setClipChildren(false);
         pc.setClipToPadding(false);
-        panel.setClipChildren(false);
-        panel.setClipToPadding(false);
-        pc.setPadding(GlassKit.dp(c, 14), GlassKit.dp(c, 10), GlassKit.dp(c, 14), GlassKit.dp(c, 14));
-        panel.addView(pc, new FrameLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
         LinearLayout chips = new LinearLayout(c);
         chips.setOrientation(LinearLayout.HORIZONTAL);
@@ -103,9 +112,9 @@ final class HeroBanner extends FrameLayout {
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
         title = new TextView(c);
-        title.setTextSize(GlassKit.sp(30));
+        title.setTextSize(GlassKit.sp(28));
         title.setTypeface(title.getTypeface(), Typeface.BOLD);
-        title.setSingleLine(true);
+        title.setMaxLines(2);
         title.setEllipsize(TextUtils.TruncateAt.END);
         title.setTextColor(GlassKit.color(c, R.color.asc_text_primary));
         title.setShadowLayer(GlassKit.dp(c, 4), 0, GlassKit.dp(c, 1), 0xCC000000);
@@ -122,11 +131,11 @@ final class HeroBanner extends FrameLayout {
         playButton = new GlassSurface.Button(c, "\u25B6  Assistir", true);
         listButton = new GlassSurface.Button(c, "+ Minha lista",
                 GlassSurface.STYLE_SEE_THROUGH);
-        // largura pelo texto (antes era fixa e o "+ Minha lista" ficava cortado)
+        // largura pelo texto
         buttons.addView(playButton, new LinearLayout.LayoutParams(
-                LayoutParams.WRAP_CONTENT, GlassKit.dp(c, 40)));
+                LayoutParams.WRAP_CONTENT, GlassKit.dp(c, 38)));
         LinearLayout.LayoutParams lb = new LinearLayout.LayoutParams(
-                LayoutParams.WRAP_CONTENT, GlassKit.dp(c, 40));
+                LayoutParams.WRAP_CONTENT, GlassKit.dp(c, 38));
         lb.leftMargin = GlassKit.dp(c, 10);
         buttons.addView(listButton, lb);
         LinearLayout.LayoutParams bl = new LinearLayout.LayoutParams(
@@ -134,21 +143,38 @@ final class HeroBanner extends FrameLayout {
         bl.topMargin = GlassKit.dp(c, 6);
         pc.addView(buttons, bl);
 
-        FrameLayout.LayoutParams pp = new FrameLayout.LayoutParams(
-                GlassKit.dp(c, 380), LayoutParams.WRAP_CONTENT, Gravity.START | Gravity.BOTTOM);
-        pp.leftMargin = GlassKit.dp(c, 16);
-        pp.bottomMargin = GlassKit.dp(c, 16);
-        addView(panel, pp);
+        // bolinhas do carrossel
+        dots = new LinearLayout(c);
+        dots.setOrientation(LinearLayout.HORIZONTAL);
+        dots.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout.LayoutParams dl = new LinearLayout.LayoutParams(
+                LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        dl.topMargin = GlassKit.dp(c, 6);
+        dl.leftMargin = GlassKit.dp(c, 4);
+        pc.addView(dots, dl);
 
-        // Card da capa (2:3), à direita, ABAIXO da barra de busca/relógio (não passa por trás).
-        // Altura = banner visível menos as margens; a largura segue a proporção da capa.
-        int visibleH = GlassKit.d(c, HEIGHT);
-        int cardH = visibleH - GlassKit.dp(c, 8) - GlassKit.dp(c, 16);
+        FrameLayout.LayoutParams pp = new FrameLayout.LayoutParams(
+                GlassKit.dp(c, 400), LayoutParams.WRAP_CONTENT, Gravity.START | Gravity.BOTTOM);
+        pp.leftMargin = GlassKit.dp(c, 16);
+        pp.bottomMargin = GlassKit.dp(c, 12);
+        addView(pc, pp);
+
+        // capa 2:3 inteira, à direita, ABAIXO da barra de busca/relógio (não passa por trás)
+        art = new ImageView(c);
+        art.setScaleType(ImageView.ScaleType.FIT_CENTER); // inteira, nunca cortada
+        art.setContentDescription(null);
+        posterCard = new FrameLayout(c);
+        final int cardCorner = GlassKit.dp(c, 14);
+        posterCard.setBackground(GlassKit.placeholder(c, cardCorner));
+        GlassKit.roundClip(posterCard, cardCorner);
+        posterCard.addView(art, new FrameLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+        int cardH = GlassKit.dp(c, HEIGHT_DP - TOP_BAR_DP - POSTER_BOTTOM_DP);
         int cardW = Math.round(cardH * 2f / 3f);
         FrameLayout.LayoutParams cp = new FrameLayout.LayoutParams(cardW, cardH,
                 Gravity.END | Gravity.BOTTOM);
-        cp.rightMargin = GlassKit.dp(c, 28); // margem de segurança da TV (overscan)
-        cp.bottomMargin = GlassKit.dp(c, 16);
+        cp.rightMargin = GlassKit.dp(c, 40); // margem de segurança da TV (overscan)
+        cp.bottomMargin = GlassKit.dp(c, POSTER_BOTTOM_DP);
         addView(posterCard, cp);
 
         showLoading();
@@ -157,7 +183,7 @@ final class HeroBanner extends FrameLayout {
     /** rightBleedPx: quanto o banner passa da margem direita da coluna, até a borda da tela. */
     static FrameLayout.LayoutParams params(Context c, int rightBleedPx) {
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, GlassKit.d(c, HEIGHT) + GlassKit.dp(c, TOP_EXTRA_DP));
+                LayoutParams.MATCH_PARENT, GlassKit.dp(c, HEIGHT_DP));
         lp.rightMargin = -rightBleedPx;
         return lp;
     }
@@ -198,7 +224,7 @@ final class HeroBanner extends FrameLayout {
 
     // ---------- Conteúdo ----------
 
-    /** Antes de ter um destaque: painel com texto de espera e sem botões. */
+    /** Antes de ter um destaque: título de espera, sem botões, capa e fundo vazios. */
     void showLoading() {
         chipKind.setVisibility(GONE);
         chipMeta.setVisibility(GONE);
@@ -209,12 +235,14 @@ final class HeroBanner extends FrameLayout {
         playButton.setFocusable(false);
         listButton.setFocusable(false);
         art.setImageDrawable(null);
+        backdrop.setImageDrawable(null);
         posterCard.setVisibility(INVISIBLE);
+        dots.removeAllViews();
     }
 
-    /** Mostra um destaque. Não pede foco. */
+    /** Mostra um destaque. Não pede foco. backdropUrl pode ser vazio (fica o degradê do app). */
     void showEntry(String name, String kindLabel, String meta, String rating, String artUrl,
-                   boolean inList) {
+                   String backdropUrl, boolean inList) {
         title.setText(name == null ? "" : name);
         // Só o selo "EM DESTAQUE" (pedido do dono): sem Filme/Série, gênero·ano e nota.
         setChip(chipKind, "");
@@ -227,6 +255,30 @@ final class HeroBanner extends FrameLayout {
         listButton.setFocusable(true);
         setInList(inList);
         ImageLoader.load(art, artUrl, 640);
+        ImageLoader.load(backdrop, backdropUrl, 768);
+    }
+
+    /** Bolinhas do carrossel: a do destaque atual fica dourada e alongada. */
+    void setPage(int index, int count) {
+        Context c = getContext();
+        dots.removeAllViews();
+        if (count <= 1) {
+            return;
+        }
+        int n = Math.min(count, MAX_DOTS);
+        for (int i = 0; i < n; i++) {
+            boolean on = i == index;
+            View d = new View(c);
+            GradientDrawable g = new GradientDrawable();
+            g.setCornerRadius(GlassKit.dp(c, 4));
+            g.setColor(on ? GlassKit.color(c, R.color.asc_gold)
+                    : GlassKit.alpha(c, R.color.asc_text_primary, 0.5f));
+            d.setBackground(g);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    GlassKit.dp(c, on ? 18 : 7), GlassKit.dp(c, 7));
+            lp.rightMargin = GlassKit.dp(c, 5);
+            dots.addView(d, lp);
+        }
     }
 
     private static void setChip(TextView chip, String text) {

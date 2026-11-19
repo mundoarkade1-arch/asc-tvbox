@@ -712,3 +712,10 @@
 - O dono testou três desenhos novos do banner (capa dentro do card do nome; sem fundo azul e sem "Lista atualizada"; card grande atrás da busca com capa alta) e não gostou de nenhum. HeroBanner e TopBar voltaram ao desenho do experimento (12): banner 350, card da capa à direita, "Lista atualizada" e relógio na barra.
 - Ideia de outro caminho só se o dono pedir de novo.
 
+## 19/11/2026 (15) - Banner no estilo "imagem grande de fundo" (foto de referência do dono)
+- Pedido do dono (foto de outro app só como referência): imagem larga ao fundo, capa em destaque, nome e botão de assistir; busca e relógio menores.
+- XtreamApi.Details ganhou o campo backdrop (primeiro endereço de backdrop_path do servidor; vazio se não houver). Construtor de 3 argumentos continua existindo.
+- HomeActivity: HeroInfo.backdrop, passado ao banner; hero.setPage(index, total) a cada troca de destaque.
+- HeroBanner: fundo = backdrop (CENTER_CROP) com escurecimento à esquerda, embaixo e no topo; esquerda: EM DESTAQUE, nome (até 2 linhas), Assistir e + Minha lista, bolinhas do carrossel; direita: capa 2:3 inteira abaixo da busca. Sem backdrop, fica o degradê do app. HEIGHT_DP 232.
+- TopBar: busca 200x30dp e relógio 12sp; o aviso "Lista atualizada" saiu (pedido anterior do dono); setUpdatedText e setUpdating ficam sem efeito.
+

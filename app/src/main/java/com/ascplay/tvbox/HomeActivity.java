@@ -132,6 +132,7 @@ public class HomeActivity extends AscActivity {
         String rating = "";
         double value = 0d;
         String cover = "";
+        String backdrop = "";
     }
 
     private static final class HeroEntry {
@@ -952,6 +953,7 @@ public class HomeActivity extends AscActivity {
     /** Tira de "Ação • 2021 • 1:45:00 • Nota 7.5" o gênero/ano e a nota. */
     private static void fillInfo(HeroInfo info, XtreamApi.Details d) {
         info.cover = d.cover == null ? "" : d.cover;
+        info.backdrop = d.backdrop == null ? "" : d.backdrop;
         List<String> parts = new ArrayList<>();
         String meta = d.meta == null ? "" : d.meta;
         for (String p : meta.split(" \u2022 ")) {
@@ -1031,7 +1033,9 @@ public class HomeActivity extends AscActivity {
                 e.item.kind == XtreamApi.Kind.MOVIE ? "Filme" : "Série",
                 e.info.metaChip, e.info.rating,
                 e.info.cover.isEmpty() ? e.item.icon : e.info.cover,
+                e.info.backdrop,
                 favKeys.contains(FavoritesStore.identity(e.item)));
+        hero.setPage(index, heroEntries.size());
         autoFocus(RANK_HERO, hero.playButton());
     }
 

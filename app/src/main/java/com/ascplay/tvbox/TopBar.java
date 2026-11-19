@@ -12,15 +12,12 @@ import android.widget.TextClock;
 import android.widget.TextView;
 
 /**
- * Barra superior: campo de busca em pílula de vidro, chip "Lista atualizada ..." (com indicador
- * discreto enquanto atualiza) e relógio 24h em pílula de vidro (TextClock: o próprio Android
- * atualiza a cada minuto).
+ * Barra superior (compacta): campo de busca em pílula de vidro e relógio 24h pequeno em pílula
+ * de vidro (TextClock: o próprio Android atualiza a cada minuto). Sem o aviso "Lista atualizada".
  */
 final class TopBar extends LinearLayout {
 
     private final GlassSurface search;
-    private final TextView chipText;
-    private final ProgressBar chipSpinner;
 
     TopBar(Context c) {
         super(c);
@@ -28,8 +25,8 @@ final class TopBar extends LinearLayout {
         setGravity(Gravity.CENTER_VERTICAL);
         setClipChildren(false);
         setClipToPadding(false);
-        final int h = GlassKit.dp(c, 36);
-        final int corner = GlassKit.dp(c, 18);
+        final int h = GlassKit.dp(c, 30);
+        final int corner = GlassKit.dp(c, 15);
 
         // busca
         search = new GlassSurface(c, corner, true, GlassSurface.STYLE_SEE_THROUGH, false);
@@ -41,10 +38,10 @@ final class TopBar extends LinearLayout {
         ImageView icon = new ImageView(c);
         icon.setImageResource(R.drawable.ic_search);
         icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        inner.addView(icon, new LinearLayout.LayoutParams(GlassKit.dp(c, 16), GlassKit.dp(c, 16)));
+        inner.addView(icon, new LinearLayout.LayoutParams(GlassKit.dp(c, 14), GlassKit.dp(c, 14)));
         TextView hint = new TextView(c);
         hint.setText("Buscar canais, filmes e séries");
-        hint.setTextSize(GlassKit.sp(13));
+        hint.setTextSize(GlassKit.sp(12));
         hint.setSingleLine(true);
         hint.setEllipsize(TextUtils.TruncateAt.END);
         hint.setTextColor(GlassKit.color(c, R.color.asc_text_primary));
@@ -56,40 +53,11 @@ final class TopBar extends LinearLayout {
         search.addView(inner, new FrameLayout.LayoutParams(
                 LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT));
         GlassKit.focusScale(search, 1.05f, null);
-        addView(search, new LinearLayout.LayoutParams(GlassKit.dp(c, 240), h));
+        addView(search, new LinearLayout.LayoutParams(GlassKit.dp(c, 200), h));
 
         // espaço
         android.view.View spacer = new android.view.View(c);
         addView(spacer, new LinearLayout.LayoutParams(0, 1, 1f));
-
-        // chip "Lista atualizada"
-        GlassSurface chip = new GlassSurface(c, corner, false,
-                GlassSurface.STYLE_SEE_THROUGH, false);
-        LinearLayout chipRow = new LinearLayout(c);
-        chipRow.setOrientation(HORIZONTAL);
-        chipRow.setGravity(Gravity.CENTER_VERTICAL);
-        chipRow.setPadding(GlassKit.dp(c, 12), 0, GlassKit.dp(c, 12), 0);
-        chipSpinner = new ProgressBar(c, null, android.R.attr.progressBarStyleSmall);
-        chipSpinner.setIndeterminate(true);
-        chipSpinner.setVisibility(GONE);
-        LinearLayout.LayoutParams sp = new LinearLayout.LayoutParams(
-                GlassKit.dp(c, 14), GlassKit.dp(c, 14));
-        sp.rightMargin = GlassKit.dp(c, 6);
-        chipRow.addView(chipSpinner, sp);
-        chipText = new TextView(c);
-        chipText.setTextSize(GlassKit.sp(12));
-        chipText.setSingleLine(true);
-        chipText.setTypeface(chipText.getTypeface(), Typeface.BOLD);
-        chipText.setTextColor(GlassKit.color(c, R.color.asc_text_primary));
-        chipText.setShadowLayer(GlassKit.dp(c, 3), 0, GlassKit.dp(c, 1), 0xCC000000);
-        chipRow.addView(chipText, new LinearLayout.LayoutParams(
-                LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
-        chip.addView(chipRow, new FrameLayout.LayoutParams(
-                LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT));
-        LinearLayout.LayoutParams cl = new LinearLayout.LayoutParams(
-                LayoutParams.WRAP_CONTENT, h);
-        cl.rightMargin = GlassKit.dp(c, 8);
-        addView(chip, cl);
 
         // relógio 24h
         GlassSurface clockPill = new GlassSurface(c, corner, false,
@@ -97,32 +65,26 @@ final class TopBar extends LinearLayout {
         TextClock clock = new TextClock(c);
         clock.setFormat24Hour("HH:mm");
         clock.setFormat12Hour("HH:mm");
-        clock.setTextSize(GlassKit.sp(14));
+        clock.setTextSize(GlassKit.sp(12));
         clock.setTypeface(clock.getTypeface(), Typeface.BOLD);
         clock.setTextColor(GlassKit.color(c, R.color.asc_text_primary));
         clock.setShadowLayer(GlassKit.dp(c, 3), 0, GlassKit.dp(c, 1), 0xCC000000);
         clock.setGravity(Gravity.CENTER);
-        clock.setPadding(GlassKit.dp(c, 14), 0, GlassKit.dp(c, 14), 0);
+        clock.setPadding(GlassKit.dp(c, 10), 0, GlassKit.dp(c, 10), 0);
         clockPill.addView(clock, new FrameLayout.LayoutParams(
                 LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT));
         addView(clockPill, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, h));
 
-        setUpdatedText("Lista ainda não atualizada");
     }
 
     GlassSurface searchPill() {
         return search;
     }
 
+    /** O aviso "Lista atualizada" saiu da barra (pedido do dono); os métodos ficam para a Home compilar. */
     void setUpdatedText(String text) {
-        chipText.setText(text);
     }
 
-    /** Indicador discreto de carregamento dentro do chip. */
     void setUpdating(boolean updating) {
-        chipSpinner.setVisibility(updating ? VISIBLE : GONE);
-        if (updating) {
-            chipText.setText("Atualizando...");
-        }
     }
 }

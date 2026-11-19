@@ -151,11 +151,18 @@ public final class XtreamApi {
         public final String cover;
         public final String plot;
         public final String meta;
+        /** Imagem larga de fundo (backdrop) do servidor; vazia se não houver. */
+        public final String backdrop;
 
         Details(String cover, String plot, String meta) {
+            this(cover, plot, meta, "");
+        }
+
+        Details(String cover, String plot, String meta, String backdrop) {
             this.cover = cover == null ? "" : cover;
             this.plot = plot == null ? "" : plot;
             this.meta = meta == null ? "" : meta;
+            this.backdrop = backdrop == null ? "" : backdrop;
         }
     }
 
@@ -792,10 +799,18 @@ public final class XtreamApi {
         String date = "";
         String duration = "";
         String rating = "";
+        String backdrop = "";
         r.beginObject();
         while (r.hasNext()) {
             String key = r.nextName();
             switch (key) {
+                case "backdrop_path": {
+                    String v = readFirstUrl(r);
+                    if (backdrop.isEmpty()) {
+                        backdrop = v;
+                    }
+                    break;
+                }
                 case "movie_image":
                 case "cover_big":
                 case "cover": {
@@ -866,7 +881,7 @@ public final class XtreamApi {
             }
             meta.append(parts.get(i));
         }
-        return new Details(cover, plot.trim(), meta.toString());
+        return new Details(cover, plot.trim(), meta.toString(), backdrop);
     }
 
     private static String cutTo(String s, int max) {
@@ -1064,6 +1079,30 @@ public final class XtreamApi {
     }
 
     /** Lê texto, número ou nulo como texto. Qualquer outra coisa é ignorada. */
+    /** Lê um texto ou uma lista de textos e devolve o primeiro endereço http/https (ou vazio). */
+    private static String readFirstUrl(JsonReader r) throws IOException {
+        String found = "";
+        JsonToken t = r.peek();
+        if (t == JsonToken.BEGIN_ARRAY) {
+            r.beginArray();
+            while (r.hasNext()) {
+                String v = readText(r);
+                String lower = v.toLowerCase();
+                if (found.isEmpty() && (lower.startsWith("http://") || lower.startsWith("https://"))) {
+                    found = v;
+                }
+            }
+            r.endArray();
+        } else {
+            String v = readText(r);
+            String lower = v.toLowerCase();
+            if (lower.startsWith("http://") || lower.startsWith("https://")) {
+                found = v;
+            }
+        }
+        return found;
+    }
+
     private static String readText(JsonReader r) throws IOException {
         JsonToken t = r.peek();
         if (t == JsonToken.STRING || t == JsonToken.NUMBER) {
