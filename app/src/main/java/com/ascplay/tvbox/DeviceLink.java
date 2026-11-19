@@ -57,6 +57,9 @@ public final class DeviceLink {
     /** Texto curto para o dono ver na tela de login o que deu errado (sem senhas). */
     public static volatile String lastDetail = "";
 
+    /** true se a última falha foi de rede ou do servidor (5xx): aí a tela diz "em manutenção". */
+    public static volatile boolean lastServerDown = false;
+
     private DeviceLink() {
     }
 
@@ -118,6 +121,7 @@ public final class DeviceLink {
     public static synchronized Reply poll(Context context) {
         SharedPreferences p = ensureIdentity(context);
         lastDetail = "";
+        lastServerDown = false;
         for (int attempt = 0; attempt < 3; attempt++) {
             String reg = rpc("register_device", body(p));
             if (reg == null) {
@@ -268,6 +272,7 @@ public final class DeviceLink {
             }
             int httpCode = conn.getResponseCode();
             if (httpCode != 200) {
+                lastServerDown = httpCode >= 500;
                 lastDetail = "Erro " + httpCode + " em " + function + ".";
                 return null;
             }
@@ -288,6 +293,7 @@ public final class DeviceLink {
                 in.close();
             }
         } catch (IOException e) {
+            lastServerDown = true;
             lastDetail = "Falha de rede em " + function + ".";
             return null;
         } catch (Exception e) {

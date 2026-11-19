@@ -16,6 +16,7 @@ Visual Glass da Home, Ajustes, escala automática e janelas novas estão no GitH
 - Minha lista (FavoritesStore) e busca geral (SearchAllActivity) existem na Home.
 - 19/11: textos conferidos com o código; cópias soltas da raiz e 5 arquivos sem uso apagados (ver DECISIONS).
 - 19/11: Updater.java: instalador abre em tarefa própria e sem janela de escolha (ver DECISIONS). Falta Actions e teste no TX9.
+- 19/11 (5): mensagem "Servidor em manutenção" (ServerMessage) no lugar de erro com código para falha de conexão. Falta Actions e teste no TX9 (desligar a internet e ver "Sem internet"; lista com servidor fora do ar e ver "manutenção").
 - 19/11 (4): o APK instalado na TV ainda é o antigo (com o bug) e por isso não acha atualização: instalar o APK novo UMA vez à mão. Updater agora compara o endereço sem diferenciar maiúscula/minúscula.
 - 19/11 (3): bug do Updater consertado (a atualização nunca era achada); atualização em janela (Home, login e Ajustes); login mostra o motivo do erro do código; Apagar dados limpa a Minha lista. Falta Actions e teste no TX9.
 

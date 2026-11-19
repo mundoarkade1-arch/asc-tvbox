@@ -752,7 +752,7 @@ public class HomeActivity extends AscActivity {
             return;
         }
         if (items == null) {
-            row.showError("Sem conexão. Confira a internet e a lista, e tente Atualizar.");
+            row.showError(ServerMessage.connection(this) + " Depois toque em Atualizar.");
             railDone(false);
             return;
         }

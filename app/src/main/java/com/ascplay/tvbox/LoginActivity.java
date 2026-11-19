@@ -279,9 +279,14 @@ public class LoginActivity extends AscActivity {
             tvLinkStatus.setText(detail.isEmpty() ? getString(R.string.link_waiting)
                     : getString(R.string.link_waiting) + "\n" + detail);
         } else if (r.state == DeviceLink.State.OFFLINE) {
-            // detail diz o motivo real (ex.: "Erro 401 em fetch_playlist"); nunca tem senha
-            tvLinkStatus.setText(detail.isEmpty() ? getString(R.string.link_offline)
-                    : getString(R.string.link_offline) + "\n" + detail);
+            // Rede ou servidor fora do ar: frase simples, sem código. Erro do app/permissão
+            // (ex.: "Erro 401 em fetch_playlist") continua aparecendo para o dono; nunca tem senha
+            if (DeviceLink.lastServerDown) {
+                tvLinkStatus.setText(ServerMessage.connection(this));
+            } else {
+                tvLinkStatus.setText(detail.isEmpty() ? getString(R.string.link_offline)
+                        : getString(R.string.link_offline) + "\n" + detail);
+            }
         } else {
             tvLinkStatus.setText("");
         }
@@ -428,7 +433,11 @@ public class LoginActivity extends AscActivity {
             return;
         }
 
-        showStatus(getString(messageFor(result)), COLOR_ERROR);
+        if (result == LoginChecker.Result.NETWORK) {
+            showStatus(ServerMessage.connection(this), COLOR_ERROR);
+        } else {
+            showStatus(getString(messageFor(result)), COLOR_ERROR);
+        }
         btnEnter.requestFocus();
     }
 

@@ -370,7 +370,7 @@ public class MainActivity extends AscActivity {
                         public void onFail() {
                             if (!isFinishing() && !isDestroyed()) {
                                 Toast.makeText(MainActivity.this,
-                                        "Não foi possível trocar de canal.",
+                                        ServerMessage.connection(MainActivity.this),
                                         Toast.LENGTH_SHORT).show();
                             }
                         }
@@ -558,6 +558,18 @@ public class MainActivity extends AscActivity {
         }
         episodeLabel.setText(text);
         episodeLabel.setVisibility(View.VISIBLE);
+    }
+
+    /** Erros de rede ou de resposta do servidor (não são erro do app). */
+    private static boolean isConnectionError(int code) {
+        return code == PlaybackException.ERROR_CODE_IO_UNSPECIFIED
+                || code == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED
+                || code == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT
+                || code == PlaybackException.ERROR_CODE_IO_INVALID_HTTP_CONTENT_TYPE
+                || code == PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS
+                || code == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND
+                || code == PlaybackException.ERROR_CODE_PARSING_CONTAINER_MALFORMED
+                || code == PlaybackException.ERROR_CODE_PARSING_MANIFEST_MALFORMED;
     }
 
     private static boolean isHttp(String s) {
@@ -975,7 +987,13 @@ public class MainActivity extends AscActivity {
                     return;
                 }
                 // Não mostra a mensagem completa: ela pode conter o endereço com a senha.
-                showStatus("Não foi possível tocar (" + error.getErrorCodeName() + ").");
+                if (isConnectionError(error.errorCode)) {
+                    // Servidor ou canal sem resposta: frase simples, sem código, para o cliente
+                    showStatus(ServerMessage.connection(MainActivity.this));
+                } else {
+                    // Erro do próprio app (decodificador, formato...): mostra o código
+                    showStatus("Não foi possível tocar (" + error.getErrorCodeName() + ").");
+                }
             }
         });
 

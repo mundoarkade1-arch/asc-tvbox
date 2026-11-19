@@ -251,7 +251,7 @@ public class SeriesActivity extends AscActivity {
             return;
         }
         if (res == null) {
-            showStatus("Não foi possível carregar. Confira a internet e o servidor.", COLOR_ERROR);
+            showStatus(ServerMessage.connection(this), COLOR_ERROR);
             return;
         }
         if (res.isEmpty()) {

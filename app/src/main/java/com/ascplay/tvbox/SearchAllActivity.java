@@ -167,7 +167,7 @@ public class SearchAllActivity extends AscActivity {
         SectionRow row = rows[idx];
         if (found.isEmpty()) {
             if (failed) {
-                row.showError("Não foi possível buscar. Confira a internet e o login.");
+                row.showError(ServerMessage.connection(this));
             } else {
                 row.showMessage("Nada encontrado com esse nome.");
             }

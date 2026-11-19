@@ -306,7 +306,7 @@ public class M3uBrowseActivity extends AscActivity {
             return;
         }
         if (res == null) {
-            Toast.makeText(this, "Não foi possível carregar as categorias.",
+            Toast.makeText(this, ServerMessage.connection(this),
                     Toast.LENGTH_SHORT).show();
             return;
         }
@@ -450,9 +450,9 @@ public class M3uBrowseActivity extends AscActivity {
         if (res == null) {
             loadFailed = true;
             if (items.isEmpty()) {
-                showStatus("Não foi possível carregar. Confira a internet e a lista.", COLOR_ERROR);
+                showStatus(ServerMessage.connection(this), COLOR_ERROR);
             } else {
-                Toast.makeText(this, "Não foi possível carregar mais itens.",
+                Toast.makeText(this, ServerMessage.connection(this),
                         Toast.LENGTH_SHORT).show();
             }
             return;

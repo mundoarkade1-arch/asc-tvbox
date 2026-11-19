@@ -636,3 +636,12 @@
 - Decisão: instalar UMA vez, à mão, o APK novo (baixado em Releases) por cima do antigo. Dali em diante a atualização automática funciona.
 - Updater.isSafeDownloadUrl: o começo do endereço agora é comparado sem diferenciar maiúscula/minúscula (regionMatches). Motivo: evitar recusa silenciosa se o nome do repositório no GitHub tiver outra caixa. As outras conferências (https, "..", %2e, barra invertida, %5c) continuam iguais.
 - Sem dependência nova.
+
+## 19/11/2026 (5) - "Servidor em manutenção" no lugar de erro com código
+- Pedido do dono: quando o servidor cai, está em manutenção ou não entrega a lista/canal, o cliente não deve ver código de erro (ele se assusta). Deve ver "Servidor em manutenção". Erro do próprio app continua com código, para o dono corrigir.
+- Decisão: nova classe ServerMessage. Falha de conexão mostra "Servidor em manutenção. Tente de novo em alguns minutos."; se o aparelho está sem rede, mostra "Sem internet. Confira a conexão do aparelho." (para não culpar o servidor à toa). Se não der para saber, vale "manutenção".
+- Trocados: login (Result.NETWORK e a espera da lista remota, quando a falha é de rede ou 5xx), faixas da Home, Browse, M3uBrowse, M3uSeries, Series, buscas, programação (EPG) e troca de canal.
+- Player: erros de rede, HTTP, arquivo não encontrado e manifesto/contêiner malformado (o servidor devolveu algo que não é vídeo) mostram "manutenção". Erros de decodificador e outros continuam com "Não foi possível tocar (CÓDIGO)".
+- DeviceLink: novo lastServerDown (rede ou 5xx). Erros 4xx (ex.: 401 em fetch_playlist, permissão do Supabase) continuam mostrando o código, porque são do app/configuração.
+- Permissão nova: ACCESS_NETWORK_STATE (comum, sem pergunta ao usuário). Motivo: saber se o aparelho está sem internet. Sem dependência nova.
+- Risco aceito: um endereço de servidor digitado errado também vai mostrar "manutenção". Antes dizia "confira o endereço".

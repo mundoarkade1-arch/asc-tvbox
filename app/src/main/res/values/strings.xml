@@ -17,7 +17,7 @@
     <string name="err_empty">Preencha todos os campos.</string>
     <string name="err_server">Endereço do servidor inválido.</string>
     <string name="err_url">Link inválido. Use http:// ou https://</string>
-    <string name="err_network">Sem conexão com o servidor. Confira o endereço e a internet.</string>
+    <string name="err_network">Servidor em manutenção. Tente de novo em alguns minutos.</string>
     <string name="err_auth">Usuário ou senha incorretos.</string>
     <string name="err_expired">Conta vencida ou desativada.</string>
     <string name="err_not_m3u">O link não parece ser uma lista M3U válida.</string>

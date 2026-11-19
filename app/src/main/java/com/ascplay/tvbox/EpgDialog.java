@@ -167,7 +167,7 @@ public final class EpgDialog {
                              List<XtreamApi.Program> programs) {
         if (programs == null) {
             status.setTextColor(COLOR_ERROR);
-            status.setText("Não foi possível carregar a programação.");
+            status.setText(ServerMessage.connection(activity));
             return;
         }
         if (programs.isEmpty()) {

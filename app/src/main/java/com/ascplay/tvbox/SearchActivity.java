@@ -172,7 +172,7 @@ public class SearchActivity extends AscActivity {
         }
         if (found.isEmpty()) {
             if (failed) {
-                showStatus("Não foi possível buscar. Confira a internet e o login.", COLOR_ERROR);
+                showStatus(ServerMessage.connection(this), COLOR_ERROR);
             } else {
                 showStatus("Nada encontrado com esse nome.", COLOR_NEUTRAL);
             }
