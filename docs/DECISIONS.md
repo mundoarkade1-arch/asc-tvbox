@@ -672,3 +672,12 @@
 - Cadeado do controle parental: era emoji ANTES do nome; agora é o vetor ic_cat_lock, DEPOIS da tarja.
 - Lucide não é biblioteca do projeto (app nativo): os desenhos são vetores XML no estilo Lucide.
 - Não feito: "Canais 4K" e "Reality Shows" (não existem como grupo; mexer seria mudar a classificação).
+
+## 19/11/2026 — Esportes ampliado e novo grupo Reality Shows (só canais ao vivo)
+- Pedido do dono (por voz): X Sport, Sportnet, Prime Video, Gold, Kazé, Apple TV e Paramount Plus devem cair em Esportes; Reality (A Fazenda, BBB, De Volta com o Ex, etc.) vira grupo próprio, mais para cima. Filmes e séries ficam como estão.
+- Decisão: grupo novo REALITY ("Reality Shows"), logo depois de Esportes (agora são 14 grupos). Palavras: reality, bbb, big brother, fazenda, de volta com o ex, power couple, peões, ilha record. "reality" saiu de Variedades.
+- Esportes: "sport" em qualquer posição (pega XSport e Sportnet; exceto "transport"), prime video(s), gold, caze/kaze, apple tv, paramount (menos "Paramount Channel", que é de filmes).
+- Cada grupo ganhou um número fixo (code) guardado nas correções manuais "Mover para". Antes era a posição na lista; como REALITY entrou no meio, a posição mudaria e quebraria as correções já guardadas. Os 13 antigos mantêm o número que tinham; REALITY = 13.
+- Ícone de Reality: TV com play (ic_cat_reality.xml).
+- Limite que continua: a regra olha o NOME DA CATEGORIA, não o canal. Se "X Sport" for nome de CANAL dentro de outra categoria, esta mudança não resolve.
+- Efeito colateral aceito: qualquer categoria com a palavra "gold" (ex.: "Gold Movies") vai para Esportes.

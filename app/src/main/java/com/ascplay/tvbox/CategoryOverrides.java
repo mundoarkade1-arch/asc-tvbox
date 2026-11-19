@@ -35,10 +35,11 @@ public final class CategoryOverrides {
             return auto; // correção nunca tira a proteção do adulto
         }
         try {
-            int idx = prefs(c).getInt(key(name), -1);
-            CategoryGroups.Group[] all = CategoryGroups.Group.values();
-            if (idx >= 0 && idx < all.length && all[idx] != CategoryGroups.Group.ADULTOS) {
-                return all[idx];
+            int code = prefs(c).getInt(key(name), -1);
+            for (CategoryGroups.Group g : CategoryGroups.Group.values()) {
+                if (g.code == code && g != CategoryGroups.Group.ADULTOS) {
+                    return g;
+                }
             }
         } catch (Exception ignored) {
             // preferência estranha: usa o automático
@@ -55,7 +56,7 @@ public final class CategoryOverrides {
         if (g == null) {
             ed.remove(k);
         } else {
-            ed.putInt(k, g.ordinal());
+            ed.putInt(k, g.code);
         }
         ed.apply();
     }

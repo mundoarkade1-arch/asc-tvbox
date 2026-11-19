@@ -23,6 +23,8 @@ final class CategoryIcons {
                 return R.drawable.ic_cat_inicio;
             case ESPORTES:
                 return R.drawable.ic_cat_esportes;
+            case REALITY:
+                return R.drawable.ic_cat_reality;
             case ABERTOS:
                 return R.drawable.ic_cat_abertos;
             case FILMES:

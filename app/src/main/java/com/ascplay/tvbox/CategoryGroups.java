@@ -5,8 +5,8 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
- * Organização única das categorias de CANAIS: descobre a qual dos 13 grupos padrão
- * (Esportes, Canais Abertos, Filmes...) uma categoria do servidor pertence, qualquer que seja o
+ * Organização única das categorias de CANAIS: descobre a qual dos 14 grupos padrão
+ * (Esportes, Reality Shows, Canais Abertos, Filmes...) uma categoria do servidor pertence, qualquer que seja o
  * nome que o servidor usa. Só lê o nome: nunca muda nome, id nem endereço do servidor.
  *
  * Classe pura (sem Android), para poder ser testada fora do aparelho. As correções feitas à
@@ -17,29 +17,37 @@ import java.util.regex.Pattern;
  */
 public final class CategoryGroups {
 
-    /** Os 13 grupos, na ordem em que aparecem. */
+    /** Os 14 grupos, na ordem em que aparecem. */
     public enum Group {
-        INICIO("Início / Destaques"),
-        ESPORTES("Esportes"),
-        ABERTOS("Canais Abertos"),
-        FILMES("Filmes e Entretenimento"),
-        SERIES("Séries"),
-        DOCUMENTARIOS("Documentários"),
-        NOTICIAS("Notícias"),
-        INFANTIL("Infantil"),
-        VARIEDADES("Variedades"),
-        H24("Canais 24 Horas"),
-        OUTROS("Outros Canais"),
-        INTERNACIONAIS("Internacionais"),
-        ADULTOS("Adultos");
+        INICIO("Início / Destaques", 0),
+        ESPORTES("Esportes", 1),
+        REALITY("Reality Shows", 13),
+        ABERTOS("Canais Abertos", 2),
+        FILMES("Filmes e Entretenimento", 3),
+        SERIES("Séries", 4),
+        DOCUMENTARIOS("Documentários", 5),
+        NOTICIAS("Notícias", 6),
+        INFANTIL("Infantil", 7),
+        VARIEDADES("Variedades", 8),
+        H24("Canais 24 Horas", 9),
+        OUTROS("Outros Canais", 10),
+        INTERNACIONAIS("Internacionais", 11),
+        ADULTOS("Adultos", 12);
 
         public final String label;
+        /**
+         * Número FIXO do grupo, guardado nas correções manuais (CategoryOverrides). Nunca mude
+         * o número de um grupo existente, senão as correções guardadas apontam para o grupo errado.
+         * (Antes era a posição na lista; os 13 primeiros mantêm o número que já tinham.)
+         */
+        public final int code;
 
-        Group(String label) {
+        Group(String label, int code) {
             this.label = label;
+            this.code = code;
         }
 
-        /** 1 a 13: quanto menor, mais acima. */
+        /** 1 a 14: quanto menor, mais acima. */
         public int order() {
             return ordinal() + 1;
         }
@@ -71,10 +79,18 @@ public final class CategoryGroups {
             "\\b24 ?(h|hs|hr|hrs|horas|hours)\\b|\\b24 7\\b");
 
     private static final Pattern ESPORTES = Pattern.compile(
-            "esport|\\bsports?\\b|futebol|football|soccer|\\bpremiere\\b|sportv|\\bespn\\b"
+            "esport|(?<!tran)sport|futebol|football|soccer|\\bpremiere\\b|sportv|\\bespn\\b"
                     + "|combate|\\bufc\\b|\\bnba\\b|\\bnfl\\b|campeonat|libertadores"
                     + "|brasileirao|champions|\\bcopa\\b|\\bf1\\b|formula 1|\\bluta|\\bboxe\\b"
-                    + "|\\bmma\\b|\\bdazn\\b|\\bgol\\b");
+                    + "|\\bmma\\b|\\bdazn\\b|\\bgol\\b"
+                    // Pedido do dono (19/11/2026): estas contam como esporte nos canais ao vivo
+                    + "|\\bprime videos?\\b|\\bgold\\b|\\b(caze|kaze)\\w*|\\bapple tv\\b"
+                    + "|\\bparamount(?! channel)\\b");
+
+    /** Reality shows (só canais ao vivo): vão para o grupo próprio, logo depois de Esportes. */
+    private static final Pattern REALITY = Pattern.compile(
+            "\\breality\\b|\\bbbb\\b|big brother|\\bfazenda\\b|de volta com o ex"
+                    + "|power couple|\\bpeoes\\b|\\bilha record\\b");
 
     private static final Pattern INFANTIL = Pattern.compile(
             "infantil|\\bkids?\\b|desenho|cartoon|crianc|\\bnick\\w*|gloob|\\bbaby\\b"
@@ -101,7 +117,7 @@ public final class CategoryGroups {
 
     private static final Pattern VARIEDADES = Pattern.compile(
             "variedade|\\bmusic\\w*|culinar|\\bcook\\w*|gastronom|\\bviage\\w*|\\btravel\\b"
-                    + "|\\breality\\b|\\bcultura\\b|entretenimento|lifestyle|\\bmtv\\b"
+                    + "|\\bcultura\\b|entretenimento|lifestyle|\\bmtv\\b"
                     + "|multishow|\\bvh1\\b|\\bcomedy\\b|\\bhumor\\b|\\bnovelas?\\b|\\bshows?\\b");
 
     private CategoryGroups() {
@@ -133,6 +149,9 @@ public final class CategoryGroups {
         }
         if (esportes) {
             return Group.ESPORTES;
+        }
+        if (REALITY.matcher(n).find()) {
+            return Group.REALITY;
         }
         if (INFANTIL.matcher(n).find()) {
             return Group.INFANTIL;
