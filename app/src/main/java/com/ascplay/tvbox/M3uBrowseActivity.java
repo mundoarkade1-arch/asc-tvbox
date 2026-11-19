@@ -59,7 +59,6 @@ public class M3uBrowseActivity extends AscActivity {
     private static final int LOAD_AHEAD = 12;
     private static final int COLOR_NEUTRAL = 0xFFB8C0CC;
     private static final int COLOR_ERROR = 0xFFF28B82;
-    private static final String LOCK = "\uD83D\uDD12 ";
 
     private CredentialStore.Credentials creds;
     private XtreamApi.Kind kind;
@@ -626,24 +625,24 @@ public class M3uBrowseActivity extends AscActivity {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            TextView tv;
+            CategoryLabel tv;
             if (convertView == null) {
-                tv = (TextView) LayoutInflater.from(M3uBrowseActivity.this)
+                tv = (CategoryLabel) LayoutInflater.from(M3uBrowseActivity.this)
                         .inflate(R.layout.item_category, parent, false);
                 // Quem controla a seleção e o clique é a própria lista.
                 tv.setFocusable(false);
                 tv.setClickable(false);
             } else {
-                tv = (TextView) convertView;
+                tv = (CategoryLabel) convertView;
             }
             String name = catNames.get(position);
             boolean locked = parentalOn && position > 0 && ParentalStore.isAdultCategory(name);
-            tv.setText(locked ? LOCK + name : name);
+            tv.setText(name);
             int icon = position < catIcons.size() ? catIcons.get(position) : 0;
             boolean firstAdult = icon == CategoryIcons.adult() && position > 0
                     && (position - 1 >= catIcons.size()
                     || catIcons.get(position - 1) != CategoryIcons.adult());
-            CategoryIcons.apply(tv, icon, firstAdult);
+            CategoryIcons.apply(tv, icon, firstAdult, locked);
             return tv;
         }
     }

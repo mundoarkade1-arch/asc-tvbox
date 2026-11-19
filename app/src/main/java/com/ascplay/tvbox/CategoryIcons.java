@@ -1,20 +1,17 @@
 package com.ascplay.tvbox;
 
-import android.widget.TextView;
-
 /**
- * Ícones das categorias (lista lateral). Desenhos de linha fina, da mesma família dos ícones do
- * menu (res/drawable/ic_cat_*.xml). Identificam o TIPO da categoria; os canais continuam com as
- * suas próprias logos. Não usa emoji: o emoji muda de desenho de aparelho para aparelho e some em
- * TV box antigo (Android 7).
+ * Ícones das categorias (lista lateral). O NOME vem primeiro e o ícone DEPOIS (CategoryLabel).
+ * Desenhos de linha no estilo Lucide (res/drawable/ic_cat_*.xml), 26dp, cor viva
+ * (@color/cat_icon). Adultos não usa ícone: usa a tarja vermelha "18+" depois do nome.
+ * Não usa emoji: o emoji muda de desenho de aparelho para aparelho e some em TV box antigo.
  */
 final class CategoryIcons {
 
+    /** Marcador (não é recurso): categoria adulta, que ganha a tarja 18+. */
+    private static final int ADULT = -18;
     /** Altura extra acima da primeira categoria adulta, para separá-la das outras (dp). */
     private static final int ADULT_GAP_DP = 16;
-    /** Margem de cima do item (igual ao item_category.xml). */
-    private static final int BASE_TOP_DP = 8;
-    private static final int ICON_GAP_DP = 10;
 
     private CategoryIcons() {
     }
@@ -45,26 +42,27 @@ final class CategoryIcons {
             case INTERNACIONAIS:
                 return R.drawable.ic_cat_internacionais;
             case ADULTOS:
-                return R.drawable.ic_cat_adultos;
+                return ADULT;
             default:
                 return R.drawable.ic_cat_outros;
         }
     }
 
-    /** Ícone de uma categoria adulta (filmes, séries ou canais): sempre o mesmo, em vermelho. */
+    /** Marcador de categoria adulta (canais, filmes ou séries): vira a tarja 18+. */
     static int adult() {
-        return R.drawable.ic_cat_adultos;
+        return ADULT;
     }
 
     /**
-     * Põe o ícone ao lado do nome. "separateTop" afasta a linha de cima (primeira categoria
-     * adulta). Tem que redefinir tudo a cada chamada, porque a linha da lista é reaproveitada.
+     * Põe o ícone (ou a tarja 18+) DEPOIS do nome. "separateTop" afasta a linha de cima (primeira
+     * categoria adulta). "locked" põe um cadeado pequeno no fim (controle parental ligado).
      */
-    static void apply(TextView tv, int iconRes, boolean separateTop) {
-        tv.setCompoundDrawablesRelativeWithIntrinsicBounds(iconRes, 0, 0, 0);
-        tv.setCompoundDrawablePadding(iconRes == 0 ? 0 : GlassKit.dp(tv.getContext(), ICON_GAP_DP));
-        int top = GlassKit.dp(tv.getContext(), BASE_TOP_DP
-                + (separateTop ? ADULT_GAP_DP : 0));
-        tv.setPaddingRelative(tv.getPaddingStart(), top, tv.getPaddingEnd(), tv.getPaddingBottom());
+    static void apply(CategoryLabel tv, int icon, boolean separateTop, boolean locked) {
+        int extra = separateTop ? GlassKit.dp(tv.getContext(), ADULT_GAP_DP) : 0;
+        if (icon == ADULT) {
+            tv.setTrailing(0, true, locked, extra);
+        } else {
+            tv.setTrailing(icon, false, locked, extra);
+        }
     }
 }

@@ -1,37 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Ícone de categoria (traço fino, mesma família dos ícones do menu). A cor vem de @color/nav_text (cinza; dourado selecionado; branco com foco). -->
+<!-- Canais 24 Horas: relógio. Traço estilo Lucide, 26dp. Cor: @color/cat_icon (viva; dourado selecionado; branco com foco). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="22dp"
-    android:height="22dp"
-    android:tint="@color/nav_text"
-    android:viewportWidth="48"
-    android:viewportHeight="48">
+    android:width="26dp"
+    android:height="26dp"
+    android:tint="@color/cat_icon"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.5"
+        android:strokeWidth="2"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:pathData="M40 22 A16 16 0 0 0 13 13 L8 18" />
+        android:pathData="M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0" />
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.5"
+        android:strokeWidth="2"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:pathData="M8 8 V18 H18" />
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.5"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M8 26 A16 16 0 0 0 35 35 L40 30" />
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.5"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M40 40 V30 H30" />
+        android:pathData="M12 6v6l4 2" />
 </vector>

@@ -1,37 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Ícone de categoria (traço fino, mesma família dos ícones do menu). A cor vem de @color/nav_text (cinza; dourado selecionado; branco com foco). -->
+<!-- Infantil: ursinho. Traço estilo Lucide, 26dp. Cor: @color/cat_icon (viva; dourado selecionado; branco com foco). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="22dp"
-    android:height="22dp"
-    android:tint="@color/nav_text"
-    android:viewportWidth="48"
-    android:viewportHeight="48">
+    android:width="26dp"
+    android:height="26dp"
+    android:tint="@color/cat_icon"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.5"
+        android:strokeWidth="2"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:pathData="M6 24 A18 18 0 1 1 42 24 A18 18 0 1 1 6 24 Z" />
+        android:pathData="M5 12a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.5"
+        android:strokeWidth="2"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:pathData="M16 28 C18 33 30 33 32 28" />
+        android:pathData="M4.2 4.8a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0" />
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.5"
+        android:strokeWidth="2"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:pathData="M18 19 V20" />
+        android:pathData="M14.8 4.8a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0" />
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.5"
+        android:strokeWidth="2"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:pathData="M30 19 V20" />
+        android:pathData="M9.5 11.5h.01" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M14.5 11.5h.01" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M10.5 14.5a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0 -3 0" />
 </vector>

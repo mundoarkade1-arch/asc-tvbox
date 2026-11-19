@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cor dos ícones das categorias: viva (não apagada). Dourado selecionado; branco com foco. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true" android:color="#E2BE6E" />
+    <item android:state_focused="true" android:color="#FFFFFF" />
+    <item android:color="#F1F4F9" />
+</selector>

@@ -1,58 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Ícone de categoria (traço fino, mesma família dos ícones do menu). A cor vem de @color/nav_text (cinza; dourado selecionado; branco com foco). -->
+<!-- Esportes: bola de futebol. Traço estilo Lucide, 26dp. Cor: @color/cat_icon (viva; dourado selecionado; branco com foco). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="22dp"
-    android:height="22dp"
-    android:tint="@color/nav_text"
-    android:viewportWidth="48"
-    android:viewportHeight="48">
+    android:width="26dp"
+    android:height="26dp"
+    android:tint="@color/cat_icon"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.5"
+        android:strokeWidth="2"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:pathData="M6 24 A18 18 0 1 1 42 24 A18 18 0 1 1 6 24 Z" />
+        android:pathData="M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0" />
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.5"
+        android:strokeWidth="2"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:pathData="M24 17 L30.5 21.7 L28 29.3 H20 L17.5 21.7 Z" />
+        android:pathData="M12 8.2l3.6 2.6-1.4 4.2H9.8l-1.4-4.2z" />
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.5"
+        android:strokeWidth="2"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:pathData="M24 17 V6.5" />
+        android:pathData="M12 8.2V2.2" />
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.5"
+        android:strokeWidth="2"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:pathData="M30.5 21.7 L40 18.5" />
+        android:pathData="M15.6 10.8l5.7-1.9" />
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.5"
+        android:strokeWidth="2"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:pathData="M28 29.3 L33.5 37.5" />
+        android:pathData="M14.2 15l3.5 4.9" />
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.5"
+        android:strokeWidth="2"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:pathData="M20 29.3 L14.5 37.5" />
+        android:pathData="M9.8 15l-3.5 4.9" />
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.5"
+        android:strokeWidth="2"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:pathData="M17.5 21.7 L8 18.5" />
+        android:pathData="M8.4 10.8L2.7 8.9" />
 </vector>

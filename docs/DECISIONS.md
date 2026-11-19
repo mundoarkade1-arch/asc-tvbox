@@ -663,3 +663,12 @@
 - Adulto: mesmo ícone vermelho em canais, filmes e séries; a primeira categoria adulta fica mais afastada das outras. Cor de destaque só nele.
 - Logos dos canais não foram tocadas; ícone é da categoria, logo é da emissora.
 - Não feito: ícones por gênero em Filmes e Séries (Ação, Comédia...), "Canais 4K", Favoritos e "Reality" como linhas próprias (não existem como categoria no app hoje), e Adultos oculto por padrão (continua pendente da decisão do dono, ver item 6).
+
+## 19/11/2026 — Ajuste visual dos ícones de categoria
+- Pedido do dono: NOME primeiro e ícone DEPOIS; ícones maiores e vivos; Adultos com tarja "18+"; sem mexer em ordem ou classificação.
+- Decisão: nova classe CategoryLabel (TextView pública) desenha o ícone colado no fim do nome. O espaço do ícone é reservado no padding do fim, então o nome quebra ou termina em "..." antes de chegar nele (nunca sobrepõe).
+- Ícones: 26dp (eram 22dp), traço estilo Lucide, cor @color/cat_icon (#F1F4F9; dourado selecionado; branco com foco), sem opacidade baixa. Mapa: Esportes=bola, Abertos=TV, Filmes=claquete, Séries=rolo de filme, Documentários e Internacionais=globo, Notícias=jornal, Infantil=ursinho, Variedades=máscaras de teatro, 24 Horas=relógio.
+- Adultos: sem ícone; tarja vermelha escura "18+" (cantos 5dp, borda clara) depois do nome, em canais, filmes e séries. ic_cat_adultos.xml apagado (CategoryIcons.adult() agora é só um marcador).
+- Cadeado do controle parental: era emoji ANTES do nome; agora é o vetor ic_cat_lock, DEPOIS da tarja.
+- Lucide não é biblioteca do projeto (app nativo): os desenhos são vetores XML no estilo Lucide.
+- Não feito: "Canais 4K" e "Reality Shows" (não existem como grupo; mexer seria mudar a classificação).
