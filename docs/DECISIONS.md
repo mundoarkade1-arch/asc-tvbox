@@ -730,3 +730,9 @@
 - SideRail: TextClock 24h (11sp) acima do logo; largura 60dp (SideRail.WIDTH_DP, usada por HomeActivity, NavBar e SettingsActivity; era 76); itens 42dp (era 54); ícones 18dp (era 26); nomes 9sp (era 12); logo 30dp. A FitColumn desconta a altura do relógio antes de encolher os itens.
 - TopBar: só a busca; o relógio saiu de lá.
 
+## 19/11/2026 (18) - Instalador: sessão primeiro, sem a lista "escolha o instalador"
+- Problema (TX9): chegava toda hora um aviso para escolher o instalador; ao escolher, aparecia "Assistant" que não terminava a instalação. Voltou depois de mexer na parte de atualização.
+- Causa provável: as tentativas por intent (INSTALL_PACKAGE e VIEW do APK) deixam o Android abrir a lista de apps que sabem instalar APK; neste TV box um "assistente" entra nessa lista, e o "Sempre" o grava como padrão. Sessões de instalação antigas pendentes também podiam voltar a pedir confirmação.
+- Decisão: Updater.startInstaller agora usa PRIMEIRO a sessão do PackageInstaller (fala direto com o instalador do sistema, sem lista). Antes cancela as sessões antigas deste app (API 24+). A confirmação abre uma vez só. Cancelar na confirmação não mostra erro. Só se a sessão nem puder ser criada é que tenta INSTALL_PACKAGE e VIEW (jeito antigo), sem forçar nenhum app.
+- O padrão já gravado no TV box ("Sempre" no assistente) não sai pelo app: Configurações > Aplicativos > o assistente > Limpar padrões (ou desativar).
+

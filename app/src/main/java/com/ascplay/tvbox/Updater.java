@@ -305,13 +305,13 @@ public final class Updater {
     }
 
     /**
-     * Abre o instalador do Android. Tenta, nesta ordem: (1) INSTALL_PACKAGE, (2) VIEW do APK e
-     * (3) a sessão do PackageInstaller (funciona em TV boxes sem a tela de instalação comum).
+     * Instala a atualização. Ordem: (1) sessão do PackageInstaller, que fala direto com o
+     * instalador do sistema e NÃO abre a lista "escolha o instalador" (era ela que mostrava um tal
+     * de "Assistente" que não instala); (2) só se a sessão nem puder ser criada, INSTALL_PACKAGE e
+     * VIEW do APK pelo jeito antigo.
      *
-     * 19/11/2026 (revertido): antes o app escolhia sozinho um instalador e abria por nome. Em TV
-     * box isso podia cair num app errado (um "assistente") que não instala. Agora volta ao jeito
-     * de antes: o Android decide, sem forçar nenhum app. Abre pela tela do app quando ela está
-     * viva; senão pelo Application com NEW_TASK.
+     * Antes de criar a sessão, as sessões antigas deste app (que ficavam pendentes e pediam
+     * confirmação toda hora) são canceladas.
      */
     private static void startInstaller(Context app, Context ui, File apk,
                                        InstallListener listener) {
@@ -327,6 +327,10 @@ public final class Updater {
                 } catch (Exception e) {
                     // Sem essa tela neste aparelho: segue, o próprio instalador pede a permissão.
                 }
+            }
+            abandonOldSessions(app);
+            if (installWithSession(app, apk, listener)) {
+                return; // o resultado chega pelo listener (confirmação do Android)
             }
             Uri uri = FileProvider.getUriForFile(app, app.getPackageName() + ".fileprovider", apk);
             boolean live = ui instanceof Activity && !((Activity) ui).isFinishing();
@@ -361,19 +365,43 @@ public final class Updater {
                     // tenta a próxima forma
                 }
             }
-            installWithSession(app, apk, listener);
+            listener.onFailed("Este aparelho não conseguiu abrir o instalador de aplicativos.");
         } catch (Exception e) {
             listener.onFailed("Não foi possível abrir o instalador.");
         }
     }
 
-    /** Última tentativa: instala pela sessão do PackageInstaller (o Android pede a confirmação). */
-    private static void installWithSession(final Context app, File apk,
-                                           final InstallListener listener) {
+    /** Cancela sessões de instalação antigas deste app (pendentes, que ficam pedindo confirmação). */
+    private static void abandonOldSessions(Context app) {
+        if (Build.VERSION.SDK_INT < 24) {
+            return;
+        }
+        try {
+            PackageInstaller installer = app.getPackageManager().getPackageInstaller();
+            for (PackageInstaller.SessionInfo info : installer.getMySessions()) {
+                try {
+                    installer.abandonSession(info.getSessionId());
+                } catch (Exception ignored) {
+                    // já encerrada
+                }
+            }
+        } catch (Exception ignored) {
+            // sem acesso às sessões neste aparelho: segue
+        }
+    }
+
+    /**
+     * Instala pela sessão do PackageInstaller (o Android mostra a confirmação, sem lista de
+     * instaladores). Devolve true se a sessão foi confirmada ao sistema; o resultado vem depois,
+     * pelo listener. Devolve false (sem chamar o listener) se nem foi possível criar a sessão.
+     */
+    private static boolean installWithSession(final Context app, File apk,
+                                              final InstallListener listener) {
         try {
             PackageInstaller installer = app.getPackageManager().getPackageInstaller();
             PackageInstaller.SessionParams params = new PackageInstaller.SessionParams(
                     PackageInstaller.SessionParams.MODE_FULL_INSTALL);
+            params.setAppPackageName(app.getPackageName());
             int id = installer.createSession(params);
             PackageInstaller.Session session = installer.openSession(id);
             try {
@@ -392,14 +420,19 @@ public final class Updater {
                 }
 
                 final String action = app.getPackageName() + ".INSTALL_RESULT";
+                final boolean[] confirmShown = {false};
                 BroadcastReceiver receiver = new BroadcastReceiver() {
                     @Override
                     public void onReceive(Context context, Intent intent) {
                         int status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS,
                                 PackageInstaller.STATUS_FAILURE);
                         if (status == PackageInstaller.STATUS_PENDING_USER_ACTION) {
+                            if (confirmShown[0]) {
+                                return; // a confirmação já foi aberta: não abre outra
+                            }
                             Intent confirm = intent.getParcelableExtra(Intent.EXTRA_INTENT);
                             if (confirm != null) {
+                                confirmShown[0] = true;
                                 confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                 try {
                                     app.startActivity(confirm);
@@ -415,7 +448,9 @@ public final class Updater {
                         } catch (Exception ignored) {
                             // já removido
                         }
-                        if (status != PackageInstaller.STATUS_SUCCESS) {
+                        // Cancelou na confirmação: não é erro, segue sem aviso
+                        if (status != PackageInstaller.STATUS_SUCCESS
+                                && status != PackageInstaller.STATUS_FAILURE_ABORTED) {
                             listener.onFailed("O Android não conseguiu instalar a atualização.");
                         }
                     }
@@ -431,11 +466,12 @@ public final class Updater {
                 Intent result = new Intent(action).setPackage(app.getPackageName());
                 PendingIntent pending = PendingIntent.getBroadcast(app, id, result, flags);
                 session.commit(pending.getIntentSender());
+                return true;
             } finally {
                 session.close();
             }
         } catch (Exception e) {
-            listener.onFailed("Este aparelho não conseguiu abrir o instalador de aplicativos.");
+            return false;
         }
     }
 
