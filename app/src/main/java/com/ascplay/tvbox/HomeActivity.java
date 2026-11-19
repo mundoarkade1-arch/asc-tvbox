@@ -95,6 +95,9 @@ public class HomeActivity extends AscActivity {
     private GlassSurface.Button btnUpdateLater;
     private Updater.Info pendingUpdate;
     private boolean downloading = false;
+    /** Quando foi a última verificação de atualização (ms); a Home revê ao voltar de outra tela. */
+    private long lastUpdateCheckMs = 0L;
+    private static final long UPDATE_RECHECK_MS = 15L * 60L * 1000L;
 
     // Ignorar respostas antigas
     private int railGen = 0;
@@ -210,6 +213,11 @@ public class HomeActivity extends AscActivity {
             return;
         }
         resumed = true;
+        // Voltou depois de um tempo e ainda não há aviso na tela: confere de novo se há versão nova
+        if (!downloading && (updateDialog == null || !updateDialog.isShowing())
+                && System.currentTimeMillis() - lastUpdateCheckMs > UPDATE_RECHECK_MS) {
+            checkForUpdate();
+        }
         handler.removeCallbacks(heroTick);
         handler.postDelayed(heroTick, HERO_PERIOD_MS);
         topBar.setUpdatedText(updatedText(HomeStore.lastUpdated(this, owner)));
@@ -1444,6 +1452,7 @@ public class HomeActivity extends AscActivity {
     // ---------------------------------------------------------------------------------
 
     private void checkForUpdate() {
+        lastUpdateCheckMs = System.currentTimeMillis();
         Updater.checkAsync(this, new Updater.CheckListener() {
             @Override
             public void onUpdateAvailable(Updater.Info info) {

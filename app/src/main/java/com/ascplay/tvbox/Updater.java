@@ -102,22 +102,51 @@ public final class Updater {
 
     // ---------- 1) Verificar ----------
 
-    /** Verifica em segundo plano se existe versão mais nova. Falhas ficam em silêncio. */
+    /** Esperas (ms) antes de cada tentativa da verificação: a internet do TV box pode demorar. */
+    private static final long[] CHECK_WAITS_MS = {0L, 5000L, 15000L, 30000L};
+
+    /** true se a última verificação NÃO conseguiu falar com o servidor (≠ "não há versão nova"). */
+    private static volatile boolean lastCheckFailed = false;
+
+    /** Diz se a última verificação falhou (sem internet, GitHub fora, resposta estranha). */
+    public static boolean lastCheckFailed() {
+        return lastCheckFailed;
+    }
+
+    /**
+     * Verifica em segundo plano se existe versão mais nova. Se não conseguir falar com o servidor
+     * (internet ainda subindo no TV box, por exemplo), tenta de novo algumas vezes antes de desistir.
+     * Só avisa "sem novidade" (onNoUpdate) no fim; lastCheckFailed() diz se foi por falha.
+     */
     public static void checkAsync(final Context context, final CheckListener listener) {
         final Context app = context.getApplicationContext();
         new Thread(new Runnable() {
             @Override
             public void run() {
                 Info found = null;
-                try {
-                    int installed = installedVersionCode(app);
-                    Info latest = fetchLatest();
-                    if (installed > 0 && latest != null && latest.code > installed) {
-                        found = latest;
+                boolean answered = false;
+                int installed = installedVersionCode(app);
+                for (int attempt = 0; attempt < CHECK_WAITS_MS.length && !answered; attempt++) {
+                    if (CHECK_WAITS_MS[attempt] > 0) {
+                        try {
+                            Thread.sleep(CHECK_WAITS_MS[attempt]);
+                        } catch (InterruptedException e) {
+                            break;
+                        }
                     }
-                } catch (Exception ignored) {
-                    // sem internet ou resposta estranha: segue sem avisar
+                    try {
+                        Info latest = fetchLatest();
+                        if (latest != null) {
+                            answered = true;
+                            if (installed > 0 && latest.code > installed) {
+                                found = latest;
+                            }
+                        }
+                    } catch (Exception ignored) {
+                        // sem internet agora: tenta de novo
+                    }
                 }
+                lastCheckFailed = !answered;
                 final Info result = found;
                 MAIN.post(new Runnable() {
                     @Override
@@ -432,6 +461,8 @@ public final class Updater {
             conn.setConnectTimeout(CONNECT_TIMEOUT_MS);
             conn.setReadTimeout(READ_TIMEOUT_MS);
             conn.setInstanceFollowRedirects(false);
+            conn.setUseCaches(false); // sempre a resposta nova (não a guardada)
+            conn.setRequestProperty("Cache-Control", "no-cache");
             conn.setRequestProperty("User-Agent", USER_AGENT);
             int code = conn.getResponseCode();
             if (code == 301 || code == 302 || code == 303 || code == 307 || code == 308) {

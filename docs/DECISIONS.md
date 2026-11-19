@@ -719,3 +719,9 @@
 - HeroBanner: fundo = backdrop (CENTER_CROP) com escurecimento à esquerda, embaixo e no topo; esquerda: EM DESTAQUE, nome (até 2 linhas), Assistir e + Minha lista, bolinhas do carrossel; direita: capa 2:3 inteira abaixo da busca. Sem backdrop, fica o degradê do app. HEIGHT_DP 232.
 - TopBar: busca 200x30dp e relógio 12sp; o aviso "Lista atualizada" saiu (pedido anterior do dono); setUpdatedText e setUpdating ficam sem efeito.
 
+## 19/11/2026 (16) - Atualização que "não achava" ou "não procurava"
+- Problema (visto no TX9): ao abrir o app não achava a versão nova; só achava ao perguntar em Ajustes. Às vezes não aparecia, às vezes parecia não procurar.
+- Causas prováveis: (a) a verificação rodava UMA vez ao abrir, logo quando o Wi-Fi do TV box ainda estava subindo, e qualquer falha era engolida em silêncio; (b) a Home nunca conferia de novo ao voltar de outra tela; (c) Ajustes dizia "Nenhuma atualização encontrada" mesmo quando a internet tinha falhado; (d) a resposta podia vir guardada (cache).
+- Decisão: Updater.checkAsync tenta até 4 vezes (esperas 0, 5, 15 e 30 s) antes de desistir; Updater.lastCheckFailed() diz se foi falha. Conexão sem cache (setUseCaches(false) e Cache-Control: no-cache). HomeActivity confere de novo ao voltar (onResume) se passaram 15 min e não há janela nem download. Ajustes mostra "Não consegui verificar agora. Confira a internet e tente de novo." em falha e "Você já está na versão mais nova." quando não há versão nova.
+- Não mexido: version.json e o fluxo de publicação (apk.yml). Se mesmo assim falhar, ver no Actions se o Release foi publicado (precisa dos Secrets da chave).
+

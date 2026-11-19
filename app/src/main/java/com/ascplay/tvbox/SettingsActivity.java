@@ -759,7 +759,12 @@ public class SettingsActivity extends AscActivity {
                 if (isFinishing() || isDestroyed()) {
                     return;
                 }
-                showUpdate("Nenhuma atualização encontrada agora.", COLOR_WHITE);
+                if (Updater.lastCheckFailed()) {
+                    showUpdate("Não consegui verificar agora. Confira a internet e tente de novo.",
+                            COLOR_WHITE);
+                } else {
+                    showUpdate("Você já está na versão mais nova.", COLOR_WHITE);
+                }
             }
         });
     }

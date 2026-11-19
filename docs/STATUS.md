@@ -23,6 +23,7 @@ Visual Glass da Home, Ajustes, escala automática e janelas novas estão no GitH
 - 19/11 (11): player com fundo preto e encaixe sem cortar (faixas azuis eram o fundo do layout). Falta Actions e teste no TX9.
 - 19/11 (12): banner 350 com card da capa inteira à direita. Três tentativas foram desfeitas (DECISIONS 14); depois veio o (15).
 - 19/11 (15): banner novo com imagem larga ao fundo (backdrop), capa à direita, bolinhas, busca e relógio menores. Falta Actions e teste no TX9 (ver se o servidor manda backdrop_path e se a capa e o nome cabem).
+- 19/11 (16): atualização revista: tenta 4 vezes ao abrir, revê ao voltar à Home (15 min), mensagens honestas em Ajustes. Falta Actions e teste no TX9.
 - 19/11 (13): Updater: desfeito o instalador escolhido sozinho (causava aviso e "assistente" que não instala). Falta Actions e teste no TX9; limpar o padrão salvo no TV box (ver DECISIONS).
 - 19/11 (6): categorias de CANAIS na ordem padrão dos 13 grupos (CategoryGroups, CategoryOverrides) + "Mover para" segurando o OK. Falta Actions e teste no TX9. Pendente de decisão do dono: Adultos oculto por padrão, títulos de grupo, juntar categorias.
 - 19/11 (5): mensagem "Servidor em manutenção" (ServerMessage) no lugar de erro com código para falha de conexão. Falta Actions e teste no TX9 (desligar a internet e ver "Sem internet"; lista com servidor fora do ar e ver "manutenção").
