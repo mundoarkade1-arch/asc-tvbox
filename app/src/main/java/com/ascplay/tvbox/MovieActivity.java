@@ -100,7 +100,7 @@ public class MovieActivity extends AscActivity {
 
         if (CredentialStore.MODE_XTREAM.equals(creds.mode)) {
             tvPlot.setTextColor(COLOR_NEUTRAL);
-            tvPlot.setText("Carregando...");
+            Skeleton.loadingText(tvPlot);
             loadDetails();
         } else {
             tvPlot.setTextColor(COLOR_NEUTRAL);

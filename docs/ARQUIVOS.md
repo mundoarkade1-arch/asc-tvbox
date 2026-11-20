@@ -131,4 +131,5 @@ Outros: res/values/strings.xml, res/xml/file_paths.xml, AndroidManifest.xml, app
 ## Adicionados em 19/11/2026
 - app/src/main/java/com/ascplay/tvbox/AppPrefs.java: preferências de Ajustes (atualização ao abrir, áudio, legenda, qualidade máxima, grupos de canais ocultos).
 - app/src/main/res/values/asc_support.xml: texto de contato mostrado em Ajustes > Ajuda.
+- app/src/main/java/com/ascplay/tvbox/Skeleton.java: esqueleto de carregamento (blocos com brilho, grade e sinopse).
 

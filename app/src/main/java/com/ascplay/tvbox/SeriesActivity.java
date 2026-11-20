@@ -139,7 +139,7 @@ public class SeriesActivity extends AscActivity {
 
         tvTitle.setText(seriesName);
         tvPlot.setTextColor(COLOR_NEUTRAL);
-        tvPlot.setText("Carregando...");
+        Skeleton.loadingText(tvPlot);
         if (icon != null && !icon.isEmpty()) {
             ImageLoader.load(ivCover, icon);
         }

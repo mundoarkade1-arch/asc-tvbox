@@ -35,6 +35,8 @@ final class HeroBanner extends FrameLayout {
 
     private final ImageView backdrop;
     private final ImageView art;
+    private final LinearLayout textCol;
+    private final FrameLayout skeleton;
     private final FrameLayout posterCard;
     private final TextView chipKind;
     private final TextView chipMeta;
@@ -89,6 +91,7 @@ final class HeroBanner extends FrameLayout {
 
         // coluna do texto (esquerda, embaixo)
         LinearLayout pc = new LinearLayout(c);
+        textCol = pc;
         pc.setOrientation(LinearLayout.VERTICAL);
         pc.setClipChildren(false);
         pc.setClipToPadding(false);
@@ -177,6 +180,41 @@ final class HeroBanner extends FrameLayout {
         cp.bottomMargin = GlassKit.dp(c, POSTER_BOTTOM_DP);
         addView(posterCard, cp);
 
+        // esqueleto de carregamento: barras no lugar do texto e um bloco no lugar da capa
+        skeleton = new FrameLayout(c);
+        skeleton.setClipChildren(false);
+        LinearLayout sk = new LinearLayout(c);
+        sk.setOrientation(LinearLayout.VERTICAL);
+        sk.addView(Skeleton.block(c, 96, 20, 10));
+        Skeleton t1 = Skeleton.block(c, 240, 26, 8);
+        ((LinearLayout.LayoutParams) t1.getLayoutParams()).topMargin = GlassKit.dp(c, 12);
+        sk.addView(t1);
+        Skeleton t2 = Skeleton.block(c, 160, 26, 8);
+        ((LinearLayout.LayoutParams) t2.getLayoutParams()).topMargin = GlassKit.dp(c, 8);
+        sk.addView(t2);
+        LinearLayout skBtns = new LinearLayout(c);
+        skBtns.setOrientation(LinearLayout.HORIZONTAL);
+        skBtns.addView(Skeleton.block(c, 112, 38, 16));
+        Skeleton b2 = Skeleton.block(c, 124, 38, 16);
+        ((LinearLayout.LayoutParams) b2.getLayoutParams()).leftMargin = GlassKit.dp(c, 10);
+        skBtns.addView(b2);
+        LinearLayout.LayoutParams sbl = new LinearLayout.LayoutParams(
+                LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        sbl.topMargin = GlassKit.dp(c, 14);
+        sk.addView(skBtns, sbl);
+        FrameLayout.LayoutParams skp = new FrameLayout.LayoutParams(
+                GlassKit.dp(c, 400), LayoutParams.WRAP_CONTENT, Gravity.START | Gravity.BOTTOM);
+        skp.leftMargin = GlassKit.dp(c, 20);
+        skp.bottomMargin = GlassKit.dp(c, 20);
+        skeleton.addView(sk, skp);
+        FrameLayout.LayoutParams skPoster = new FrameLayout.LayoutParams(cardW, cardH,
+                Gravity.END | Gravity.BOTTOM);
+        skPoster.rightMargin = GlassKit.dp(c, 40);
+        skPoster.bottomMargin = GlassKit.dp(c, POSTER_BOTTOM_DP);
+        skeleton.addView(new Skeleton(c, GlassKit.dp(c, 14)), skPoster);
+        addView(skeleton, new FrameLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+
         showLoading();
     }
 
@@ -226,6 +264,8 @@ final class HeroBanner extends FrameLayout {
 
     /** Antes de ter um destaque: título de espera, sem botões, capa e fundo vazios. */
     void showLoading() {
+        skeleton.setVisibility(VISIBLE);
+        textCol.setVisibility(GONE);
         chipKind.setVisibility(GONE);
         chipMeta.setVisibility(GONE);
         chipRating.setVisibility(GONE);
@@ -243,6 +283,8 @@ final class HeroBanner extends FrameLayout {
     /** Mostra um destaque. Não pede foco. backdropUrl pode ser vazio (fica o degradê do app). */
     void showEntry(String name, String kindLabel, String meta, String rating, String artUrl,
                    String backdropUrl, boolean inList) {
+        skeleton.setVisibility(GONE);
+        textCol.setVisibility(VISIBLE);
         title.setText(name == null ? "" : name);
         // Só o selo "EM DESTAQUE" (pedido do dono): sem Filme/Série, gênero·ano e nota.
         setChip(chipKind, "");

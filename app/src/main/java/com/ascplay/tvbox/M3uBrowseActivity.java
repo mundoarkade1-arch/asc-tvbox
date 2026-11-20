@@ -554,6 +554,7 @@ public class M3uBrowseActivity extends AscActivity {
             showStatus("Nada encontrado nesta categoria.", COLOR_NEUTRAL);
             return;
         }
+        setLoadingSkeleton(false);
         tvStatus.setVisibility(View.GONE);
         if (focusGridWhenReady) {
             focusGridWhenReady = false;
@@ -595,10 +596,33 @@ public class M3uBrowseActivity extends AscActivity {
 
     // ---------- Ajudas ----------
 
+    private View skeletonView;
+
+    /** Mostra ou esconde o esqueleto da grade (por cima da grade, no lugar do "Carregando..."). */
+    private void setLoadingSkeleton(boolean on) {
+        if (on) {
+            if (skeletonView == null) {
+                boolean live = kind == XtreamApi.Kind.LIVE;
+                skeletonView = Skeleton.grid(this,
+                        live ? ScreenScale.COLS_LIVE : ScreenScale.COLS_POSTER,
+                        live ? 6 : 2, live ? 76 : 240, !live);
+                ((ViewGroup) tvStatus.getParent()).addView(skeletonView,
+                        new android.widget.FrameLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT));
+            }
+            skeletonView.setVisibility(View.VISIBLE);
+        } else if (skeletonView != null) {
+            skeletonView.setVisibility(View.GONE);
+        }
+    }
+
     private void showStatus(String text, int color) {
+        boolean loadingMsg = "Carregando...".equals(text);
+        setLoadingSkeleton(loadingMsg);
         tvStatus.setTextColor(color);
         tvStatus.setText(text);
-        tvStatus.setVisibility(View.VISIBLE);
+        tvStatus.setVisibility(loadingMsg ? View.GONE : View.VISIBLE);
     }
 
     private int dp(int value) {

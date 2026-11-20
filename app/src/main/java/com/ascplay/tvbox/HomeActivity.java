@@ -379,6 +379,7 @@ public class HomeActivity extends AscActivity {
         rowFav.setVisibility(View.GONE);
         rowFav.viewAllButton().setVisibility(View.GONE);
         rowLive = addRow(body, "Canais ao vivo");
+        rowLive.setSkeletonLive(true);
         rowMovie = addRow(body, "Filmes");
         rowSeries = addRow(body, "Séries");
 

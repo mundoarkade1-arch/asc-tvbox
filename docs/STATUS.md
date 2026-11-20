@@ -31,6 +31,7 @@ Visual Glass da Home, Ajustes, escala automática e janelas novas estão no GitH
 - 19/11 (21): menu lateral com vidro transparente (STYLE_RAIL e STYLE_RAIL_ITEM). Falta Actions e teste no TX9.
 - 19/11 (22): menu aberto mais estreito (118dp) e recolhe ao apertar OK. Falta Actions e teste no TX9.
 - 19/11 (23): menu lateral fixo (52dp) com o nome embaixo de cada ícone; não abre mais. Falta Actions e teste no TX9 (ver se os nomes cabem na largura).
+- 19/11 (24): skeleton loader na Home (linhas e banner), nas listas Filmes/Séries/Ao vivo e na sinopse. Falta Actions e teste no TX9 (ver se o brilho anda liso e se some quando carrega).
 - 19/11 (13): Updater: desfeito o instalador escolhido sozinho (causava aviso e "assistente" que não instala). Falta Actions e teste no TX9; limpar o padrão salvo no TV box (ver DECISIONS).
 - 19/11 (6): categorias de CANAIS na ordem padrão dos 13 grupos (CategoryGroups, CategoryOverrides) + "Mover para" segurando o OK. Falta Actions e teste no TX9. Pendente de decisão do dono: Adultos oculto por padrão, títulos de grupo, juntar categorias.
 - 19/11 (5): mensagem "Servidor em manutenção" (ServerMessage) no lugar de erro com código para falha de conexão. Falta Actions e teste no TX9 (desligar a internet e ver "Sem internet"; lista com servidor fora do ar e ver "manutenção").

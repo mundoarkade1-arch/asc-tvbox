@@ -766,3 +766,11 @@
 - Pedido do dono: deixar o menu só recolhido, do mesmo tamanho, com o nome embaixo de cada item; não abrir mais.
 - SideRail: removido o abrir/recolher (setExpanded, animação, escuta de foco, dispatchKeyEvent do OK, fundo escuro e EXPANDED_DP). Largura fixa de 52dp (WIDTH_DP); cada item (46dp) mostra o ícone com o nome pequeno (8sp) embaixo; se faltar altura, a FitColumn esconde os nomes e depois o logo, como antes. Mantidos: vidro transparente (STYLE_RAIL e STYLE_RAIL_ITEM), logo no topo e o relógio fixo acima do menu (host()), sem elevação. Substitui as decisões (19) e (22) no comportamento de abrir.
 
+## 19/11/2026 (24) - Skeleton loader (esqueleto de carregamento) fora do player
+- Pedido do dono: o app, menos o player, carregar com skeleton loader.
+- Skeleton.java (novo): bloco de vidro com brilho que passa da esquerda para a direita. Um único ValueAnimator move o brilho de todos os blocos visíveis e só roda enquanto houver algum (leve para TV box de 1 GB). Construtores: block(), grid() (grade das listas) e loadingText() (linhas no lugar da sinopse).
+- Onde aparece: SectionRow (linhas da Home; cards de canal no Ao vivo, pôsteres nos outros), HeroBanner (barras do texto, dos botões e bloco da capa) , BrowseActivity e M3uBrowseActivity (grade por cima da grade enquanto carrega; some quando chegam itens ou aparece erro/"nada encontrado") e sinopse em MovieActivity e SeriesActivity (3 linhas; somem assim que o texto recebe qualquer conteúdo).
+- O texto "Carregando..." saiu desses lugares. Mensagens de erro e "vazio" continuam como antes.
+- Não feito: episódios em SeriesActivity e M3uSeriesActivity, busca (SearchAllActivity), Continue assistindo e diálogos (continuam com texto "Carregando...").
+- Limite conhecido: se a Home não tiver nenhum destaque (todas as listas vazias ou com erro), o banner continua em esqueleto.
+

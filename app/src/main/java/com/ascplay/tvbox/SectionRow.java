@@ -25,6 +25,8 @@ final class SectionRow extends LinearLayout {
     private final TextView statusText;
     private final HorizontalScrollView scroll;
     private final LinearLayout rail;
+    private final LinearLayout skeletonBox;
+    private boolean skeletonLive = false;
 
     SectionRow(Context c, String titleText) {
         super(c);
@@ -110,7 +112,35 @@ final class SectionRow extends LinearLayout {
         scroll.addView(rail, new FrameLayout.LayoutParams(
                 LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
 
+        // esqueleto de carregamento (no lugar do texto "Carregando...")
+        skeletonBox = new LinearLayout(c);
+        skeletonBox.setOrientation(HORIZONTAL);
+        skeletonBox.setClipChildren(false);
+        skeletonBox.setPadding(GlassKit.dp(c, 6), GlassKit.dp(c, 9), 0, GlassKit.dp(c, 9));
+        addView(skeletonBox, new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        fillSkeleton();
+
         showLoading();
+    }
+
+    /** Cards de esqueleto no formato certo: canais (largos) ou pôsteres (2:3). */
+    private void fillSkeleton() {
+        Context c = getContext();
+        skeletonBox.removeAllViews();
+        for (int i = 0; i < 8; i++) {
+            LinearLayout.LayoutParams lp = skeletonLive ? ChannelCard.params(c)
+                    : PosterCard.params(c);
+            skeletonBox.addView(new Skeleton(c, GlassKit.dp(c, 14)), lp);
+        }
+    }
+
+    /** true: esqueleto de cards de canal (Ao vivo); false: de pôsteres (padrão). */
+    void setSkeletonLive(boolean live) {
+        if (live != skeletonLive) {
+            skeletonLive = live;
+            fillSkeleton();
+        }
     }
 
     LinearLayout rail() {
@@ -126,7 +156,10 @@ final class SectionRow extends LinearLayout {
     }
 
     void showLoading() {
-        setStatus("Carregando...", false);
+        statusBox.setVisibility(GONE);
+        scroll.setVisibility(GONE);
+        skeletonBox.setVisibility(VISIBLE);
+        count.setText("");
     }
 
     void showMessage(String text) {
@@ -144,6 +177,7 @@ final class SectionRow extends LinearLayout {
         statusText.setTextColor(GlassKit.color(c,
                 error ? R.color.asc_text_primary : R.color.asc_text_secondary));
         statusBox.setVisibility(VISIBLE);
+        skeletonBox.setVisibility(GONE);
         scroll.setVisibility(GONE);
         count.setText("");
     }
@@ -151,6 +185,7 @@ final class SectionRow extends LinearLayout {
     /** Há cards: esconde o estado e mostra a fileira. */
     void showItems() {
         statusBox.setVisibility(GONE);
+        skeletonBox.setVisibility(GONE);
         scroll.setVisibility(VISIBLE);
     }
 
