@@ -49,7 +49,8 @@ final class NavBar {
         lp.leftMargin = GlassKit.dp(activity, 16);
         lp.topMargin = GlassKit.dp(activity, 16);
         lp.bottomMargin = GlassKit.dp(activity, 16);
-        parent.addView(rail, index, lp);
+        parent.setClipChildren(false);
+        parent.addView(SideRail.host(activity, rail), index, lp);
 
         rail.home.setSelected(false);
         GlassSurface selected;

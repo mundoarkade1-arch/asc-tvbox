@@ -317,7 +317,7 @@ public class HomeActivity extends AscActivity {
         rl.leftMargin = GlassKit.dp(this, 16);
         rl.topMargin = GlassKit.dp(this, 16);
         rl.bottomMargin = GlassKit.dp(this, 16);
-        main.addView(rail, rl);
+        main.addView(SideRail.host(this, rail), rl);
 
         // Coluna de conteúdo: margem de segurança (overscan) de 48px = 24dp
         LinearLayout column = new LinearLayout(this);

@@ -736,3 +736,9 @@
 - Decisão: Updater.startInstaller agora usa PRIMEIRO a sessão do PackageInstaller (fala direto com o instalador do sistema, sem lista). Antes cancela as sessões antigas deste app (API 24+). A confirmação abre uma vez só. Cancelar na confirmação não mostra erro. Só se a sessão nem puder ser criada é que tenta INSTALL_PACKAGE e VIEW (jeito antigo), sem forçar nenhum app.
 - O padrão já gravado no TV box ("Sempre" no assistente) não sai pelo app: Configurações > Aplicativos > o assistente > Limpar padrões (ou desativar).
 
+## 19/11/2026 (19) - Menu lateral recolhido (só ícones) que abre ao focar; relógio fixo acima
+- Pedido do dono (foto de referência de outro app): menu recolhido mostrando só os ícones; ao apertar para a esquerda e entrar nele, abre maior mostrando o nome de cada item; logo no topo; relógio maior, fora do menu, fixo acima dele e sempre visível.
+- SideRail: recolhido 52dp (WIDTH_DP) só com ícones (20dp); aberto 150dp (EXPANDED_DP) com ícone + nome, por cima do conteúdo, com fundo escuro atrás. Abre quando o foco entra em qualquer item (OnGlobalFocusChangeListener) e recolhe quando sai (seta para a direita ou outro foco). Animação de 140 ms na largura. A ordem do foco (relink) e o setOnRight não mudaram.
+- SideRail.host(): quadro de 52dp com o relógio 24h (15sp, negrito) fixo no topo e o menu 28dp abaixo; elevation 16dp para o menu aberto ficar acima do conteúdo. HomeActivity, SettingsActivity e NavBar colocam o host no lugar do menu (mesmas margens). NavBar passa a desligar o corte de filhos do pai do menu.
+- O relógio saiu de dentro do menu (decisão 17 trocada por esta).
+
