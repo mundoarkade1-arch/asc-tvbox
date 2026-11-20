@@ -56,7 +56,7 @@ final class SideRail extends GlassSurface {
             };
 
     SideRail(Context c) {
-        super(c, GlassKit.d(c, 40), false, STYLE_GLASS, true);
+        super(c, GlassKit.d(c, 40), false, STYLE_RAIL, false);
         // O item em foco cresce e tem anel/brilho: sem isto o menu cortava a borda de seleção
         setClipChildren(false);
         setClipToPadding(false);
@@ -65,7 +65,7 @@ final class SideRail extends GlassSurface {
         backing = new View(c);
         GradientDrawable bg = new GradientDrawable();
         bg.setCornerRadius(GlassKit.d(c, 40));
-        bg.setColor(GlassKit.alpha(c, R.color.asc_bg_scrim_dialog, 0.88f));
+        bg.setColor(GlassKit.alpha(c, R.color.asc_bg_scrim_dialog, 0.62f));
         backing.setBackground(bg);
         backing.setAlpha(0f);
         addView(backing, new FrameLayout.LayoutParams(
@@ -210,7 +210,7 @@ final class SideRail extends GlassSurface {
     }
 
     private GlassSurface item(Context c, LinearLayout parent, int iconRes, String label) {
-        GlassSurface s = new GlassSurface(c, GlassKit.dp(c, 12), true);
+        GlassSurface s = new GlassSurface(c, GlassKit.dp(c, 12), true, STYLE_RAIL_ITEM, false);
         s.setContentDescription(label);
 
         LinearLayout inner = new LinearLayout(c);
@@ -338,6 +338,8 @@ final class SideRail extends GlassSurface {
         h.setClipChildren(false);
         h.setClipToPadding(false);
         h.setElevation(GlassKit.dp(c, 16)); // desenha acima do conteúdo quando o menu abre
+        h.setOutlineProvider(null); // sem sombra própria (o vidro fica transparente)
+        h.setClipToOutline(false);
 
         TextClock clock = new TextClock(c);
         clock.setFormat24Hour("HH:mm");

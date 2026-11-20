@@ -35,6 +35,10 @@ class GlassSurface extends FrameLayout {
     static final int STYLE_CLEAR = 2;
     /** Vidro de verdade: quase transparente, só um leve véu e borda (por cima de imagens). */
     static final int STYLE_SEE_THROUGH = 3;
+    /** Menu lateral: vidro transparente (só um véu escuro bem leve e borda fina). */
+    static final int STYLE_RAIL = 4;
+    /** Item do menu lateral: sem fundo; só ganha um véu claro quando selecionado ou em foco. */
+    static final int STYLE_RAIL_ITEM = 5;
 
     private final Fill fill;
 
@@ -120,6 +124,10 @@ class GlassSurface extends FrameLayout {
         private final int seeFocusHi;
         private final int seeFocusLo;
         private final int borderSee;
+        private final int railHi;
+        private final int railLo;
+        private final int itemHi;
+        private final int itemLo;
 
         private boolean selected = false;
         private boolean focused = false;
@@ -144,6 +152,10 @@ class GlassSurface extends FrameLayout {
             seeFocusHi = GlassKit.alpha(c, R.color.asc_text_primary, 0.30f);
             seeFocusLo = GlassKit.alpha(c, R.color.asc_text_primary, 0.16f);
             borderSee = GlassKit.alpha(c, R.color.asc_text_primary, 0.30f);
+            railHi = GlassKit.alpha(c, R.color.asc_bg_scrim_dialog, 0.34f);
+            railLo = GlassKit.alpha(c, R.color.asc_bg_scrim_dialog, 0.20f);
+            itemHi = GlassKit.alpha(c, R.color.asc_text_primary, 0.14f);
+            itemLo = GlassKit.alpha(c, R.color.asc_text_primary, 0.06f);
             focusHi = selHi;
             focusLo = selLo;
             // borda de 1dp: branco com ~10% (bem sutil)
@@ -210,6 +222,12 @@ class GlassSurface extends FrameLayout {
             } else if (style == STYLE_CLEAR) {
                 hi = focused ? clearFocusHi : clearHi;
                 lo = focused ? clearFocusLo : clearLo;
+            } else if (style == STYLE_RAIL) {
+                hi = railHi;
+                lo = railLo;
+            } else if (style == STYLE_RAIL_ITEM) {
+                hi = (selected || focused) ? itemHi : 0;
+                lo = (selected || focused) ? itemLo : 0;
             } else if (selected) {
                 hi = selHi;
                 lo = selLo;
@@ -247,14 +265,15 @@ class GlassSurface extends FrameLayout {
 
             // borda de 1dp
             borderPaint.setColor(selected ? borderSelected
-                    : (style == STYLE_SEE_THROUGH ? borderSee : borderNormal));
+                    : (style == STYLE_SEE_THROUGH ? borderSee
+                    : (style == STYLE_RAIL_ITEM ? 0 : borderNormal)));
             float half = line / 2f;
             rect.set(b.left + half, b.top + half, b.right - half, b.bottom - bottomGap - half);
             canvas.drawRoundRect(rect, Math.max(0f, corner - half), Math.max(0f, corner - half),
                     borderPaint);
 
             // brilho interno no topo (linha 1dp mais clara)
-            sheenPaint.setColor(sheenNormal);
+            sheenPaint.setColor(style == STYLE_RAIL_ITEM ? 0 : sheenNormal);
             float y = b.top + line * 1.5f;
             float x1 = b.left + corner * 0.8f;
             float x2 = b.right - corner * 0.8f;

@@ -752,3 +752,9 @@
 - Diagnóstico: botão "Testar conexão" usa o Updater.checkAsync (até 4 tentativas, pode levar até cerca de 50 s se estiver sem internet).
 - Não feito: Perfis (8), Tamanho da interface (10) e Aparência (1): o dono não pediu.
 
+## 19/11/2026 (21) - Menu lateral com vidro transparente
+- Pedido do dono: o vidro do menu lateral tinha que ser transparente (estava com fundo branco).
+- GlassSurface ganhou dois estilos: STYLE_RAIL (véu escuro bem leve, 34% em cima e 20% embaixo, usando asc_bg_scrim_dialog, com borda fina) e STYLE_RAIL_ITEM (sem fundo; só um véu claro e o tom azul quando selecionado ou em foco; sem borda nem brilho parados). Sem sombra própria.
+- SideRail usa STYLE_RAIL e os itens STYLE_RAIL_ITEM. O fundo escuro de quando o menu abre baixou de 88% para 62% para continuar transparente. O quadro do relógio (host) perdeu a sombra (setOutlineProvider(null)), mantendo a elevação só para ficar por cima do conteúdo.
+- Os outros cards do app continuam com o vidro de antes.
+
