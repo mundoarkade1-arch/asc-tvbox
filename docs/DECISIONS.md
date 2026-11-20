@@ -758,3 +758,7 @@
 - SideRail usa STYLE_RAIL e os itens STYLE_RAIL_ITEM. O fundo escuro de quando o menu abre baixou de 88% para 62% para continuar transparente. O quadro do relógio (host) perdeu a sombra (setOutlineProvider(null)), mantendo a elevação só para ficar por cima do conteúdo.
 - Os outros cards do app continuam com o vidro de antes.
 
+## 19/11/2026 (22) - Menu lateral aberto menor e que fecha ao escolher
+- Pedido do dono: menu aberto menor e mais discreto; ao escolher uma opção (OK), fechar na hora.
+- SideRail: EXPANDED_DP 150 -> 118; nomes 11sp; espaços internos menores. dispatchKeyEvent: depois de OK/Enter (soltar a tecla) em qualquer item, o clique roda e o menu recolhe (setExpanded(false)). Se o foco continuar no menu e a pessoa apertar cima/baixo, ele abre de novo.
+

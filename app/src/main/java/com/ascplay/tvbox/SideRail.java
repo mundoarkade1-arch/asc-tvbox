@@ -33,7 +33,7 @@ final class SideRail extends GlassSurface {
     /** Largura do menu recolhido (dp): só ícones. */
     static final int WIDTH_DP = 52;
     /** Largura do menu aberto (dp): ícone + nome. */
-    static final int EXPANDED_DP = 150;
+    static final int EXPANDED_DP = 118;
 
     final GlassSurface home;
     final GlassSurface live;
@@ -228,7 +228,7 @@ final class SideRail extends GlassSurface {
 
         TextView t = new TextView(c);
         t.setText(label);
-        t.setTextSize(GlassKit.sp(12));
+        t.setTextSize(GlassKit.sp(11));
         t.setSingleLine(true);
         t.setEllipsize(TextUtils.TruncateAt.END);
         t.setGravity(Gravity.CENTER_VERTICAL);
@@ -238,7 +238,7 @@ final class SideRail extends GlassSurface {
         t.setVisibility(GONE); // recolhido: só o ícone
         LinearLayout.LayoutParams tl = new LinearLayout.LayoutParams(
                 LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        tl.leftMargin = GlassKit.dp(c, 12);
+        tl.leftMargin = GlassKit.dp(c, 8);
         inner.addView(t, tl);
 
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
@@ -282,6 +282,20 @@ final class SideRail extends GlassSurface {
         super.onDetachedFromWindow();
     }
 
+    /** OK (ou Enter) em qualquer item: o clique roda e o menu recolhe na hora. */
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        boolean handled = super.dispatchKeyEvent(event);
+        if (event.getAction() == KeyEvent.ACTION_UP) {
+            int k = event.getKeyCode();
+            if (k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER
+                    || k == KeyEvent.KEYCODE_NUMPAD_ENTER) {
+                setExpanded(false);
+            }
+        }
+        return handled;
+    }
+
     /** Abre (ícone + nome, por cima do conteúdo) ou recolhe (só ícones). */
     void setExpanded(boolean open) {
         if (open == expanded) {
@@ -295,7 +309,7 @@ final class SideRail extends GlassSurface {
             View label = inner.getChildAt(1);
             inner.setOrientation(open ? LinearLayout.HORIZONTAL : LinearLayout.VERTICAL);
             inner.setGravity(open ? (Gravity.START | Gravity.CENTER_VERTICAL) : Gravity.CENTER);
-            inner.setPadding(open ? GlassKit.dp(c, 14) : 0, 0, 0, 0);
+            inner.setPadding(open ? GlassKit.dp(c, 10) : 0, 0, 0, 0);
             label.setVisibility(open ? VISIBLE : GONE);
         }
         col.requestLayout();
