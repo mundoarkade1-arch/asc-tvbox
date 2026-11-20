@@ -413,6 +413,15 @@ public class BrowseActivity extends AscActivity {
             }
             return collator.compare(a.name, b.name);
         });
+        if (byGroup) {
+            // Ajustes > Categorias: grupos que a pessoa escondeu não aparecem na lista
+            for (java.util.Iterator<XtreamApi.Category> it = sorted.iterator(); it.hasNext(); ) {
+                XtreamApi.Category hc = it.next();
+                if (AppPrefs.isGroupHidden(this, CategoryOverrides.of(this, hc.name))) {
+                    it.remove();
+                }
+            }
+        }
         // Fica só a "Todas as categorias" (posição 0) e põe as outras na nova ordem
         while (catIds.size() > 1) {
             catIds.remove(catIds.size() - 1);

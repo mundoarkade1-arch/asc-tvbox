@@ -742,3 +742,13 @@
 - SideRail.host(): quadro de 52dp com o relógio 24h (15sp, negrito) fixo no topo e o menu 28dp abaixo; elevation 16dp para o menu aberto ficar acima do conteúdo. HomeActivity, SettingsActivity e NavBar colocam o host no lugar do menu (mesmas margens). NavBar passa a desligar o corte de filhos do pai do menu.
 - O relógio saiu de dentro do menu (decisão 17 trocada por esta).
 
+## 19/11/2026 (20) - Ajustes novos e visual refeito
+- Pedido do dono: mais opções em Ajustes (atualização automática, diagnóstico, limpar cache, idioma e qualidade, categorias, histórico e Minha lista separados, ajuda) e visual mais bonito (não gostou dos cards em grade).
+- Visual: lista de opções em UMA coluna com títulos de seção (CONTEÚDO, SEGURANÇA E DADOS, APLICATIVO), traço dourado na opção selecionada, sem sombra; painel da direita com linhas de vidro: botão, chave LIGADO/DESLIGADO (OK alterna) ou escolha (cada OK passa para a próxima opção). Seta para a direita na opção entra no painel; esquerda volta.
+- Opções: Listas, Categorias, Reprodução, Controle parental, Dados e cache, Atualização, Diagnóstico, Ajuda. "Sobre o dispositivo" e "Sobre o aplicativo" viraram o Diagnóstico; "Apagar dados" virou Dados e cache (continua com "Apagar tudo").
+- AppPrefs (novo, SharedPreferences "asc_settings"): atualização ao abrir (padrão ligada), áudio (auto/português/inglês), legenda (auto/português), qualidade máxima (auto até 1080p / 720p / 480p) e grupos de canais ocultos (nunca o Adultos). Padrões = comportamento de antes.
+- Ligações: MainActivity (DefaultTrackSelector: tamanho máximo e idioma preferido de áudio e legenda, na próxima reprodução); HomeActivity e LoginActivity (checkForUpdate sai sem procurar se desligado; a verificação manual em Ajustes continua); BrowseActivity e M3uBrowseActivity (grupos ocultos somem da lista de categorias do Ao vivo; os canais continuam em "Todas as categorias").
+- Ajuda: texto de contato em res/values/asc_support.xml (string support_contact), para o dono trocar pelo WhatsApp ou e-mail.
+- Diagnóstico: botão "Testar conexão" usa o Updater.checkAsync (até 4 tentativas, pode levar até cerca de 50 s se estiver sem internet).
+- Não feito: Perfis (8), Tamanho da interface (10) e Aparência (1): o dono não pediu.
+

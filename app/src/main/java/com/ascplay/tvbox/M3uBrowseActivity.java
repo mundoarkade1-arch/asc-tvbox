@@ -364,6 +364,15 @@ public class M3uBrowseActivity extends AscActivity {
             }
             return collator.compare(a, b);
         });
+        if (byGroup) {
+            // Ajustes > Categorias: grupos que a pessoa escondeu não aparecem na lista
+            for (java.util.Iterator<String> it = sorted.iterator(); it.hasNext(); ) {
+                String hc = it.next();
+                if (AppPrefs.isGroupHidden(this, CategoryOverrides.of(this, hc))) {
+                    it.remove();
+                }
+            }
+        }
         // Fica só a "Todas as categorias" (posição 0) e põe as outras na nova ordem
         while (catNames.size() > 1) {
             catNames.remove(catNames.size() - 1);

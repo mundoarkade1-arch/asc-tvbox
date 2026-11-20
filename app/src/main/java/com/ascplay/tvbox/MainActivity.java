@@ -911,9 +911,22 @@ public class MainActivity extends AscActivity {
 
         DefaultTrackSelector trackSelector = new DefaultTrackSelector(this);
         trackSelector.setParameters(trackSelector.buildUponParameters()
-            .setMaxVideoSize(1920, 1080)
+            .setMaxVideoSize(AppPrefs.maxVideoWidth(this), AppPrefs.maxVideoHeight(this))
             .setMaxVideoFrameRate(60)
             .build());
+        // Ajustes > Reprodução: áudio e legenda preferidos (vazio = automático)
+        String prefAudio = AppPrefs.audioLang(this);
+        if (!prefAudio.isEmpty()) {
+            trackSelector.setParameters(trackSelector.buildUponParameters()
+                .setPreferredAudioLanguage(prefAudio)
+                .build());
+        }
+        String prefText = AppPrefs.textLang(this);
+        if (!prefText.isEmpty()) {
+            trackSelector.setParameters(trackSelector.buildUponParameters()
+                .setPreferredTextLanguage(prefText)
+                .build());
+        }
         player = new ExoPlayer.Builder(this)
             .setTrackSelector(trackSelector)
                 .setMediaSourceFactory(new DefaultMediaSourceFactory(http))

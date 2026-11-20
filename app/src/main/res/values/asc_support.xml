@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Texto de contato mostrado em Ajustes > Ajuda. Troque pelo seu WhatsApp ou e-mail. -->
+    <string name="support_contact">Fale com quem forneceu a sua lista.</string>
+</resources>

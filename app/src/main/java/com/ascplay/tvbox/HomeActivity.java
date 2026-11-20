@@ -1452,6 +1452,9 @@ public class HomeActivity extends AscActivity {
     // ---------------------------------------------------------------------------------
 
     private void checkForUpdate() {
+        if (!AppPrefs.autoUpdateCheck(this)) {
+            return; // desligado em Ajustes > Atualização (a verificação manual continua)
+        }
         lastUpdateCheckMs = System.currentTimeMillis();
         Updater.checkAsync(this, new Updater.CheckListener() {
             @Override

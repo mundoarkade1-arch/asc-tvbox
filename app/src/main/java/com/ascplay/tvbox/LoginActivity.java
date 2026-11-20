@@ -301,6 +301,9 @@ public class LoginActivity extends AscActivity {
     private UpdateDialog updateDialog;
 
     private void checkForUpdate() {
+        if (!AppPrefs.autoUpdateCheck(this)) {
+            return; // desligado em Ajustes > Atualização
+        }
         Updater.checkAsync(this, new Updater.CheckListener() {
             @Override
             public void onUpdateAvailable(Updater.Info info) {
