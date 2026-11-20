@@ -762,3 +762,7 @@
 - Pedido do dono: menu aberto menor e mais discreto; ao escolher uma opção (OK), fechar na hora.
 - SideRail: EXPANDED_DP 150 -> 118; nomes 11sp; espaços internos menores. dispatchKeyEvent: depois de OK/Enter (soltar a tecla) em qualquer item, o clique roda e o menu recolhe (setExpanded(false)). Se o foco continuar no menu e a pessoa apertar cima/baixo, ele abre de novo.
 
+## 19/11/2026 (23) - Menu lateral fixo, sem abrir
+- Pedido do dono: deixar o menu só recolhido, do mesmo tamanho, com o nome embaixo de cada item; não abrir mais.
+- SideRail: removido o abrir/recolher (setExpanded, animação, escuta de foco, dispatchKeyEvent do OK, fundo escuro e EXPANDED_DP). Largura fixa de 52dp (WIDTH_DP); cada item (46dp) mostra o ícone com o nome pequeno (8sp) embaixo; se faltar altura, a FitColumn esconde os nomes e depois o logo, como antes. Mantidos: vidro transparente (STYLE_RAIL e STYLE_RAIL_ITEM), logo no topo e o relógio fixo acima do menu (host()), sem elevação. Substitui as decisões (19) e (22) no comportamento de abrir.
+
