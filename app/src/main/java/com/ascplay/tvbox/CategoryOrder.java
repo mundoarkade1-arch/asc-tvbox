@@ -27,7 +27,8 @@ public final class CategoryOrder {
         String n = Normalizer.normalize(name, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "").toLowerCase(Locale.ROOT);
         if (n.contains("jogos do dia") || n.contains("jogo do dia")
-                || n.contains("jogos de hoje") || n.contains("jogos hoje")) {
+                || n.contains("jogos de hoje") || n.contains("jogos hoje")
+                || n.contains("jogos ao vivo")) {
             return 0;
         }
         if (n.contains("luta") || n.contains("eventos do dia") || n.contains("eventos de hoje")) {
@@ -36,8 +37,14 @@ public final class CategoryOrder {
         if (UFC.matcher(n).find()) {
             return 2;
         }
-        if (n.contains("canal do cliente") || n.contains("canais do cliente")) {
+        if (n.contains("cliente")) {
             return 3;
+        }
+        // Plataformas de jogos e pay-per-view: logo depois, antes do resto do esporte
+        if (n.contains("ppv") || n.contains("pay per view") || n.contains("pay-per-view")
+                || n.contains("disney") || n.contains("hbo max") || n.contains("paramount")
+                || n.contains("prime video") || n.contains("star+") || n.contains("star plus")) {
+            return 4;
         }
         return NORMAL;
     }

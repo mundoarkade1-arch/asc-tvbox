@@ -34,12 +34,17 @@ public final class ParentalStore {
     // Nome de categoria adulta (mesmas palavras do app original)
     private static final Pattern ADULT_CATEGORY = Pattern.compile(
             "(^|[^a-z0-9])(adult[oa]?s?|xxx|porn[oa]?|erotic[oa]s?|sex|sexy|hentai|playboy"
-                    + "|18 ?\\+|\\+ ?18|18plus)($|[^a-z0-9])");
+                    + "|18 ?\\+|\\+ ?18|18plus"
+                    // Plataformas e termos de conteúdo adulto (23/11/2026)
+                    + "|onlyfans|only ?fans|fansly|privacy|pornhub|xvideos|xnxx|redtube|xhamster"
+                    + "|brazzers|sexy ?hot|sexo|safad[ao]s?|putaria|nudes?|fetish|fetiche|bdsm"
+                    + "|strip ?tease|stripper|cam ?girls?|hardcore|milf)($|[^a-z0-9])");
 
     // Nome de canal ou filme adulto (lista mais curta, para evitar falsos alarmes)
     private static final Pattern ADULT_NAME = Pattern.compile(
             "(^|[^a-z0-9])(xxx|playboy|sextreme|penthouse|brazzers|hustler|porn[oa]?|hentai"
-                    + "|sexy ?hot|\\+ ?18|18 ?\\+)($|[^a-z0-9])");
+                    + "|sexy ?hot|\\+ ?18|18 ?\\+|onlyfans|only ?fans|fansly|pornhub|xvideos"
+                    + "|xnxx|redtube|xhamster)($|[^a-z0-9])");
 
     private ParentalStore() {
     }
