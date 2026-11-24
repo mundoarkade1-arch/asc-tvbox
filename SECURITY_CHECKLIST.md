@@ -3,7 +3,7 @@
 ## Antes de publicar uma versão
 - [ ] Nenhum segredo/senha/link M3U nos arquivos novos
 - [ ] Secrets do GitHub preenchidos (senão o APK não é publicado)
-- [ ] Teste de atualização automática no aparelho (Android 7.1 / TX9)
+- [x] Teste de atualização automática no aparelho (Android 7.1 / TX9) feito em 23/11/2026
 
 ## Supabase
 - [x] RLS ligado em todas as tabelas do schema public (só existe devices)

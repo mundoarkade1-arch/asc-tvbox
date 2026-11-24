@@ -8,7 +8,7 @@ App Android nativo (Java, ExoPlayer), 61 classes, 11 activities (só LoginActivi
 ## Achados
 | ID | Gravidade | Status | Descrição |
 |---|---|---|---|
-| V-01 | Média | CORRIGIDA no código (teste real pendente) | Receiver INSTALL_RESULT exportado em Android < 13 (Updater.java) |
+| V-01 | Média | CORRIGIDA e VERIFICADA no TX9 (Android 7.1) | Receiver INSTALL_RESULT exportado em Android < 13 (Updater.java) |
 | V-02 | Baixa | Aceita | usesCleartextTraffic=true (necessário para servidores IPTV em HTTP) |
 | V-03 | Baixa | Pendente | Android 5.x (API 21-22) guarda login só em Base64 |
 | V-04 | Baixa | CORRIGIDA | DeviceLink mostrava o tamanho do usuário e da senha |
@@ -31,4 +31,4 @@ App Android nativo (Java, ExoPlayer), 61 classes, 11 activities (só LoginActivi
 Nenhum encontrado. Se a chave de assinatura (.jks) já esteve em algum commit público, troque-a.
 
 ## Riscos residuais
-Conta do administrador (e-mail do dono) controla todas as listas: usar senha forte e MFA. Cadastro de novos usuários no Supabase precisa estar desligado (V-12). Compilação e teste do V-01 em aparelho real pendentes.
+Conta do administrador (e-mail do dono) controla todas as listas: usar senha forte e MFA. Cadastro de novos usuários no Supabase precisa estar desligado (V-12). Compilação (Actions verde) e atualização no TX9 verificadas.

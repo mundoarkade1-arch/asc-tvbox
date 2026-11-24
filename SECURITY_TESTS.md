@@ -12,9 +12,10 @@
 | Supabase pós-correção: anon executa bump_version | false (aprovado) |
 | Supabase pós-correção: anon executa register_device / fetch_playlist | true / true (aprovado, o app precisa) |
 
+| Compilação do app com as correções (GitHub Actions) | Verde (aprovado) |
+| Atualização automática no TX9 (V-01): baixa, confirma, instala, login mantido | Funcionou (aprovado) |
+
 ## NÃO VERIFICADO
-- Compilação do app (GitHub Actions deve ficar VERDE)
-- V-01 em aparelho real
 - Limite de 300/hora em carga real (resposta "busy")
 - Cadastro de usuários desligado no Supabase (V-12)
 - Ferramentas automáticas (Semgrep, Gitleaks, Trivy, CodeQL)
