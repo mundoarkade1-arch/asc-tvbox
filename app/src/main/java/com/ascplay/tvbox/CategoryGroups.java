@@ -20,8 +20,8 @@ public final class CategoryGroups {
     /**
      * Os 15 grupos, na ordem em que aparecem na lista de canais ao vivo (pedido do dono, 23/11/2026):
      * jogos do dia e canal do cliente, esportes, abertos, documentários, filmes, séries,
-     * religiosos, variedades (música, TNT...), depois o que sobrar (notícias, infantil, reality,
-     * outros), canais 24 horas, internacionais e, por último, adultos.
+     * infantil, religiosos, variedades (música, TNT...), depois o que sobrar (notícias, reality,
+     * outros), e por último, de cima para baixo: canais 24 horas, internacionais e adultos.
      */
     public enum Group {
         INICIO("Início / Destaques", 0),
@@ -30,10 +30,10 @@ public final class CategoryGroups {
         DOCUMENTARIOS("Documentários", 5),
         FILMES("Filmes e Entretenimento", 3),
         SERIES("Séries", 4),
+        INFANTIL("Infantil", 7),
         RELIGIOSOS("Religiosos", 14),
         VARIEDADES("Variedades", 8),
         NOTICIAS("Notícias", 6),
-        INFANTIL("Infantil", 7),
         REALITY("Reality Shows", 13),
         OUTROS("Outros Canais", 10),
         H24("Canais 24 Horas", 9),
@@ -70,13 +70,40 @@ public final class CategoryGroups {
     private static final Pattern BRASIL = Pattern.compile(
             "\\b(brasil|brazil|brasileir\\w*|br|nacionais?)\\b");
 
-    /** País, região ou idioma estrangeiro. */
+    /** País, região ou idioma estrangeiro (português e inglês/espanhol, com e sem acento). */
     private static final Pattern ESTRANGEIRO = Pattern.compile(
-            "\\b(usa|eua|us|uk|latinos?|latinas?|latin|latam|portugal|portugues|portuguese"
-                    + "|espanha|spain|espanol|spanish|argentina|mexico|chile|colombia|peru"
-                    + "|americanos?|americana|america|english|ingles|france|frances|italia"
-                    + "|italy|germany|alemanha|arabic|arabe|turkey|turquia|india|hindi|russia"
-                    + "|canada|asia|europa|europe)\\b");
+            "\\b(usa|eua|us|uk|gb|latinos?|latinas?|latin|latam|hispano\\w*|iberoamerica\\w*"
+                    + "|estados unidos|united states|reino unido|united kingdom|inglaterra|england"
+                    + "|escocia|scotland|irlanda|ireland|gales|wales"
+                    + "|portugal|portugues|portuguese|espanha|spain|espanol|espanhol|spanish"
+                    + "|argentin\\w*|mexic\\w*|chile\\w*|colombia\\w*|peru\\w*|bolivia\\w*"
+                    + "|paraguai|paraguay\\w*|uruguai|uruguay\\w*|venezuela\\w*|equador|ecuador"
+                    + "|cuba\\w*|panama|costa rica|guatemala|honduras|nicaragua|el salvador"
+                    + "|republica dominicana|dominicana|porto rico|puerto rico|caribe|caribbean"
+                    + "|americanos?|americana|america|english|ingles|france|frances|franca|francais"
+                    + "|italia|italy|italiano|italian|germany|alemanha|alemao|german|deutsch"
+                    + "|holanda|netherlands|dutch|belgica|belgium|suica|switzerland|austria"
+                    + "|suecia|sweden|noruega|norway|dinamarca|denmark|finlandia|finland"
+                    + "|polonia|poland|polish|russia|russo|russian|ucrania|ukraine|romenia|romania"
+                    + "|bulgaria|hungria|hungary|grecia|greece|servia|serbia|croacia|croatia"
+                    + "|albania|turquia|turkey|turco|turkish|israel|arabe|arabic|arabia\\w*"
+                    + "|emirados|dubai|qatar|catar|egito|egypt|marrocos|morocco|iraque|iraq|iran"
+                    + "|india|indian|hindi|paquistao|pakistan|bangladesh|china|chines|chinese"
+                    + "|japao|japan|japones|japanese|coreia|korea|korean|tailandia|thailand"
+                    + "|vietna|vietnam|filipinas|philippines|indonesia|malasia|malaysia"
+                    + "|australia|nova zelandia|new zealand|canada|canadian|quebec"
+                    + "|africa|african\\w*|nigeria|angola|mocambique|cabo verde|oceania"
+                    + "|asia|asiatic\\w*|europa|europe|european\\w*|oriente medio|middle east"
+                    + "|estrangeiro\\w*|worldwide)\\b");
+
+    /**
+     * Siglas de país entre barras ou colchetes, como \"|AR|\", \"[MX]\" ou \"(UY)\". Só vale com
+     * o delimitador, para não confundir com palavras em português (\"de\", \"ar\", \"pe\"...).
+     */
+    private static final Pattern SIGLA_PAIS = Pattern.compile(
+            "(^|[|\\[(])\\s*(ar|mx|uy|py|bo|ve|ec|cl|co|cu|pa|cr|gt|hn|sv|ni|pr|es|fr|it|de|pt|tr|pl|nl"
+                    + "|ru|ua|ro|gr|il|ir|iq|pk|jp|kr|cn|vn|th|ph|id|in|au|ca|us|uk|gb|ae|sa|eg|ma|ng|za"
+                    + "|ao|mz|cv|at|ch|be|se|no|dk|fi|ie)\\s*[|\\])]");
 
     /** Só a palavra "internacional": vale se nenhum gênero for achado. */
     private static final Pattern INTERNACIONAL_GENERICO = Pattern.compile(
@@ -123,16 +150,24 @@ public final class CategoryGroups {
                     + "|power couple|\\bpeoes\\b|\\bilha record\\b");
 
     private static final Pattern INFANTIL = Pattern.compile(
-            "infantil|\\bkids?\\b|desenho|cartoon|crianc|\\bnick\\w*|gloob|\\bbaby\\b"
-                    + "|\\bjunior\\b|disney|boomerang|\\banimes?\\b");
+            "infantil|infantis|\\bkids?\\b|desenho|cartoon|crianc|\\bnick\\w*|gloob\\w*|\\bbaby\\b"
+                    + "|\\bjunior\\b|\\bjr\\b|disney|boomerang|\\banimes?\\b|animacao|animacoes|animados?"
+                    + "|\\btoons?\\b|tooncast|cartoonito|ratinbum|\\bra tim bum\\b|zoo ?moo|\\bpanda\\b"
+                    + "|turma da monica|\\bbita\\b|mundo bita|galinha pintadinha|\\bpeppa\\b|dreamworks"
+                    + "|pica ?pau|looney|hanna barbera|\\bturminha\\b|\\bteen\\b|\\bjuvenil\\b"
+                    + "|discovery kids|\\bpbs kids\\b|\\bclubinho\\b|\\bplaygames?\\b");
 
     private static final Pattern NOTICIAS = Pattern.compile(
-            "notici|\\bnews\\b|jornal|telejornal|globonews|\\bcnn\\b|\\bbbc\\b");
+            "notici|\\bnews\\b|jornal|telejornal|globonews|\\bcnn\\b|\\bbbc\\b(?! earth)"
+                    + "|jovem pan|bloomberg|\\bcnbc\\b|al jazeera|euronews|\\bjp news\\b");
 
     private static final Pattern DOCUMENTARIOS = Pattern.compile(
-            "document|discovery|\\bhistory\\b|\\bhistoria\\b|nat geo|national geographic"
-                    + "|animal planet|ciencia|\\bscience\\b|\\bnatureza\\b|\\bnature\\b"
-                    + "|\\bbiografia|\\bcuriosidade");
+            "document|documental|\\bdocs?\\b|discovery|\\bhistory\\b|\\bhistoria\\b|nat geo"
+                    + "|national geographic|animal planet|ciencia|\\bscience\\b|\\bnatureza\\b"
+                    + "|\\bnature\\b|\\bbiografia|\\bcuriosidade|\\bcuriosity\\b|\\btlc\\b|smithsonian"
+                    + "|wild ?life|investigation|investigacao|\\bh2\\b|love nature|bbc earth"
+                    + "|\\bplaneta\\b|\\barqueologia|\\bmilitar\\b|\\bmegaconstru\\w*|sobrevivencia"
+                    + "|\\bcrimes?\\b|\\bterra viva\\b|\\bcanal arte\\b|\\bviceland\\b");
 
     private static final Pattern FILMES = Pattern.compile(
             "\\bfilmes?\\b|\\bmovies?\\b|cinema|\\bcine\\b|cinemax|\\bhbo\\b|telecine"
@@ -170,7 +205,8 @@ public final class CategoryGroups {
             return Group.INICIO;
         }
         // Estrangeiro não se mistura com o brasileiro, mesmo sendo do mesmo gênero
-        if (!BRASIL.matcher(n).find() && ESTRANGEIRO.matcher(n).find()) {
+        if (!BRASIL.matcher(n).find()
+                && (ESTRANGEIRO.matcher(n).find() || SIGLA_PAIS.matcher(original(categoryName)).find())) {
             return Group.INTERNACIONAIS;
         }
         boolean esportes = ESPORTES.matcher(n).find()
