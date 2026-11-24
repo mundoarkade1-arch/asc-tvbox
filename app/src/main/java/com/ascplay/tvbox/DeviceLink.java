@@ -160,8 +160,8 @@ public final class DeviceLink {
                 String pass = str(o, "pass");
                 String origin = LoginChecker.normalizeServer(server);
                 lastDetail = "Servidor " + (origin != null ? "ok" : "invalido")
-                        + ", usuario " + user.length() + " letras, senha " + pass.length()
-                        + " letras.";
+                        + ", usuario " + (user.isEmpty() ? "vazio" : "preenchido")
+                        + ", senha " + (pass.isEmpty() ? "vazia" : "preenchida") + ".";
                 if (origin != null && !user.isEmpty() && !pass.isEmpty()) {
                     c = new CredentialStore.Credentials(mode, origin, user, pass, "");
                 }

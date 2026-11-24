@@ -18,6 +18,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
 
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
 import org.json.JSONObject;
@@ -402,7 +403,7 @@ public final class Updater {
             PackageInstaller.SessionParams params = new PackageInstaller.SessionParams(
                     PackageInstaller.SessionParams.MODE_FULL_INSTALL);
             params.setAppPackageName(app.getPackageName());
-            int id = installer.createSession(params);
+            final int id = installer.createSession(params);
             PackageInstaller.Session session = installer.openSession(id);
             try {
                 OutputStream out = session.openWrite("ASC-TVBox.apk", 0, apk.length());
@@ -424,6 +425,11 @@ public final class Updater {
                 BroadcastReceiver receiver = new BroadcastReceiver() {
                     @Override
                     public void onReceive(Context context, Intent intent) {
+                        // Segurança: só aceita o aviso desta sessão de instalação. Um app
+                        // malicioso não deve conseguir mandar um aviso falso para este receiver.
+                        if (intent.getIntExtra(PackageInstaller.EXTRA_SESSION_ID, -1) != id) {
+                            return;
+                        }
                         int status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS,
                                 PackageInstaller.STATUS_FAILURE);
                         if (status == PackageInstaller.STATUS_PENDING_USER_ACTION) {
@@ -431,6 +437,9 @@ public final class Updater {
                                 return; // a confirmação já foi aberta: não abre outra
                             }
                             Intent confirm = intent.getParcelableExtra(Intent.EXTRA_INTENT);
+                            if (confirm != null && targetsOwnApp(app, confirm)) {
+                                return; // nunca abre tela deste próprio app por pedido de fora
+                            }
                             if (confirm != null) {
                                 confirmShown[0] = true;
                                 confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -456,11 +465,10 @@ public final class Updater {
                     }
                 };
                 IntentFilter filter = new IntentFilter(action);
-                if (Build.VERSION.SDK_INT >= 33) {
-                    app.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED);
-                } else {
-                    app.registerReceiver(receiver, filter);
-                }
+                // Receiver NÃO exportado em qualquer versão do Android (antes do Android 13,
+                // o ContextCompat protege com uma permissão interna do próprio app).
+                ContextCompat.registerReceiver(app, receiver, filter,
+                        ContextCompat.RECEIVER_NOT_EXPORTED);
                 int flags = PendingIntent.FLAG_UPDATE_CURRENT
                         | (Build.VERSION.SDK_INT >= 31 ? PendingIntent.FLAG_MUTABLE : 0);
                 Intent result = new Intent(action).setPackage(app.getPackageName());
@@ -473,6 +481,15 @@ public final class Updater {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    /** true se o intent aponta para uma tela ou componente do próprio app. */
+    private static boolean targetsOwnApp(Context app, Intent intent) {
+        String mine = app.getPackageName();
+        if (intent.getComponent() != null && mine.equals(intent.getComponent().getPackageName())) {
+            return true;
+        }
+        return mine.equals(intent.getPackage());
     }
 
     private static void postFailed(final InstallListener listener, final String message) {
